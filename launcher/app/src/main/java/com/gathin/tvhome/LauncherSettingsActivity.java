@@ -151,12 +151,39 @@ public final class LauncherSettingsActivity extends Activity {
         appearance.setOnClickListener(view -> showAppearancePicker());
         TextView backgroundChoice = findViewById(R.id.backgroundChoice);
         backgroundChoice.setVisibility(PersonalAppearance.enabled(this) ? View.VISIBLE : View.GONE);
-        backgroundChoice.setOnClickListener(view -> new AlertDialog.Builder(this).setTitle("背景风格")
-                .setSingleChoiceItems(new String[]{"APP主色渐变 · 随焦点平滑变化", "壁纸 · 使用已选图片"},
-                        PersonalAppearance.appBackdrop(this) ? 0 : 1, (dialog, which) -> {
-                            choices.edit().putString(PersonalAppearance.BACKGROUND_KEY, which == 0 ? "app" : "wallpaper").apply();
-                            changed(); refresh(); dialog.dismiss();
-                        }).setNegativeButton(android.R.string.cancel, null).show());
+        backgroundChoice.setOnClickListener(view -> {
+            String background = choices.getString(PersonalAppearance.BACKGROUND_KEY, "app");
+            int selected = "app".equals(background) ? 0 : "bing".equals(background) ? 2 : 1;
+            new AlertDialog.Builder(this).setTitle("背景风格")
+                    .setSingleChoiceItems(new String[]{"APP主色渐变 · 随焦点平滑变化",
+                                    "壁纸 · 使用已选图片", "壁纸 · 必应每日精选"},
+                            selected, (dialog, which) -> {
+                                if (which == 0) {
+                                    choices.edit().putString(PersonalAppearance.BACKGROUND_KEY, "app")
+                                            .remove(Config.WALLPAPER_CHOICE_KEY).apply();
+                                    changed();
+                                    refresh();
+                                } else if (which == 1) {
+                                    choices.edit().putString(PersonalAppearance.BACKGROUND_KEY, "wallpaper")
+                                            .apply();
+                                    changed();
+                                    refresh();
+                                } else {
+                                    choices.edit().putString(PersonalAppearance.BACKGROUND_KEY, "bing")
+                                            .putString(Config.WALLPAPER_CHOICE_KEY, Config.WALLPAPER_NAME)
+                                            .apply();
+                                    changed();
+                                    refresh();
+                                    // Bring today's picture down right away; the saved choice shows it
+                                    // even if the fetch fails (the previous day's file stays).
+                                    BingDaily.fetchToday(this, true, (ok, message) -> {
+                                        Toast.makeText(this, message, Toast.LENGTH_SHORT).show();
+                                        if (ok) changed();
+                                    });
+                                }
+                                dialog.dismiss();
+                            }).setNegativeButton(android.R.string.cancel, null).show();
+        });
         TextView displayInfo = findViewById(R.id.displayInfo);
         displayInfo.setVisibility(PersonalAppearance.enabled(this) ? View.VISIBLE : View.GONE);
         displayInfo.setText("桌面显示：" + Math.round(getWindowManager().getDefaultDisplay().getRefreshRate()) + " Hz · 使用系统可用的最高刷新率");
@@ -303,8 +330,11 @@ public final class LauncherSettingsActivity extends Activity {
     private void refresh() {
         TextView appearance = findViewById(R.id.appearanceChoice);
         TextView backgroundChoice = findViewById(R.id.backgroundChoice);
-        if (backgroundChoice != null) backgroundChoice.setText(PersonalAppearance.appBackdrop(this)
-                ? "背景：APP主色渐变" : "背景：壁纸");
+        if (backgroundChoice != null) {
+            String background = choices.getString(PersonalAppearance.BACKGROUND_KEY, "app");
+            backgroundChoice.setText("背景：" + ("bing".equals(background) ? "壁纸 · 必应每日精选"
+                    : PersonalAppearance.appBackdrop(this) ? "APP主色渐变" : "壁纸"));
+        }
         if (appearance != null) appearance.setText("外观模式：" + AppearancePolicy.label(PersonalAppearance.mode(this)));
         for (int i = 0; i < columnChoices.length; i++) {
             columnChoices[i].setSelected(columns == i + 4);
@@ -326,7 +356,8 @@ public final class LauncherSettingsActivity extends Activity {
         ambientMotionChoice.setAlpha(animations ? 1f : 0.5f);
         String wallpaperCurrent = choices.getString(Config.WALLPAPER_CHOICE_KEY, null);
         wallpaperChoice.setText(getString(R.string.wallpaper_state,
-                "none".equals(wallpaperCurrent) ? getString(R.string.wallpaper_none)
+                "bing".equals(choices.getString(PersonalAppearance.BACKGROUND_KEY, "app")) ? "必应每日精选"
+                        : "none".equals(wallpaperCurrent) ? getString(R.string.wallpaper_none)
                         : wallpaperCurrent != null ? PersonalAppearance.wallpaperName(wallpaperCurrent)
                         : getString(R.string.wallpaper_theme_default)));
         openOnStartChoice.setText(getString(R.string.open_on_start_state, openOnStartLabel()));
