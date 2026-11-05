@@ -200,6 +200,9 @@ final class WallpaperPlayer {
     void close() {
         active = false;
         closed = true;
+        // Detach the picture view: a replacement player (Bing daily update) adds its own, and the
+        // root is going away anyway when this is the final close in onDestroy.
+        root.removeView(image);
         decoder.shutdownNow();
     }
 
