@@ -27,8 +27,64 @@ CleanMiTV 的底子来自 **[CleanYourTV](https://github.com/Gathin23/cleanyourt
 | 🎛️ **精简设置** | 删除「高级动态效果」（额外上浮、缩放和转场），保留普通焦点动画；新增「动态背景」独立开关 |
 | 🇨🇳 **国行小米适配** | 底栏预设飞牛TV、Nova、云视听极光、云视听小电视；「设置」大齿轮直达小米原生设置；补上原厂「文件管理」入口；直播使用小米 `tvplayer` |
 | 📦 **更小的包** | 只保留简体中文和英文资源，APK 约 360 KB |
+| 👧 **儿童与老人模式** | 移植 [aerial-tv](https://github.com/pengchujin/aerial-tv) 的 Kids Mode：儿童/老人模式、4 位 PIN 锁、时长/作息/休息限制、应用白名单、全屏锁定，详见下方 [儿童与老人模式](#儿童与老人模式kids--elders-mode) |
 
 同时保留了小爱同学、投屏、HDMI / CEC、幻彩随影、米家和系统更新等原厂功能，只停用了统计和诊断组件。
+
+## 儿童与老人模式（Kids & Elders Mode）
+
+移植自 [pengchujin/aerial-tv](https://github.com/pengchujin/aerial-tv) 的 Kids & Elders mode。
+原项目用 Kotlin + Jetpack Compose 实现，本移植按 cleanmitv 的 Java + 原生 View + XML 技术栈完整重写，不引入任何新依赖。
+
+**功能**
+
+- **儿童模式 / 老人模式**：桌面只显示你选择的应用，按选择顺序排列，没有你没选的任何东西。
+- **时间限制（仅儿童）**：工作日 / 周末每日时长（不限 / 30 / 60 / 90 / 120 分钟）；最晚看到（不限 / 20:00 / 21:00 / 22:00）；休息间隔（关 / 30 / 45 / 60 分钟，看满间隔休息 5 分钟）。
+- **家长 PIN**：4 位 PIN（SHA-256 存储）。退出模式、锁屏后给更多时间（15 / 30 / 60 分钟 / 今天不限）都需 PIN；支持遥控器数字键和屏幕数字键盘。
+- **全屏锁定**：今日时长用完 / 超过最晚时间 / 休息中都会全屏锁定，按返回键无效。
+- **防绕过**：家长用 PIN 退出后，电视熄屏或屏保出现时自动恢复模式；儿童模式下隐藏顶栏设置按钮、屏蔽遥控器设置键，孩子无法进入设置关闭模式。
+- **阻止其他应用（仅儿童，默认开启）**：锁定时任何应用都进不去；未锁定且「阻止」开启时，非允许应用也会被拉回桌面（无障碍服务为主，UsageStats 兜底）。
+
+**开启方法**
+
+1. 桌面顶栏点「设置」→「儿童与老人模式」（或在遥控器设置键面板中找到入口）。
+2. 右侧选择要给孩子用的应用，左侧设置对象（儿童/老人）、时长、最晚时间、休息间隔。
+3. 点「设置 PIN」设一个 4 位家长 PIN（必须设置，否则无法退出）。
+4. 点「启动儿童模式」/「启动老人模式」。
+
+**新增文件**
+
+```
+launcher/app/src/main/java/com/gathin/tvhome/
+  Kids.java              核心状态：模式开关、允许应用、时间规则、观看用量、PIN（SHA-256）
+  KidsWatch.java         计时守护：每 10 秒记账、警告、锁定时把 Home 拉回前台
+  PinDialog.java         家长 PIN 键盘（创建 / 验证两种模式）
+  KidsSetupActivity.java 儿童/老人模式设置界面
+  KidsLockActivity.java  全屏锁定界面
+
+launcher/app/src/main/res/layout/
+  activity_kids_setup.xml   设置界面布局（左：规则，右：应用选择列表）
+  activity_kids_lock.xml    锁定界面布局
+  item_kids_app.xml         应用选择列表项
+
+launcher/app/src/main/res/drawable/
+  kids_chip_bg.xml     选择胶囊背景（聚焦/选中态）
+  kids_button_bg.xml   操作按钮背景
+  kids_app_bg.xml      应用列表项背景
+  kids_order_badge.xml 应用序号圆形徽标
+```
+
+**与 aerial-tv 的差异**
+
+| 项目 | aerial-tv | 本移植 |
+|---|---|---|
+| UI 技术 | Jetpack Compose | 原生 View + XML（与 cleanmitv 一致） |
+| 老人模式大图标 | 图标放大 + 显示名称 | 保持 cleanmitv 原有图标样式，仅过滤应用 |
+| 方向键 PIN | 支持 4 方向 PIN | 仅数字 PIN（屏幕键盘 + 遥控数字键） |
+| 阻止其他应用 | 无障碍服务 + UsageStats 双保险 | 无障碍服务为主，UsageStats 为辅（需授权） |
+
+**编译验证**：已通过 GitHub Actions 云端 `./gradlew assembleRelease` 编译（含 R8 压缩），
+产物以 `tvhome-app-release` artifact 上传至 [Actions 页面](https://github.com/jankxia/cleanmitv/actions/workflows/build-apk.yml)。
 
 ## 实机截图
 
