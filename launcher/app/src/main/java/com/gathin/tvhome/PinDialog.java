@@ -166,7 +166,7 @@ public final class PinDialog extends Dialog {
                     k.setBackground(g);
                     k.setOnFocusChangeListener((v, has) -> {
                         GradientDrawable d = new GradientDrawable();
-                        d.setColor(has ? 0xFF5574A987 : 0xFF2E3642);
+                        d.setColor(has ? 0xFF5574A9 : 0xFF2E3642);
                         d.setCornerRadius(12 * getContext().getResources().getDisplayMetrics().density);
                         if (has) d.setStroke(2, Color.parseColor("#FFB9E7C7"));
                         v.setBackground(d);
