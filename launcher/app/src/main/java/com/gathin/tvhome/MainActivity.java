@@ -136,6 +136,8 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
     private GlassView glass;
     /** The one Home, for BingDaily's daily wallpaper update to reload it while it is visible. */
     static MainActivity instance;
+    /** Home is the resumed activity (set in onResume/onPause); reloads keep the player going only then. */
+    boolean resumed;
     private View ambient;
     private AppColorBackdrop appBackdrop;
     private TextView heroName;
@@ -960,6 +962,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
     @Override
     protected void onResume() {
         super.onResume();
+        resumed = true;
         if (dayAppearance != PersonalAppearance.day(this)) { recreate(); return; }
         // A festival that started or ended while Home was in the background: rebuild with or without it.
         if (festive != festival.active(LocalDate.now())) {
@@ -1008,7 +1011,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         wallpaperPlayer.start();
         // Bing daily wallpaper: on a new day, Home fetches the day's picture and reloads the wallpaper
         // player in place (the once-a-day guard makes this a no-op on the other days).
-        BingDaily.fetchToday(this, false, refreshed -> {
+        BingDaily.fetchToday(this, false, (refreshed, ignored) -> {
             if (refreshed && !isDestroyed()) reloadWallpaper();
         });
         handler.postDelayed(minuteTick, MINUTE_MS);
@@ -1185,6 +1188,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
     @Override
     protected void onPause() {
         super.onPause();
+        resumed = false;
         root.removeCallbacks(showIdleClock);
         endReorder();   // Home or another app while reordering keeps the order so far
         wallpaperPlayer.stop();
@@ -1212,7 +1216,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
     void reloadWallpaper() {
         wallpaperPlayer.close();
         wallpaperPlayer = new WallpaperPlayer(this, root, Config.load(this));
-        if (isResumed()) wallpaperPlayer.start();
+        if (resumed) wallpaperPlayer.start();
     }
 
     @Override
