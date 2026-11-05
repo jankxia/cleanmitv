@@ -143,6 +143,9 @@ public final class LauncherSettingsActivity extends Activity {
         });
         findViewById(R.id.tvSettingsChoice).setOnClickListener(v ->
                 open(SystemSettings.intent(this, Settings.ACTION_SETTINGS)));
+        // Kids/Elders mode: who it is for, the apps it shows and the time limits.
+        findViewById(R.id.kidsChoice).setOnClickListener(v ->
+                open(new Intent(this, KidsSetupActivity.class)));
         TextView appearance = findViewById(R.id.appearanceChoice);
         appearance.setVisibility(PersonalAppearance.enabled(this) ? View.VISIBLE : View.GONE);
         appearance.setOnClickListener(view -> showAppearancePicker());

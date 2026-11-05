@@ -822,7 +822,47 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         if (savedInstanceState == null && !openLauncherSettingsIfAsked(getIntent())) openInputsIfAsked(getIntent());
         PersonalAppearance.main(this);
         if (PersonalAppearance.enabled(this)) greetingColor = PersonalAppearance.secondary(this);
+        // Kids/Elders mode (ported from aerial-tv): count watching time, keep the chosen Home, and
+        // lock when the rules say so. Started here and by the guard, whichever comes first.
+        KidsWatch.start(this);
+        applyKidsMode();
+    }
 
+    /** Kids/Elders mode was on at the last applyKidsMode; null until the first look. */
+    private Boolean lastKidsActive;
+
+    /**
+     * Kids/Elders mode on this Home: only the chosen tiles show, and once locked the full-screen
+     * Kids lock goes over the tiles. Called on create, on resume and when the mode changes.
+     */
+    private void applyKidsMode() {
+        boolean active = Kids.active();
+        adapter.setKidsMode(active ? Kids.allowed() : null);
+        // The child gets no Settings or Inputs buttons; the mode's Home is just the tiles.
+        View topButtons = findViewById(R.id.topButtons);
+        if (topButtons != null) topButtons.setVisibility(active ? View.GONE : View.VISIBLE);
+        // A parent who left the mode (PIN) gets the whole Home back; entering it shows only the chosen tiles.
+        if (lastKidsActive != null && lastKidsActive != active) reloadApps(true);
+        else if (active && !tilesMatchKidsMode()) reloadApps(true);
+        lastKidsActive = active;
+        Kids.Lock lock = Kids.lockNow(System.currentTimeMillis());
+        if (lock != null && !KidsWatch.lockScreenShowing) {
+            Intent i = new Intent(this, KidsLockActivity.class);
+            i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP);
+            startActivity(i);
+        }
+    }
+
+    /** Whether the tiles shown are already the mode's; avoids rebuilding on every resume. */
+    private boolean tilesMatchKidsMode() {
+        if (!Kids.active()) return true;
+        List<String> wanted = Kids.allowed();
+        if (adapter.getItemCount() != wanted.size()) return false;
+        for (int i = 0; i < wanted.size(); i++) {
+            String pkg = adapter.packageAt(i);
+            if (pkg == null || !wanted.contains(pkg)) return false;
+        }
+        return true;
     }
 
     /**
@@ -972,6 +1012,10 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
                 handler.postDelayed(this::playPetalShower, 450);
             }
         }
+        // Kids/Elders mode: Home is the front surface the mode counts as not watching, and the mode's
+        // Home and its lock belong on screen now.
+        KidsWatch.setHomeInFront(true);
+        applyKidsMode();
     }
 
     /** Launcher settings' change count (Config.SETTINGS_REVISION_KEY); onResume rebuilds Home when it moved. */
@@ -1090,7 +1134,11 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
                 new Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_LEANBACK_LAUNCHER), 0);
         cards = moduleCards ? CardFeature.run(() -> Cards.discover(this, hiddenApps,
                 () -> Cards.load(Cards.storeFile(this)), leanback), none) : none;
+        // Kids/Elders mode shows only the tiles chosen for it, in the order picked.
+        adapter.setKidsMode(Kids.active() ? Kids.allowed() : null);
         adapter.reload(cards.isEmpty() ? none : CardFeature.run(() -> Cards.shown(cards), none), leanback);
+        // The mode's guard knows what belongs on this Home (and no TV inputs of its own to keep).
+        Kids.notePackages(new HashSet<>(adapter.packages()), Collections.emptySet());
         lastFocusedKey = returnKey;
         lastFocused = returnSlot;
         packageSequence = currentPackageSequence(packageSequence);
@@ -1145,6 +1193,8 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         if (cardPrompt != null) cardPrompt.dismiss();
         if (appLibrary != null) appLibrary.close();
         if (openPopup != null) openPopup.dismiss();
+        // Kids/Elders mode: with Home behind an app, that app is what the mode watches and guards.
+        KidsWatch.setHomeInFront(false);
     }
 
     @Override
@@ -1210,6 +1260,8 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
      * nothing even on Home.
      */
     private boolean handleSettingsKey(KeyEvent event) {
+        // Kids/Elders mode: the child gets no settings; the key does nothing here.
+        if (Kids.active()) return true;
         for (int code : settingsKeycodes) {
             if (event.getKeyCode() != code) continue;
             if (event.getAction() == KeyEvent.ACTION_UP && !event.isCanceled()) {

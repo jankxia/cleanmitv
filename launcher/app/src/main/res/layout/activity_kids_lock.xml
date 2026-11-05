@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Over Home while Kids mode is locked: the day's time used, a break, or the hours the TV may be
+     watched. Nothing behind it can be reached; a parent's PIN gives more time or leaves the mode. -->
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#FF000000">
+
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:orientation="vertical"
+        android:gravity="center_horizontal"
+        android:maxWidth="620dp"
+        android:paddingStart="40dp"
+        android:paddingEnd="40dp">
+
+        <TextView
+            android:id="@+id/icon"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="\uD83C\uDF19"
+            android:textSize="52sp" />
+
+        <TextView
+            android:id="@+id/title"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="20dp"
+            android:textColor="#FFFFFFFF"
+            android:textSize="30sp"
+            android:fontFamily="@string/font_medium"
+            android:gravity="center" />
+
+        <TextView
+            android:id="@+id/subtitle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:textColor="#FFACB8C1"
+            android:textSize="18sp"
+            android:gravity="center"
+            android:lineSpacingExtra="2dp" />
+
+        <TextView
+            android:id="@+id/parentButton"
+            style="@style/KidsButton"
+            android:layout_width="wrap_content"
+            android:layout_height="52dp"
+            android:layout_marginTop="34dp"
+            android:text="@string/kids_parent" />
+
+        <LinearLayout
+            android:id="@+id/grantRow"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="22dp"
+            android:orientation="horizontal"
+            android:visibility="gone">
+
+            <TextView android:id="@+id/grant15" style="@style/KidsButton"
+                android:layout_marginEnd="12dp" />
+            <TextView android:id="@+id/grant30" style="@style/KidsButton"
+                android:layout_marginEnd="12dp" />
+            <TextView android:id="@+id/grant60" style="@style/KidsButton"
+                android:layout_marginEnd="12dp" />
+            <TextView android:id="@+id/grantDay" style="@style/KidsButton" />
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/leaveButton"
+            style="@style/KidsButton"
+            android:layout_width="wrap_content"
+            android:layout_height="52dp"
+            android:layout_marginTop="14dp"
+            android:visibility="gone" />
+    </LinearLayout>
+</FrameLayout>

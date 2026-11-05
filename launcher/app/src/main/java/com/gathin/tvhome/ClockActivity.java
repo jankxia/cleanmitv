@@ -29,11 +29,14 @@ public class ClockActivity extends Activity {
     protected void onResume() {
         super.onResume();
         scene.start();
+        // The clock is Home: Kids/Elders mode does not count the time it sits there.
+        KidsWatch.setHomeInFront(true);
     }
 
     @Override
     protected void onPause() {
         scene.stop();
+        KidsWatch.setHomeInFront(false);
         super.onPause();
         finish();   // never left behind in the back stack
     }

@@ -148,4 +148,57 @@
     <!-- Cinematic top shelf (cinematic_home): the line under the focused dock app's name; %1$s is when it was
          last opened, e.g. "5 minutes ago" or "yesterday, 9:40 pm". -->
     <string name="last_opened">Last opened %1$s</string>
+
+    <!-- Kids/Elders mode (ported from aerial-tv): a Home of chosen apps, with time limits for children. -->
+    <string name="kids_settings">Kids &amp; Elders mode</string>
+    <string name="kids_settings_help">A Home of chosen apps; for children with time limits. Leaving takes the PIN.</string>
+    <string name="kids_title">Kids &amp; Elders mode</string>
+    <string name="kids_hint">The tiles on the right are the whole Home here — nothing on it you did not choose.</string>
+    <string name="kids_kind">For</string>
+    <string name="kids_kind_kids">Children</string>
+    <string name="kids_kind_elders">Older people</string>
+    <string name="kids_block">Other apps</string>
+    <string name="kids_block_on">Kept away</string>
+    <string name="kids_block_off">Allowed</string>
+    <string name="kids_weekday">Weekday time</string>
+    <string name="kids_weekend">Weekend time</string>
+    <string name="kids_latest">TV off by</string>
+    <string name="kids_no_limit">None</string>
+    <string name="kids_break">Break after</string>
+    <string name="st_off">Off</string>
+    <string name="kids_start_kids">Start children\'s mode</string>
+    <string name="kids_start_elders">Start older people\'s mode</string>
+    <string name="kids_pin_set">Set PIN</string>
+    <string name="kids_pin_change">Change PIN</string>
+    <string name="kids_turn_off">Turn mode off</string>
+    <string name="kids_apps">Apps (%1$d)</string>
+    <string name="kids_apps_hint">Pick what belongs here; it shows in the order picked.</string>
+    <string name="kids_elders_apps_hint">Pick what belongs here; it shows in the order picked.</string>
+    <string name="kids_pick_first">Pick at least one app first.</string>
+    <string name="kids_parent">Parent</string>
+    <string name="kids_lock_break">Break time</string>
+    <string name="kids_lock_break_sub">Back in %1$s.</string>
+    <string name="kids_lock_day">That\'s today\'s time</string>
+    <string name="kids_lock_day_sub">%1$s watched. More tomorrow.</string>
+    <string name="kids_lock_late">Time for bed</string>
+    <string name="kids_lock_late_sub">The TV is off from %1$s until %2$s.</string>
+    <string name="kids_grant">%1$d min</string>
+    <string name="kids_grant_day">All day</string>
+    <string name="cc_kids_leave">Leave children\'s mode</string>
+    <string name="cc_elders_leave">Leave older people\'s mode</string>
+    <string name="kids_m">%1$d min</string>
+    <string name="kids_h">%1$dh</string>
+    <string name="kids_hm">%1$dh %2$dm</string>
+    <string name="kids_warn">Locking in %1$d min</string>
+    <string name="kids_warn_break">Break in %1$d min</string>
+    <string name="pin_create">Choose a PIN</string>
+    <string name="pin_confirm">Again</string>
+    <string name="pin_create_hint">Four digits.</string>
+    <string name="pin_enter">Parent PIN</string>
+    <string name="pin_enter_hint">Four digits.</string>
+    <string name="pin_arrows_create_hint">Four arrows.</string>
+    <string name="pin_arrows_hint">Four arrows.</string>
+    <string name="pin_mismatch">They did not match.</string>
+    <string name="pin_saved">PIN saved.</string>
+    <string name="pin_wrong">Wrong PIN.</string>
 </resources>

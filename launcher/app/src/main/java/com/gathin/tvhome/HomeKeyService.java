@@ -108,6 +108,8 @@ public class HomeKeyService extends AccessibilityService {
     private void loadConfig() {
         // Keycodes and the panel choice can also come from a theme; theme.sh restarts this service.
         Config config = Config.load(this);
+        // Kids/Elders mode state, so the Settings key knows when the child must not reach it.
+        Kids.init(this);
         // restore_key_services: note that this helper runs, so Home can put it back after a force stop. Here, not
         // in onServiceConnected: the note is in credential-protected storage too, readable only after the unlock.
         repairRecord = config.restoreKeyServices;
@@ -157,6 +159,8 @@ public class HomeKeyService extends AccessibilityService {
                 holdAppScancodes.get(event.getScanCode()))) return true;
         // The stock launcher handled the remote's Settings button; with it disabled the button does nothing.
         if (isSettingsKey(event)) {
+            // Kids/Elders mode: the child gets no settings; the key does nothing here either.
+            if (Kids.active()) return true;
             if (event.getAction() == KeyEvent.ACTION_UP && !event.isCanceled()) {
                 Intent open = settingsPanel ? new Intent(this, QuickSettingsActivity.class)
                         : SystemSettings.intent(this, Settings.ACTION_SETTINGS);

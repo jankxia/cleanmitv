@@ -53,4 +53,26 @@
         <item name="android:layout_marginEnd">10dp</item>
         <item name="android:gravity">center</item>
     </style>
+
+    <!-- Kids mode: a small choice pill. Selected and focused states come from kids_chip_bg. -->
+    <style name="KidsChip">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">42dp</item>
+        <item name="android:minWidth">64dp</item>
+        <item name="android:paddingStart">16dp</item>
+        <item name="android:paddingEnd">16dp</item>
+        <item name="android:gravity">center</item>
+        <item name="android:background">@drawable/kids_chip_bg</item>
+        <item name="android:textColor">#FFFFFFFF</item>
+        <item name="android:textSize">17sp</item>
+        <item name="android:focusable">true</item>
+        <item name="android:clickable">true</item>
+    </style>
+
+    <!-- Kids mode: the wide action button at the bottom of the rules column. -->
+    <style name="KidsButton" parent="KidsChip">
+        <item name="android:layout_height">50dp</item>
+        <item name="android:minWidth">150dp</item>
+        <item name="android:background">@drawable/kids_button_bg</item>
+    </style>
 </resources>

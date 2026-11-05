@@ -37,6 +37,8 @@ public class InputKeyService extends AccessibilityService {
         super.onServiceConnected();
         // From config.xml or a theme's config.json; theme.sh rebinds this service after a push.
         Config config = Config.load(this);
+        // Kids/Elders mode state, for the window guard (keeps away what the mode does not allow).
+        Kids.init(this);
         // restore_key_services: note that this helper runs, so Home can put it back after a force stop.
         repairRecord = config.restoreKeyServices;
         if (repairRecord) ServiceRepair.connected(this, getClass());
@@ -92,8 +94,21 @@ public class InputKeyService extends AccessibilityService {
         super.onDestroy();
     }
 
+    /** Kids/Elders mode guard: an app the mode does not allow, or any app once it is locked, is
+     *  brought Home over. Same duty as HomeGuardService in aerial-tv, folded into this helper
+     *  (opt-in: INPUT_KEY_SERVICE=1 build-and-install.sh enables it). */
     @Override
     public void onAccessibilityEvent(AccessibilityEvent event) {
+        if (event.getEventType() != AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED) return;
+        if (Kids.lock == null && !Kids.active()) return;
+        CharSequence cs = event.getPackageName();
+        if (cs == null || !KidsWatch.keepsAway(this, cs.toString())) return;
+        try {
+            Intent i = new Intent(this, MainActivity.class);
+            i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+            startActivity(i);
+        } catch (Exception ignored) {
+        }
     }
 
     @Override

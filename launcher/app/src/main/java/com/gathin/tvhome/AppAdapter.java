@@ -216,6 +216,8 @@ public class AppAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
     private final Map<String, String> appLabels, appBanners;
     /** Every app tile is its icon on a card tinted from that icon, never its banner (config.xml, uniform_tiles). */
     private final boolean uniformTiles;
+    /** Kids/Elders mode: the packages its Home shows, in the order picked; null when the mode is off. */
+    private List<String> kidsAllowed;
     private final List<Entry> items = new ArrayList<>();
 
     AppAdapter(Context ctx, TileListener listener, int dockSize, Config cfg) {
@@ -251,6 +253,11 @@ public class AppAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
      * Rebuilds the tiles. A shown module card stands in for every tile of its package (same component,
      * so focus follows it); hidden_apps wins over a card, and a card's package in dock_apps takes that slot.
      */
+    /** Kids/Elders mode: only these packages' tiles, in this order; null shows every tile. */
+    void setKidsMode(List<String> allowed) {
+        kidsAllowed = allowed == null ? null : new ArrayList<>(allowed);
+    }
+
     void reload(List<Cards.Card> cards, List<ResolveInfo> leanback) {
         PackageManager pm = ctx.getPackageManager();
         // The LEANBACK query is shared with the module-card check (MainActivity); copy it before adding
@@ -290,6 +297,8 @@ public class AppAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
             String pkg = ri.activityInfo.packageName;
             if (pkg.equals(ctx.getPackageName()) || !ri.activityInfo.exported
                     || !LibraryApps.visible(tvPackages.contains(pkg), hidden.contains(pkg), added.contains(pkg), removed.contains(pkg))) continue;
+            // Kids/Elders mode shows only the tiles chosen for it, in the order picked.
+            if (kidsAllowed != null && !kidsAllowed.contains(pkg)) continue;
             ComponentName component = new ComponentName(pkg, ri.activityInfo.name);
             Cards.Card card = cardByPkg.get(pkg);
             if (card != null && !card.component.equals(component)) continue;   // the card stands in for this tile
@@ -314,6 +323,13 @@ public class AppAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
             }
         }
         Collections.sort(fresh, (a, b) -> {
+            // In Kids/Elders mode the chosen order rules; the owner's order is never touched.
+            if (kidsAllowed != null) {
+                int ka = kidsAllowed.indexOf(a.pkg), kb = kidsAllowed.indexOf(b.pkg);
+                if (ka < 0) return 1;
+                if (kb < 0) return -1;
+                return Integer.compare(ka, kb);
+            }
             // The owner's own order first; tiles it does not know (new installs) follow by the rule below.
             int saved = Order.compare(savedRanks, a.component.flattenToShortString(), b.component.flattenToShortString());
             if (saved != 0) return saved;
@@ -329,7 +345,8 @@ public class AppAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
             return a.label.compareToIgnoreCase(b.label);
         });
         // Retain the optional Default-home tile until dependent tile-ordering work is merged.
-        if (showHomeSettings
+        if (kidsAllowed == null
+                && showHomeSettings
                 && pm.resolveActivity(new Intent(Settings.ACTION_HOME_SETTINGS), 0) != null) {
             fresh.add(new Entry(Entry.HOME_SETTINGS, ctx.getString(R.string.home_settings),
                     new ComponentName(ctx, HomeSettingsActivity.class), null,
@@ -639,6 +656,13 @@ public class AppAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
 
     String packageAt(int position) {
         return position >= 0 && position < items.size() ? items.get(position).pkg : null;
+    }
+
+    /** Every package currently shown, in tile order; Kids/Elders mode's guard knows these. */
+    List<String> packages() {
+        List<String> out = new ArrayList<>(items.size());
+        for (Entry e : items) out.add(e.pkg);
+        return out;
     }
 
     /** The tile's artwork, its banner or else its icon, for the cinematic shelf's backdrop (HeroArt). */
