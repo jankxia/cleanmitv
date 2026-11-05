@@ -134,6 +134,8 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
     private FrameLayout root;
     private WallpaperPlayer wallpaperPlayer;
     private GlassView glass;
+    /** The one Home, for BingDaily's daily wallpaper update to reload it while it is visible. */
+    static MainActivity instance;
     private View ambient;
     private AppColorBackdrop appBackdrop;
     private TextView heroName;
@@ -374,6 +376,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        instance = this;
         setContentView(R.layout.activity_main);
         dayAppearance = PersonalAppearance.day(this);
         density = getResources().getDisplayMetrics().density;
@@ -1003,6 +1006,11 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         if (showStats) startStats();
         sky.update();
         wallpaperPlayer.start();
+        // Bing daily wallpaper: on a new day, Home fetches the day's picture and reloads the wallpaper
+        // player in place (the once-a-day guard makes this a no-op on the other days).
+        BingDaily.fetchToday(this, false, refreshed -> {
+            if (refreshed && !isDestroyed()) reloadWallpaper();
+        });
         handler.postDelayed(minuteTick, MINUTE_MS);
         if (festive && diya != null) {
             diya.start();
@@ -1197,6 +1205,16 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         KidsWatch.setHomeInFront(false);
     }
 
+    /**
+     * Replaces the wallpaper player after Bing's daily picture changed underneath it. The old
+     * player detaches its image view on close, the new one reads the saved picture.
+     */
+    void reloadWallpaper() {
+        wallpaperPlayer.close();
+        wallpaperPlayer = new WallpaperPlayer(this, root, Config.load(this));
+        if (isResumed()) wallpaperPlayer.start();
+    }
+
     @Override
     protected void onStop() {
         super.onStop();
@@ -1242,6 +1260,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
     @Override
     protected void onDestroy() {
         super.onDestroy();
+        if (instance == this) instance = null;
         unregisterReceiver(packageReceiver);
         wallpaperPlayer.close();
         ConnectivityManager cm = getSystemService(ConnectivityManager.class);
