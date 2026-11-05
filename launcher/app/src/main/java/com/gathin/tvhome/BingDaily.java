@@ -107,7 +107,7 @@ final class BingDaily {
             new Handler(Looper.getMainLooper()).post(() -> {
                 callback.onDone(done, text);
                 MainActivity main = MainActivity.instance;
-                if (done && main != null && !main.isDestroyed() && main.isResumed()) {
+                if (done && main != null && !main.isDestroyed() && main.resumed) {
                     main.reloadWallpaper();
                 }
             });
