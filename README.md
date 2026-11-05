@@ -28,6 +28,7 @@ CleanMiTV 的底子来自 **[CleanYourTV](https://github.com/Gathin23/cleanyourt
 | 🇨🇳 **国行小米适配** | 底栏预设飞牛TV、Nova、云视听极光、云视听小电视；「设置」大齿轮直达小米原生设置；补上原厂「文件管理」入口；直播使用小米 `tvplayer` |
 | 📦 **更小的包** | 只保留简体中文和英文资源，APK 约 360 KB |
 | 👧 **儿童与老人模式** | 移植 [aerial-tv](https://github.com/pengchujin/aerial-tv) 的 Kids Mode：儿童/老人模式、4 位 PIN 锁、时长/作息/休息限制、应用白名单、全屏锁定，详见下方 [儿童与老人模式](#儿童与老人模式kids--elders-mode) |
+| 🏞️ **必应每日精选壁纸** | 「壁纸 · 使用已选图片」下新增「壁纸 · 必应每日精选」：拉取 [bing.wdbyte.com/zh-cn/](https://bing.wdbyte.com/zh-cn/) 的当日 4K 图（Bing 官方接口兜底）保存为单图壁纸，并跟随网站每日自动更新，详见下方 [必应每日精选壁纸](#必应每日精选壁纸bing-daily-wallpaper) |
 
 同时保留了小爱同学、投屏、HDMI / CEC、幻彩随影、米家和系统更新等原厂功能，只停用了统计和诊断组件。
 
@@ -82,6 +83,26 @@ launcher/app/src/main/res/drawable/
 | 老人模式大图标 | 图标放大 + 显示名称 | 保持 cleanmitv 原有图标样式，仅过滤应用 |
 | 方向键 PIN | 支持 4 方向 PIN | 仅数字 PIN（屏幕键盘 + 遥控数字键） |
 | 阻止其他应用 | 无障碍服务 + UsageStats 双保险 | 无障碍服务为主，UsageStats 为辅（需授权） |
+
+## 必应每日精选壁纸（Bing Daily Wallpaper）
+
+在「设置 → 背景风格」的「壁纸 · 使用已选图片」之下新增第三项「**壁纸 · 必应每日精选**」，让桌面背景跟随 [bing.wdbyte.com/zh-cn/](https://bing.wdbyte.com/zh-cn/) 站内的必应每日精选图片。
+
+**行为**
+
+- 选中即下载当天图片（站点页内直接提取 4K 直链，站点不可达时自动回退到 Bing 官方 `HPImageArchive` JSON），保存为桌面单图壁纸后立即生效；失败时保留前一天图片不中断。
+- **每日自动更新**：桌面每次回到前台都会检查日期，跨天后自动拉取当日新图并热刷新壁纸，无需手动干预（同一天内不重复下载）。
+- 需要联网权限；下载在后台线程完成，不阻塞首帧。
+
+**新增文件**
+
+```
+launcher/app/src/main/java/com/gathin/tvhome/
+  BingDaily.java   必应每日精选：解析 wdbyte 页面 4K 直链 / Bing 官方接口兜底，
+                   后台下载并落盘为 wallpaper.jpg，记录拉取日期
+```
+
+**涉及修改**：`AndroidManifest.xml` 新增 `INTERNET` 权限；`LauncherSettingsActivity.java` 背景风格单选新增第三项；`MainActivity.java` 每次回前台检查日期并热重建壁纸播放器；`WallpaperPlayer.java` 关闭时摘下图片视图以支持原地刷新。
 
 **编译验证**：已通过 GitHub Actions 云端 `./gradlew assembleRelease` 编译（含 R8 压缩），
 产物以 `tvhome-app-release` artifact 上传至 [Actions 页面](https://github.com/jankxia/cleanmitv/actions/workflows/build-apk.yml)。
