@@ -22,7 +22,7 @@ public class KidsLockActivity extends Activity {
     private TextView subtitle;
     private TextView parentButton;
     private View grantRow;
-    private View leaveButton;
+    private TextView leaveButton;
     private boolean granting;
     private boolean pinOpen;
 
