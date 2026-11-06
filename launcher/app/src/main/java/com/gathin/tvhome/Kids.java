@@ -259,9 +259,12 @@ public final class Kids {
 
     private Kids() {}
 
-    /** In the mode now. */
+    /**
+     * In the mode now. A mode with no apps picked still counts: that is the "hide everything" setup,
+     * where Home shows only the Kids mode card.
+     */
     public static boolean active() {
-        return enabled && !suspended && !allowed.isEmpty();
+        return enabled && !suspended;
     }
 
     /** The lock now, recomputed by KidsWatch; null while not locked or not active. */

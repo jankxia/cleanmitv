@@ -63,7 +63,7 @@ public class AppAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
     }
 
     static final class Entry {
-        static final int APP = 0, HOME_SETTINGS = 1, CARD = 2, EMPTY = 3;
+        static final int APP = 0, HOME_SETTINGS = 1, CARD = 2, EMPTY = 3, KIDS_PARENT = 4;
 
         final int kind;
         final String label;
@@ -354,10 +354,19 @@ public class AppAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         }
         docked = 0;
         while (docked < fresh.size() && isDocked(fresh.get(docked))) docked++;
-        emptySlots = dockRow && !reordering ? DockSlots.empty(docked, dockSize, fresh.size(), fillDock) : 0;
+        emptySlots = dockRow && !reordering && kidsAllowed == null
+                ? DockSlots.empty(docked, dockSize, fresh.size(), fillDock) : 0;
         for (int i = 0; i < emptySlots; i++) {
             fresh.add(docked + i, new Entry(Entry.EMPTY, "", new ComponentName(ctx, "empty-dock-slot-" + i),
                     null, null, null, 0));
+        }
+        // Kids/Elders mode: its own card comes first, so the parent's PIN is reachable even when no
+        // app was picked for the mode at all ("hide everything").
+        if (kidsAllowed != null) {
+            int label = Kids.kind() == Kids.Kind.ELDERS ? R.string.elders_mode_card : R.string.kids_mode_card;
+            fresh.add(0, new Entry(Entry.KIDS_PARENT, ctx.getString(label),
+                    new ComponentName(ctx, MainActivity.class), null,
+                    ctx.getDrawable(R.drawable.ic_kids_mode), null, 0));
         }
         items.clear();
         items.addAll(fresh);
@@ -507,6 +516,8 @@ public class AppAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         }
         h.card.setOnClickListener(v -> launch(e));
         h.card.setOnLongClickListener(v -> {
+            // The mode's card has no tile menu: it is the parent's way out, nothing to move or remove.
+            if (e.kind == Entry.KIDS_PARENT) return true;
             if (tileMenu) {
                 int pos = h.getBindingAdapterPosition();
                 if (pos != RecyclerView.NO_POSITION) listener.onTileLongPress(pos, v);
@@ -524,6 +535,12 @@ public class AppAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
 
     /** Opens the tile's activity by explicit component, with no extras: a card can name nothing else. */
     private void launch(Entry e) {
+        if (e.kind == Entry.KIDS_PARENT) {
+            // The mode's own card: same as the parent button in the top bar, a PIN to leave.
+            MainActivity main = ctx instanceof MainActivity ? (MainActivity) ctx : MainActivity.instance;
+            if (main != null && !main.isDestroyed()) main.kidsParentPressed();
+            return;
+        }
         if (e.kind == Entry.HOME_SETTINGS) {
             ctx.startActivity(new Intent(ctx, HomeSettingsActivity.class)
                     .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK));
@@ -662,8 +679,14 @@ public class AppAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
     /** Every package currently shown, in tile order; Kids/Elders mode's guard knows these. */
     List<String> packages() {
         List<String> out = new ArrayList<>(items.size());
-        for (Entry e : items) out.add(e.pkg);
+        for (Entry e : items) if (e.kind != Entry.KIDS_PARENT) out.add(e.pkg);
         return out;
+    }
+
+    /** True when the mode's own card is on this Home. */
+    boolean hasKidsParentTile() {
+        for (Entry e : items) if (e.kind == Entry.KIDS_PARENT) return true;
+        return false;
     }
 
     /** The tile's artwork, its banner or else its icon, for the cinematic shelf's backdrop (HeroArt). */

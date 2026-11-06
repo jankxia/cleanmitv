@@ -899,6 +899,12 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         }
     }
 
+    /** The mode's own torch on Home: the same PIN exit as the "parent" button in the top bar. */
+    void kidsParentPressed() {
+        if (!Kids.active()) return;
+        leaveKidsMode();
+    }
+
     /**
      * Leaving the mode from Home: the parent's button (or the Settings key) asks for the PIN and
      * then suspends the mode, which comes back once the TV sleeps again.
@@ -937,9 +943,10 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
     private boolean tilesMatchKidsMode() {
         if (!Kids.active()) return true;
         List<String> wanted = Kids.allowed();
-        if (adapter.getItemCount() != wanted.size()) return false;
+        int offset = adapter.hasKidsParentTile() ? 1 : 0;
+        if (adapter.appCount() - offset != wanted.size()) return false;
         for (int i = 0; i < wanted.size(); i++) {
-            String pkg = adapter.packageAt(i);
+            String pkg = adapter.packageAt(i + offset);
             if (pkg == null || !wanted.contains(pkg)) return false;
         }
         return true;

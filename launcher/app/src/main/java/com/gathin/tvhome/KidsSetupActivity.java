@@ -120,21 +120,14 @@ public class KidsSetupActivity extends Activity {
         bindBreak(R.id.break60, 60);
 
         startButton.setOnClickListener(v -> {
-            if (Kids.allowed().isEmpty()) {
-                Toast.makeText(this, R.string.kids_pick_first, Toast.LENGTH_LONG).show();
-                return;
-            }
-            // No PIN means no way out again: the mode can only be left with one, so ask for it here.
+            // No PIN means no way out again: the mode can only be left with one, so ask for it here
+            // and go straight into the mode once it is set.
             if (!Kids.pinSet()) {
                 Toast.makeText(this, R.string.kids_pin_first, Toast.LENGTH_LONG).show();
-                createPin();
+                createPin(true);
                 return;
             }
-            // Into the mode: enabled, and not the suspended "parent is still here" state.
-            Kids.chooseEnabled(true);
-            Kids.start();
-            KidsWatch.poke();
-            finish();
+            beginMode();
         });
         turnOffButton.setOnClickListener(v -> {
             Kids.turnOff();
@@ -147,7 +140,7 @@ public class KidsSetupActivity extends Activity {
                 PinDialog verify = new PinDialog(this, PinDialog.VERIFY, Kids.pinArrows(),
                         new PinDialog.PinListener() {
                     @Override public void onPin(String pin) {
-                        if (Kids.pinMatches(pin)) createPin();
+                        if (Kids.pinMatches(pin)) createPin(false);
                         else toastWrong();
                     }
 
@@ -156,26 +149,42 @@ public class KidsSetupActivity extends Activity {
                 });
                 verify.show();
             } else {
-                createPin();
+                createPin(false);
             }
         });
     }
 
-    /** Asks which kind of PIN to set, then opens the pad for it: four digits, or four D-pad presses. */
-    private void createPin() {
+    /** Into the mode: enabled, and not the suspended "parent is still here" state. */
+    private void beginMode() {
+        // No app picked is a real setup: the mode hides everything, Home shows only its own card.
+        if (Kids.allowed().isEmpty()) {
+            Toast.makeText(this, R.string.kids_no_apps_tip, Toast.LENGTH_LONG).show();
+        }
+        Kids.chooseEnabled(true);
+        Kids.start();
+        KidsWatch.poke();
+        finish();
+    }
+
+    /**
+     * Asks which kind of PIN to set, then opens the pad for it: four digits, or four D-pad presses.
+     * startAfter: "Start" asked for a PIN first, so the mode begins as soon as it is saved.
+     */
+    private void createPin(boolean startAfter) {
         String[] kinds = {getString(R.string.pin_kind_digits), getString(R.string.pin_kind_arrows)};
         new AlertDialog.Builder(this)
                 .setTitle(R.string.kids_pin_kind)
-                .setItems(kinds, (dialog, which) -> showCreatePin(which == 1))
+                .setItems(kinds, (dialog, which) -> showCreatePin(which == 1, startAfter))
                 .show();
     }
 
-    private void showCreatePin(boolean arrows) {
+    private void showCreatePin(boolean arrows, boolean startAfter) {
         PinDialog create = new PinDialog(this, PinDialog.CREATE, arrows, new PinDialog.PinListener() {
             @Override public void onPin(String pin) {
                 Kids.choosePin(pin, arrows);
                 refresh();
                 Toast.makeText(KidsSetupActivity.this, R.string.pin_saved, Toast.LENGTH_SHORT).show();
+                if (startAfter) beginMode();
             }
 
             @Override public void onCancel() {
