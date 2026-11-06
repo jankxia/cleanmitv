@@ -37,12 +37,26 @@ jobs:
         with:
           packages: platforms;android-34 build-tools;34.0.0
 
+      - name: Restore signing key
+        env:
+          TVHOME_KEYSTORE_B64: ${{ secrets.TVHOME_KEYSTORE_B64 }}
+        run: |
+          if [ -n "$TVHOME_KEYSTORE_B64" ]; then
+            echo "$TVHOME_KEYSTORE_B64" | base64 -d > "$RUNNER_TEMP/tvhome.p12"
+            echo "TVHOME_STORE=$RUNNER_TEMP/tvhome.p12" >> "$GITHUB_ENV"
+            echo "Signing with the fixed key: an in-place adb install upgrade keeps working."
+          else
+            echo "::warning::TVHOME_KEYSTORE_B64 is unset — falling back to the runner's debug key, which changes on every run and breaks in-place upgrades."
+          fi
+
       - name: Build release APK
         run: |
+          SIGN_ARGS=""
+          if [ -n "$TVHOME_STORE" ]; then SIGN_ARGS="-PtvhomeStoreFile=$TVHOME_STORE"; fi
           if [ -n "${{ inputs.launcherApplicationId }}" ]; then
-            ./gradlew assembleRelease -PlauncherApplicationId=${{ inputs.launcherApplicationId }} --no-daemon --console=plain
+            ./gradlew assembleRelease -PlauncherApplicationId=${{ inputs.launcherApplicationId }} $SIGN_ARGS --no-daemon --console=plain
           else
-            ./gradlew assembleRelease --no-daemon --console=plain
+            ./gradlew assembleRelease $SIGN_ARGS --no-daemon --console=plain
           fi
 
       - name: Upload release APK

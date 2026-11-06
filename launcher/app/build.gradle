@@ -2,17 +2,35 @@ plugins {
     id 'com.android.application'
 }
 
+// The APK is sideloaded over ADB and updated in place, so every build must carry the same signature
+// or the TV refuses the upgrade ("signatures do not match"). CI restores one fixed PKCS12 key from
+// the TVHOME_KEYSTORE_B64 repo secret and passes its path as -PtvhomeStoreFile; without that
+// property (a fresh fork) the runner's own debug key is used instead.
+def tvhomeStore = providers.gradleProperty('tvhomeStoreFile').getOrNull()
+
 android {
     namespace 'com.gathin.tvhome'
     compileSdk 34
+
+    signingConfigs {
+        tvhome {
+            if (tvhomeStore) {
+                storeFile file(tvhomeStore)
+                storePassword 'android'
+                keyAlias 'tvhome'
+                keyPassword 'android'
+                storeType 'PKCS12'
+            }
+        }
+    }
 
     defaultConfig {
         // Opt-in identity for firmware with a package-name HOME allowlist; see docs/devices/xiaomi-mitv-aetp0-dofus.md.
         applicationId providers.gradleProperty('launcherApplicationId').getOrElse('com.gathin.tvhome')
         minSdk 26
         targetSdk 34
-        versionCode 9
-        versionName '2.7.5-local'
+        versionCode 10
+        versionName '2.7.10-bing-rolling'
         resConfigs 'en', 'zh-rCN'
     }
 
@@ -22,8 +40,9 @@ android {
             minifyEnabled true
             shrinkResources true
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
-            // Sideloaded over ADB, never published: sign with the debug key so it installs over a debug build.
-            signingConfig signingConfigs.debug
+            // Sideloaded over ADB, never published: sign with the fixed key when CI provides one,
+            // otherwise with the debug key (that one changes on every runner, so installs collide).
+            signingConfig(tvhomeStore ? signingConfigs.tvhome : signingConfigs.debug)
         }
     }
 

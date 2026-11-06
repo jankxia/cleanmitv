@@ -148,8 +148,9 @@ launcher/app/src/main/java/com/gathin/tvhome/
 | 1 | 要在「壁纸 · 使用已选图片」弹窗里点开后的「跟随主题 / 无壁纸」旁边，加一项「必应滚动壁纸」 | 之前只在「背景风格」单选里加了第三项，图片网格弹窗本身还是两格虚卡 + 本地图，必应这个选项在那张弹窗里根本看不见 | `WallpaperPicker` 增加第三格「必应滚动壁纸」（返回特殊值 `"bing"`），`LauncherSettingsActivity` 收到后切到该模式并拉当日图 |
 | 2 | 选完之后要能看见「保留的图片」 | 原实现选中后弹个 Toast 就算结束，弹窗直接关了，看不到到底留了哪几天 | 选中后立刻用同一套弹窗打开「必应图集」视图：标题「必应滚动壁纸（保留 N 张，最新在前）」，每格标日期（`2026-11-06`），点图只提示不打断滚动；没有图时提示先联网 |
 | 3 | 保留最近 7 天、最新在前、每 30 分钟换一张、自动拉新 | `BingDaily.KEEP` 是 10；`Config` 只在轮换间隔为空时才用 30 分钟，用户把主题轮换设成别的值时会被覆盖 | `KEEP = 7`（`prune()` 与 `wallpapers()` 同步）；`Config` 在该模式下把 `rotationMinutes` 强制设为 30；每日自动拉新维持「回到桌面即检查日期」（同一天只下载一次） |
+| 4 | `adb install -r` 报 `INSTALL_FAILED_UPDATE_INCOMPATIBLE: signatures do not match`，覆盖升级装不上 | release 构建用的是 `signingConfigs.debug`，而 GitHub 每次都是全新 runner，`~/.android/debug.keystore` 每次重新生成 —— 同一个 commit 两次构建出来的 APK 签名都不一样 | 新增仓库 secret `TVHOME_KEYSTORE_B64` 存一份固定 PKCS12 签名（2048 位 RSA、自签、有效期到 2054 年、alias `tvhome`）；workflow 构建前还原该 key 并以 `-PtvhomeStoreFile` 传给 Gradle，`build.gradle` 拿不到时回退 debug 签名。`versionCode` 9 → 10、`versionName` → `2.7.10-bing-rolling` |
 
-**涉及文件**：`WallpaperPicker.java`、`LauncherSettingsActivity.java`、`Config.java`、`BingDaily.java`、`values/strings.xml`、`values-zh-rCN/strings.xml`。
+**涉及文件**：`WallpaperPicker.java`、`LauncherSettingsActivity.java`、`Config.java`、`BingDaily.java`、`values/strings.xml`、`values-zh-rCN/strings.xml`、`app/build.gradle`、`.github/workflows/build-apk.yml`。
 
 ## 实机截图
 
@@ -179,7 +180,16 @@ launcher/app/src/main/java/com/gathin/tvhome/
 
 **安装包：** 到 [Releases](https://github.com/sqlsec/cleanmitv/releases/latest) 下载 `CleanMiTV-2.7.5-local-MiTV-OS3.apk`，或直接用仓库里的 [`release/CleanMiTV-2.7.5-local-MiTV-OS3.apk`](release/CleanMiTV-2.7.5-local-MiTV-OS3.apk)（版本 2.7.5-local）
 
-> ⚠️ 这个包针对小米 OS3 国行固件构建。该固件只允许白名单内的包名成为第三方 Home，所以用 `-PlauncherApplicationId=com.ts.launcher` 编译。Java 代码的命名空间仍然是 `com.gathin.tvhome`，没有修改系统、固件或签名权限。如果你的电视已经装了同包名的其他应用，会出现签名冲突。其他机型请按下方步骤从源码编译默认包名版本。
+> ⚠️ 这个包针对小米 OS3 国行固件构建。该固件只允许白名单内的包名成为第三方 Home，所以用 `-PlauncherApplicationId=com.ts.launcher` 编译。Java 代码的命名空间仍然是 `com.gathin.tvhome`，没有修改系统、固件或签名权限。如果你的电视已经装了同包名的其他应用，会出现签名冲突。
+
+**签名固定（很重要）**：本仓库 Actions 产出的 APK 一律用仓库 secret `TVHOME_KEYSTORE_B64` 里那份固定 key 签名（PKCS12，alias `tvhome`），所以后续版本都能 `adb install -r` 原地覆盖、设置与壁纸不丢。反过来说，**首次装到一台已经装了「别的 key 签的同包名应用」的电视时，必须先卸载一次**，否则会报 `INSTALL_FAILED_UPDATE_INCOMPATIBLE: signatures do not match`：
+
+```bash
+adb uninstall com.ts.launcher        # 只会删这一份 launcher 的数据，卸载后马上装新的
+adb install tvhome-v2.7.10-bing-rolling.apk
+```
+
+之后再换版本就只需要 `adb install -r`。其他机型请按下方步骤从源码编译默认包名版本。
 
 1. 在电视的「设置 → 账号与安全」中打开 ADB 调试，让电视和电脑处于同一局域网。
 2. 安装 APK，然后按原项目的流程切换 Home、停用原桌面。完整步骤、恢复方法和注意事项见 [原项目 CleanYourTV](https://github.com/Gathin23/cleanyourtv) 和 [docs/TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md)。
