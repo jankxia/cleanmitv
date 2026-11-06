@@ -28,7 +28,7 @@ CleanMiTV 的底子来自 **[CleanYourTV](https://github.com/Gathin23/cleanyourt
 | 🇨🇳 **国行小米适配** | 底栏预设飞牛TV、Nova、云视听极光、云视听小电视；「设置」大齿轮直达小米原生设置；补上原厂「文件管理」入口；直播使用小米 `tvplayer` |
 | 📦 **更小的包** | 只保留简体中文和英文资源，APK 约 360 KB |
 | 👧 **儿童与老人模式** | 移植 [aerial-tv](https://github.com/pengchujin/aerial-tv) 的 Kids Mode：儿童/老人模式、4 位 PIN 锁、时长/作息/休息限制、应用白名单、全屏锁定，详见下方 [儿童与老人模式](#儿童与老人模式kids--elders-mode) |
-| 🏞️ **必应每日精选壁纸** | 「壁纸 · 使用已选图片」下新增「壁纸 · 必应每日精选」：拉取 [bing.wdbyte.com/zh-cn/](https://bing.wdbyte.com/zh-cn/) 的当日 4K 图（Bing 官方接口兜底），按日保存最近 10 天作为壁纸集并跟随网站每日自动更新，详见下方 [必应每日精选壁纸](#必应每日精选壁纸bing-daily-wallpaper) |
+| 🏞️ **必应滚动壁纸** | 「壁纸 · 使用已选图片」的选择弹窗里，「跟随主题」「无壁纸」旁边多一格「壁纸 · 必应滚动壁纸」：拉取 [bing.wdbyte.com/zh-cn/](https://bing.wdbyte.com/zh-cn/) 的当日 4K 图（Bing 官方接口兜底），保留最近 7 天、最新在前，选完立刻能看到保留的图片，固定 30 分钟换一张并跟随网站每日自动更新，详见下方 [必应滚动壁纸](#必应滚动壁纸bing-rolling-wallpaper) |
 
 同时保留了小爱同学、投屏、HDMI / CEC、幻彩随影、米家和系统更新等原厂功能，只停用了统计和诊断组件。
 
@@ -86,27 +86,27 @@ launcher/app/src/main/res/drawable/
 | 方向键 PIN | 支持 4 方向 PIN | 支持，可在设置 PIN 时二选一（数字 / 方向键） |
 | 阻止其他应用 | 无障碍服务 + UsageStats 双保险 | 无障碍服务为主，UsageStats 为辅（需授权） |
 
-## 必应每日精选壁纸（Bing Daily Wallpaper）
+## 必应滚动壁纸（Bing Rolling Wallpaper）
 
-在「设置 → 背景风格」的「壁纸 · 使用已选图片」之下新增第三项「**壁纸 · 必应每日精选**」，让桌面背景跟随 [bing.wdbyte.com/zh-cn/](https://bing.wdbyte.com/zh-cn/) 站内的必应每日精选图片。
+在「壁纸 · 使用已选图片」那张选择弹窗里，「跟随主题」「无壁纸」旁边新增一格「**必应滚动壁纸**」，让桌面背景跟随 [bing.wdbyte.com/zh-cn/](https://bing.wdbyte.com/zh-cn/) 站内的必应每日精选图片。
 
 **行为**
 
-- 选中即下载当天图片（站点页内直接提取 4K 直链，站点不可达时自动回退到 Bing 官方 `HPImageArchive` JSON），保存到 `files/bing/bing-<日期>.jpg` 后立即生效；失败时保留之前的图片不中断。
-- **多日图集**：每天的图各存一张，最多保留最近 10 天，最新的排第一；「必应每日精选」就是这一小组图片（按 30 分钟轮换，和原来的多图壁纸一样有轮播），不再是一张被反复覆盖的 `wallpaper.jpg`。
-- **每日自动更新**：桌面每次回到前台都会检查日期，跨天后自动拉取当日新图并热刷新壁纸，无需手动干预（同一天内不重复下载）。
-- 在「壁纸：必应每日精选」这一行点一下＝立刻重新拉取当日图片；需要手动挑单张图时，请切回「壁纸 · 使用已选图片」。
-- 需要联网权限；下载在后台线程完成，不阻塞首帧。
+- **选中即可见**：点「必应滚动壁纸」后先拉当日图，随后立刻把这个图集弹出来——你能直接看到保留下来的每一张，标题写着「保留 N 张，最新在前」。
+- **7 天滚动**：每天一张，存 `files/bing/bing-<日期>.jpg`，最多保留最近 **7 天**，最新的排第一，第 8 天到时最旧那张自动删除。
+- **30 分钟换一张**：这个模式下轮换固定为 30 分钟（不受主题自带轮换设置影响），7 张图循环播放。
+- **自动拉新**：桌面每次回到前台都会检查日期，跨天自动下载当日新图并热刷新壁纸（同一天只下一次）；站点不可达时回退 Bing 官方 `HPImageArchive` JSON，拉不到也不影响已有图集。
+- 弹窗里的日期格（`2026-11-06` 这种）只是给你确认「留了哪几天」，点它不会关掉滚动；想彻底换回手选图片，点「跟随主题」或切回「壁纸 · 使用已选图片」再挑一张。
 
 **新增文件**
 
 ```
 launcher/app/src/main/java/com/gathin/tvhome/
-  BingDaily.java   必应每日精选：解析 wdbyte 页面 4K 直链 / Bing 官方接口兜底，
-                   后台下载并按日期落盘到 files/bing/，保留最近 10 天
+  BingDaily.java   必应滚动壁纸：解析 wdbyte 页面 4K 直链 / Bing 官方接口兜底，
+                   后台下载并按日期落盘到 files/bing/，只留最近 7 天、最新在前
 ```
 
-**涉及修改**：`AndroidManifest.xml` 新增 `INTERNET` 权限；`LauncherSettingsActivity.java` 背景风格单选新增第三项；`Config.java` 在「必应每日精选」下把 `files/bing/` 的每日图作为壁纸集；`MainActivity.java` 每次回前台检查日期并热重建壁纸播放器；`WallpaperPlayer.java` 关闭时摘下图片视图以支持原地刷新。
+**涉及修改**：`AndroidManifest.xml` 新增 `INTERNET` 权限；`WallpaperPicker.java` 新增第三格与「必应图集」视图；`LauncherSettingsActivity.java` 背景风格单选新增第三项、选中后立即展示保留图；`Config.java` 在该模式下把 `files/bing/` 的 7 天图作为壁纸集并固定 30 分钟轮换；`MainActivity.java` 每次回前台检查日期并热重建壁纸播放器；`WallpaperPlayer.java` 关闭时摘下图片视图以支持原地刷新。
 
 ## v2.7.7 修复记录（实机反馈）
 
@@ -118,7 +118,7 @@ launcher/app/src/main/java/com/gathin/tvhome/
 | 2 | 儿童模式能显示选中的 APP，但点击打不开 | 锁定状态下点应用后 `KidsWatch` 只把 Home 拉回前台，用户看不到任何提示；另外 `PinDialog` 收不到按键也放大了这个问题 | 锁定时 `bringBack` 直接打开 `KidsLockActivity`（看到「时间到 / 该休息」和家长按钮）；PIN 对话框改为在 `dispatchKeyEvent` 收键，不再被聚焦的按键吞掉 |
 | 3 | 无法输入 PIN 退出儿童模式 | 两处：① 未锁定时主页没有任何退出入口，设置键被直接吞掉；② 允许不设 PIN 就启动模式，`pinMatches` 永远为 false | 主页顶栏在模式中只保留一个「家长」按钮（点击即 PIN → 退出），设置键 / 菜单键同样弹 PIN；未设 PIN 时「启动」会先要求设置 PIN |
 | 4 | 壁纸选项「原来的方案」没有保存下来 | 装机版是 `com.gathin.tvhome`，与 TV 原有桌面 `com.ts.launcher` 的数据目录、`SharedPreferences` 完全独立，原设置当然不会跟过来 | 用 `com.ts.launcher` 包名构建并 `adb install -r` 覆盖升级（签名相同、versionCode 相同即可原地升级，设置与壁纸都保留） |
-| 5 | 必应壁纸「选中的是一张 JPG 图片」 | 原实现把每日图覆盖写入 `files/wallpaper.jpg`，`files/wallpapers/` 目录为空时它就变成唯一一张可选图 | 必应图改存 `files/bing/bing-<日期>.jpg`（保留最近 10 天、最新在前），`Config` 在该模式下把这一小组作为壁纸集（30 分钟轮换）；「壁纸」行点击＝重新拉当日图，不再把 `wallpaper.jpg` 混进手选列表 |
+| 5 | 必应壁纸「选中的是一张 JPG 图片」 | 原实现把每日图覆盖写入 `files/wallpaper.jpg`，`files/wallpapers/` 目录为空时它就变成唯一一张可选图 | 必应图改存 `files/bing/bing-<日期>.jpg`（最新在前），`Config` 在该模式下把这一小组作为壁纸集；「壁纸」行不再把 `wallpaper.jpg` 混进手选列表 |
 
 **编译验证**：已通过 GitHub Actions 云端 `./gradlew assembleRelease` 编译（含 R8 压缩），
 产物以 `tvhome-app-release` artifact 上传至 [Actions 页面](https://github.com/jankxia/cleanmitv/actions/workflows/build-apk.yml)。
@@ -140,6 +140,16 @@ launcher/app/src/main/java/com/gathin/tvhome/
 | 2 | 希望点「设置」后是下拉菜单，能选系统设置、也能进 / 出儿童或老人模式 | 原来齿轮点击是「模式中就弹 PIN、否则直接跳设置页」，没有菜单 | 新增 `showGearMenu()`：点齿轮弹玻璃下拉，行顺序为「输入源 / 网络 / 桌面设置 / 系统设置 / 进入（或退出）儿童模式 / 进入（或退出）老人模式 / 重排」。模式行按当前状态显示「进入…」或「退出…」，退出仍走 `leaveKidsMode()` 的 PIN 校验；「进入」时若该模式已设置过且只是被暂停，直接恢复，否则打开设置页并预选对应的儿童 / 老人 |
 
 **涉及文件**：`MainActivity.java`（`applyKidsMode`、`showGearMenu`、`enterKidsMode`、齿轮两处点击）、`KidsSetupActivity.java`（新增 `EXTRA_KIND` 预选模式）、`values/strings.xml`、`values-zh-rCN/strings.xml`。
+
+## v2.7.10 修改记录（必应滚动壁纸进选择弹窗）
+
+| # | 反馈 | 原因 | 修复 |
+|---|---|---|---|
+| 1 | 要在「壁纸 · 使用已选图片」弹窗里点开后的「跟随主题 / 无壁纸」旁边，加一项「必应滚动壁纸」 | 之前只在「背景风格」单选里加了第三项，图片网格弹窗本身还是两格虚卡 + 本地图，必应这个选项在那张弹窗里根本看不见 | `WallpaperPicker` 增加第三格「必应滚动壁纸」（返回特殊值 `"bing"`），`LauncherSettingsActivity` 收到后切到该模式并拉当日图 |
+| 2 | 选完之后要能看见「保留的图片」 | 原实现选中后弹个 Toast 就算结束，弹窗直接关了，看不到到底留了哪几天 | 选中后立刻用同一套弹窗打开「必应图集」视图：标题「必应滚动壁纸（保留 N 张，最新在前）」，每格标日期（`2026-11-06`），点图只提示不打断滚动；没有图时提示先联网 |
+| 3 | 保留最近 7 天、最新在前、每 30 分钟换一张、自动拉新 | `BingDaily.KEEP` 是 10；`Config` 只在轮换间隔为空时才用 30 分钟，用户把主题轮换设成别的值时会被覆盖 | `KEEP = 7`（`prune()` 与 `wallpapers()` 同步）；`Config` 在该模式下把 `rotationMinutes` 强制设为 30；每日自动拉新维持「回到桌面即检查日期」（同一天只下载一次） |
+
+**涉及文件**：`WallpaperPicker.java`、`LauncherSettingsActivity.java`、`Config.java`、`BingDaily.java`、`values/strings.xml`、`values-zh-rCN/strings.xml`。
 
 ## 实机截图
 

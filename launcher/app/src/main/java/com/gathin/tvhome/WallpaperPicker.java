@@ -25,9 +25,27 @@ import java.util.function.Consumer;
 final class WallpaperPicker {
     private WallpaperPicker() { }
 
+    /** 跟随主题 / 无壁纸 + the local thumbnails. */
     static void show(Activity activity, List<File> images, Consumer<String> picked) {
+        show(activity, images, null, false, picked);
+    }
+
+    /** The same grid with a third special cell, "必应滚动壁纸", which comes back as "bing". */
+    static void show(Activity activity, List<File> images, String bingRow, Consumer<String> picked) {
+        show(activity, images, bingRow, false, picked);
+    }
+
+    /** The kept Bing days themselves, newest first — so picking the collection shows what it kept. */
+    static void showBing(Activity activity, List<File> images, String bingRow, Consumer<String> picked) {
+        show(activity, images, bingRow, true, picked);
+    }
+
+    private static void show(Activity activity, List<File> images, String bingRow, boolean bingView,
+                             Consumer<String> picked) {
         float density = activity.getResources().getDisplayMetrics().density;
         boolean day = PersonalAppearance.day(activity);
+        boolean hasBing = bingRow != null;
+        int specials = hasBing ? 3 : 2;
         ScrollView scroll = new ScrollView(activity);
         GridLayout grid = new GridLayout(activity);
         grid.setColumnCount(3);
@@ -35,7 +53,9 @@ final class WallpaperPicker {
         grid.setPadding(pad, pad, pad, pad);
         scroll.addView(grid);
         TextView title = new TextView(activity);
-        title.setText("壁纸 · " + images.size() + " 张本地精选");
+        title.setText(bingView
+                ? "壁纸 · 必应滚动壁纸（保留 " + images.size() + " 张，最新在前）"
+                : "壁纸 · " + images.size() + " 张本地精选");
         title.setTextSize(22);
         title.setTextColor(day ? 0xFF24384F : 0xFFF3F7FF);
         title.setPadding(pad * 2, Math.round(18 * density), pad * 2, pad);
@@ -47,9 +67,10 @@ final class WallpaperPicker {
         int width = Math.round(Math.min(720 * density,
                 activity.getResources().getDisplayMetrics().widthPixels * 0.86f));
         int cellWidth = (width - 6 * pad) / 3;
-        int total = images.size() + 2;
+        int total = images.size() + specials;
         for (int index = 0; index < total; index++) {
-            final String choice = index == 0 ? null : index == 1 ? "none" : images.get(index - 2).getName();
+            final String choice = index == 0 ? null : index == 1 ? "none"
+                    : hasBing && index == 2 ? "bing" : images.get(index - specials).getName();
             LinearLayout cell = new LinearLayout(activity);
             cell.setId(View.generateViewId());
             cell.setOrientation(LinearLayout.VERTICAL);
@@ -73,10 +94,10 @@ final class WallpaperPicker {
             layout.height = Math.round(118 * density);
             layout.setMargins(pad / 2, pad / 2, pad / 2, pad / 2);
             grid.addView(cell, layout);
-            if (index >= 2) {
+            if (index >= specials) {
                 BitmapFactory.Options options = new BitmapFactory.Options();
                 options.inSampleSize = 8;
-                Bitmap bitmap = BitmapFactory.decodeFile(images.get(index - 2).getAbsolutePath(), options);
+                Bitmap bitmap = BitmapFactory.decodeFile(images.get(index - specials).getAbsolutePath(), options);
                 if (bitmap != null) thumbnails.add(bitmap);
                 ImageView image = new ImageView(activity);
                 image.setScaleType(ImageView.ScaleType.CENTER_CROP);
@@ -85,8 +106,10 @@ final class WallpaperPicker {
                         Math.round(78 * density)));
             }
             TextView label = new TextView(activity);
-            label.setText(index == 0 ? "跟随主题" : index == 1 ? "无壁纸" : PersonalAppearance.wallpaperName(choice));
-            label.setTextSize(index < 2 ? 19 : 14);
+            label.setText(index == 0 ? "跟随主题" : index == 1 ? "无壁纸"
+                    : hasBing && index == 2 ? bingRow
+                    : bingView ? dayLabel(choice) : PersonalAppearance.wallpaperName(choice));
+            label.setTextSize(index < specials ? 18 : 14);
             label.setTextColor(day ? 0xFF24384F : 0xFFF3F7FF);
             label.setGravity(Gravity.CENTER);
             label.setSingleLine(true);
@@ -104,5 +127,10 @@ final class WallpaperPicker {
             dialog.getWindow().setBackgroundDrawable(background);
         }
         if (grid.getChildCount() > 0) grid.getChildAt(0).requestFocus();
+    }
+
+    /** "bing-2026-11-06.jpg" reads as "2026-11-06": the day, not the file name. */
+    private static String dayLabel(String name) {
+        return name.startsWith("bing-") && name.length() >= 15 ? name.substring(5, 15) : name;
     }
 }

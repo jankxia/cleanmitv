@@ -32,8 +32,8 @@ final class BingDaily {
     static final String DATE_KEY = "bing_daily_date";
     /** Where the day's pictures live, beside the theme's wallpapers/ collection. */
     static final String DIR = "bing";
-    /** How many days are kept; older pictures are deleted as new ones arrive. */
-    private static final int KEEP = 10;
+    /** How many days are kept (the newest days stay, newest first); older pictures are deleted. */
+    private static final int KEEP = 7;
 
     private static final String PAGE_URL = "https://bing.wdbyte.com/zh-cn/";
     private static final String JSON_URL =
@@ -135,7 +135,7 @@ final class BingDaily {
 
     /**
      * The kept day files, newest first, for Config to use as the wallpaper collection while the
-     * "必应每日精选" choice is on. Empty when nothing was fetched yet.
+     * "必应滚动壁纸" choice is on, and for the picker to show. Empty when nothing was fetched yet.
      */
     static java.util.List<File> wallpapers(Context context) {
         java.util.List<File> out = new java.util.ArrayList<>();

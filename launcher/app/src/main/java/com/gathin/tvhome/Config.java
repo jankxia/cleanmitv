@@ -616,13 +616,14 @@ final class Config {
             wallpaperEnabled = !chosen.isEmpty();
         }
         if (bing) {
-            // "必应每日精选" is the day pictures collected under files/bing/, newest first: a real
+            // "必应滚动壁纸" is the day pictures collected under files/bing/, newest first: a real
             // collection (it rotates and the picker shows them), not the single overwritten file.
             wallpapers.clear();
             wallpapers.addAll(BingDaily.wallpapers(ctx));
             wallpaper = wallpapers.isEmpty() ? null : wallpapers.get(0);
             wallpaperEnabled = !wallpapers.isEmpty();
-            if (rotationMinutes <= 0) rotationMinutes = 30;
+            // One picture every 30 minutes, whatever the theme's own rotation is set to.
+            rotationMinutes = 30;
         }
         if (personalized) {
             background = PersonalAppearance.background(ctx);

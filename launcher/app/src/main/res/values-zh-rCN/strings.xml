@@ -15,6 +15,9 @@
     <string name="wallpaper_none">无</string>
     <string name="wallpaper_applied">壁纸已更改</string>
     <string name="wallpaper_theme_default">主题默认</string>
+    <string name="wallpaper_row_bing">必应滚动壁纸</string>
+    <string name="bing_wallpaper_empty">还没有拉到必应壁纸：请确认电视已联网后再试一次。</string>
+    <string name="bing_wallpaper_kept">这张是保留的必应壁纸（%1$s），滚动壁纸每 30 分钟自动换一张。</string>
     <string name="animations_state">动态效果：%1$s</string>
     <string name="ambient_motion_state">动态背景：%1$s</string>
     <string name="ambient_motion_hint">关闭后保留 APP 配色和焦点切换，停止背景持续漂移，以降低桌面闲置时的 CPU 占用。</string>

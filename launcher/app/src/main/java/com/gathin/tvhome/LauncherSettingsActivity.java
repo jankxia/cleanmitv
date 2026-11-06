@@ -156,7 +156,7 @@ public final class LauncherSettingsActivity extends Activity {
             int selected = "app".equals(background) ? 0 : "bing".equals(background) ? 2 : 1;
             new AlertDialog.Builder(this).setTitle("背景风格")
                     .setSingleChoiceItems(new String[]{"APP主色渐变 · 随焦点平滑变化",
-                                    "壁纸 · 使用已选图片", "壁纸 · 必应每日精选"},
+                                    "壁纸 · 使用已选图片", "壁纸 · 必应滚动壁纸"},
                             selected, (dialog, which) -> {
                                 if (which == 0) {
                                     choices.edit().putString(PersonalAppearance.BACKGROUND_KEY, "app")
@@ -215,12 +215,12 @@ public final class LauncherSettingsActivity extends Activity {
     }
 
     private void showWallpaperPicker() {
-        // "必应每日精选": the row fetches today's picture again instead of offering single files.
+        // "必应滚动壁纸": the row shows the days already kept (newest first) and pulls today's first.
         if ("bing".equals(choices.getString(PersonalAppearance.BACKGROUND_KEY, "app"))) {
             BingDaily.fetchToday(this, true, (ok, message) -> {
-                Toast.makeText(this, message, Toast.LENGTH_SHORT).show();
                 if (ok) changed();
                 refresh();
+                showBingWallpapers();
             });
             return;
         }
@@ -232,7 +232,11 @@ public final class LauncherSettingsActivity extends Activity {
         if (single != null && single.isFile()
                 && (!PersonalAppearance.enabled(this) || images.isEmpty())) images.add(0, single);
         if (PersonalAppearance.enabled(this)) {
-            WallpaperPicker.show(this, images, choice -> {
+            WallpaperPicker.show(this, images, getString(R.string.wallpaper_row_bing), choice -> {
+                if ("bing".equals(choice)) {
+                    chooseBing();
+                    return;
+                }
                 choices.edit().putString(PersonalAppearance.BACKGROUND_KEY, "wallpaper").apply();
                 if (choice == null) choices.edit().remove(Config.WALLPAPER_CHOICE_KEY).apply();
                 else choices.edit().putString(Config.WALLPAPER_CHOICE_KEY, choice).apply();
@@ -268,6 +272,51 @@ public final class LauncherSettingsActivity extends Activity {
                 })
                 .setNegativeButton(android.R.string.cancel, null)
                 .show();
+    }
+
+    /** Switching to "必应滚动壁纸": pull today's picture, then show the collection that was kept. */
+    private void chooseBing() {
+        choices.edit().putString(PersonalAppearance.BACKGROUND_KEY, "bing")
+                .remove(Config.WALLPAPER_CHOICE_KEY).apply();
+        changed();
+        refresh();
+        BingDaily.fetchToday(this, true, (ok, message) -> {
+            Toast.makeText(this, message, Toast.LENGTH_SHORT).show();
+            if (ok) changed();
+            refresh();
+            showBingWallpapers();
+        });
+    }
+
+    /**
+     * The kept Bing days as the picker's own grid — the first thing a parent sees after choosing it,
+     * so the 7-day collection is verifiable on the TV. A kept picture is only shown, not picked:
+     * the collection rotates the whole set every 30 minutes.
+     */
+    private void showBingWallpapers() {
+        List<File> kept = BingDaily.wallpapers(this);
+        if (kept.isEmpty()) {
+            Toast.makeText(this, R.string.bing_wallpaper_empty, Toast.LENGTH_LONG).show();
+        }
+        WallpaperPicker.showBing(this, kept, getString(R.string.wallpaper_row_bing), choice -> {
+            if ("none".equals(choice)) {
+                choices.edit().putString(PersonalAppearance.BACKGROUND_KEY, "wallpaper")
+                        .putString(Config.WALLPAPER_CHOICE_KEY, "none").apply();
+                changed();
+                refresh();
+                return;
+            }
+            if (choice == null) {
+                // 跟随主题: no explicit wallpaper at all, the theme decides again.
+                choices.edit().remove(PersonalAppearance.BACKGROUND_KEY)
+                        .remove(Config.WALLPAPER_CHOICE_KEY).apply();
+                changed();
+                refresh();
+                return;
+            }
+            String day = choice.length() >= 15 ? choice.substring(5, 15) : choice;
+            Toast.makeText(this, getString(R.string.bing_wallpaper_kept, day), Toast.LENGTH_SHORT).show();
+        });
     }
 
     /** Off, then every app with a TV entry point by name. Saved at once; it is read on the next boot. */
@@ -341,8 +390,13 @@ public final class LauncherSettingsActivity extends Activity {
         TextView backgroundChoice = findViewById(R.id.backgroundChoice);
         if (backgroundChoice != null) {
             String background = choices.getString(PersonalAppearance.BACKGROUND_KEY, "app");
-            backgroundChoice.setText("背景：" + ("bing".equals(background) ? "壁纸 · 必应每日精选"
-                    : PersonalAppearance.appBackdrop(this) ? "APP主色渐变" : "壁纸"));
+            String state;
+            if ("bing".equals(background)) {
+                state = "壁纸 · 必应滚动壁纸（" + BingDaily.wallpapers(this).size() + " 张）";
+            } else {
+                state = PersonalAppearance.appBackdrop(this) ? "APP主色渐变" : "壁纸";
+            }
+            backgroundChoice.setText("背景：" + state);
         }
         if (appearance != null) appearance.setText("外观模式：" + AppearancePolicy.label(PersonalAppearance.mode(this)));
         for (int i = 0; i < columnChoices.length; i++) {
@@ -365,7 +419,8 @@ public final class LauncherSettingsActivity extends Activity {
         ambientMotionChoice.setAlpha(animations ? 1f : 0.5f);
         String wallpaperCurrent = choices.getString(Config.WALLPAPER_CHOICE_KEY, null);
         wallpaperChoice.setText(getString(R.string.wallpaper_state,
-                "bing".equals(choices.getString(PersonalAppearance.BACKGROUND_KEY, "app")) ? "必应每日精选"
+                "bing".equals(choices.getString(PersonalAppearance.BACKGROUND_KEY, "app"))
+                        ? "必应滚动壁纸（" + BingDaily.wallpapers(this).size() + " 张，30 分钟一换）"
                         : "none".equals(wallpaperCurrent) ? getString(R.string.wallpaper_none)
                         : wallpaperCurrent != null ? PersonalAppearance.wallpaperName(wallpaperCurrent)
                         : getString(R.string.wallpaper_theme_default)));

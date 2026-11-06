@@ -56,6 +56,9 @@
     <string name="wallpaper_none">None</string>
     <string name="wallpaper_applied">Wallpaper changed</string>
     <string name="wallpaper_theme_default">Theme default</string>
+    <string name="wallpaper_row_bing">Bing daily</string>
+    <string name="bing_wallpaper_empty">No Bing picture yet — connect the TV to the network and try again.</string>
+    <string name="bing_wallpaper_kept">Kept Bing picture %1$s. The collection rotates one picture every 30 minutes.</string>
     <string name="animations_state">Animations: %1$s</string>
     <string name="ambient_motion_state">Ambient background: %1$s</string>
     <string name="ambient_motion_hint">Off keeps app colours and focus changes, but stops continuous background drift to reduce idle CPU use.</string>
