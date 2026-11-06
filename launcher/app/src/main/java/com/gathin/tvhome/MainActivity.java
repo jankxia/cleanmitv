@@ -674,6 +674,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
                 }
             }
         });
+
         // Liquid feel: soft springs on the highlight's position.
         springX = new SpringAnimation(glass, new FloatPropertyCompat<View>("glassContentX") {
             @Override
@@ -736,35 +737,6 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
             libraryFromTopBar = true;   // closing it goes back to this button, not to the pill after the last row
         });
         btnLibraryTop.setVisibility(cfg.libraryButton && cfg.appLibrary ? View.VISIBLE : View.GONE);
-
-        // The App library pill keeps a row of its own under the grid (libraryPillRow), right below the
-        // dock row that closes it: centred, never over a tile, and no tile's size or spacing changes.
-        libraryPillRow = findViewById(R.id.libraryPillRow);
-        libraryPill = findViewById(R.id.libraryPill);
-        appLibraryPillConfigured = cfg.appLibrary
-                && LibraryApps.showPill(cfg.appLibrary, cfg.libraryButton, cfg.showLibraryPill);
-        libraryPill.setOnClickListener(v -> onLibraryRequested());
-        libraryPill.setOnFocusChangeListener((v, focused) -> { if (focused) onLibraryFocused(); });
-        libraryPill.setOnKeyListener((v, keyCode, event) -> {
-            if (event.getAction() != KeyEvent.ACTION_DOWN) return false;
-            switch (keyCode) {
-                case KeyEvent.KEYCODE_DPAD_UP:
-                    onLibraryUp();                                // back up into the dock row, or the last row of apps
-                    return true;
-                case KeyEvent.KEYCODE_DPAD_DOWN:
-                    // The dock row is positions 0..COLUMNS-1: Down from the pill enters the apps under it.
-                    if (adapter != null && adapter.appCount() > 1) {
-                        focusTile(Math.min(COLUMNS, adapter.appCount() - 1));
-                    }
-                    return true;
-                case KeyEvent.KEYCODE_DPAD_LEFT:
-                case KeyEvent.KEYCODE_DPAD_RIGHT:
-                    return true;                                  // a single pill: no sideways step
-                default:
-                    return false;
-            }
-        });
-        updateLibraryPill();
         addTopBarApps(cfg.topBarApps);
         iconOnlyButtons = cfg.iconOnlyButtons;
         topMenu = cfg.topMenu;
@@ -889,7 +861,6 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         if (lastKidsActive != null && lastKidsActive != active) reloadApps(true);
         else if (active && !tilesMatchKidsMode()) reloadApps(true);
         lastKidsActive = active;
-        updateLibraryPill();          // Kids/Elders mode keeps the App library pill off Home
         Kids.Lock lock = Kids.lockNow(System.currentTimeMillis());
         if (lock != null && !KidsWatch.lockScreenShowing) {
             Intent i = new Intent(this, KidsLockActivity.class);
@@ -1156,8 +1127,10 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
      */
     private void reloadApps(boolean animate, boolean rebuild, boolean entrance) {
         cancelPendingFocusScroll();
-        // The pill is outside the grid now: focus on it survives a rebuild on its own.
-        final boolean restoreLibrary = libraryPillShown() && libraryPill.hasFocus();
+        RecyclerView.ViewHolder footer = grid.findViewHolderForAdapterPosition(adapter.appCount());
+        final boolean restoreLibrary = adapter.isLibraryAt(adapter.appCount()) && footer != null
+                && footer.itemView.findViewById(R.id.btnLibrary) != null
+                && footer.itemView.findViewById(R.id.btnLibrary).hasFocus();
         // Capture the app before rebinding can move focus and overwrite its key.
         final String returnKey = lastFocusedKey;
         final int returnSlot = lastFocused;
@@ -1193,7 +1166,6 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
             startPendingSettingsReorder();
             showCardPrompt();
         }
-        updateLibraryPill();        // the app count changed: the pill may appear or go, and its row with it
     }
 
     /** True when PackageManager reports apps changed since the last rebuild (one binder call). */
@@ -1449,8 +1421,8 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         }
         int pos = focusedTilePosition();
         View focus = getCurrentFocus();
-        if (ok && focus != null && (focus.getId() == R.id.btnLibrary || focus.getId() == R.id.libraryPill)) {
-            // The App library pill is no tile: OK ends the mode (saving the order) and opens it.
+        if (ok && focus != null && focus.getId() == R.id.btnLibrary) {
+            // The App library pill sits in the grid but is no tile: OK ends the mode (saving the order) and opens it.
             if (event.getAction() == KeyEvent.ACTION_UP && !event.isCanceled()) {
                 endReorder();
                 onLibraryRequested();
@@ -2390,7 +2362,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
             boolean forward = rtlAppGrid ? keyCode == KeyEvent.KEYCODE_DPAD_LEFT : keyCode == KeyEvent.KEYCODE_DPAD_RIGHT;
             int last = adapter.focusablePosition(count - 1);
             if (forward && position >= last) {
-                if (libraryPillShown()) focusLibrary();
+                if (adapter.isLibraryAt(count)) focusLibrary();
                 return true;
             }
             return !forward && position == 0;
@@ -2399,7 +2371,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         // escapes up into the top bar. Mid-row moves fall through to the default focus search.
         if (keyCode == KeyEvent.KEYCODE_DPAD_LEFT || keyCode == KeyEvent.KEYCODE_DPAD_RIGHT) {
             boolean forward = rtlAppGrid ? keyCode == KeyEvent.KEYCODE_DPAD_LEFT : keyCode == KeyEvent.KEYCODE_DPAD_RIGHT;
-            if (forward && position == adapter.focusablePosition(count - 1) && libraryPillShown()) {
+            if (forward && position == adapter.focusablePosition(count - 1) && adapter.isLibraryAt(count)) {
                 focusLibrary();
                 return true;
             }
@@ -2412,14 +2384,9 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
             if (position < COLUMNS) return false;          // dock row: let focus move to the top bar
             target = position - COLUMNS;
         } else {
-            // Down from the dock row goes to the pill's own row, which sits right under it.
-            if (position < COLUMNS && libraryPillShown()) {
-                focusLibrary();
-                return true;
-            }
             int lastRowStart = ((count - 1) / COLUMNS) * COLUMNS;
             if (position >= lastRowStart) {
-                if (libraryPillShown()) focusLibrary();    // the pill's row is right under the last row of apps
+                if (adapter.isLibraryAt(count)) focusLibrary();
                 return true;
             }
             target = Math.min(position + COLUMNS, count - 1);
@@ -2435,20 +2402,6 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         libraryFocusPending = false;
         hideGlass();
         hideHero();
-    }
-
-    /** Shows the pill's own row where the config asks for it (never in Kids/Elders mode, never with no apps). */
-    private void updateLibraryPill() {
-        if (libraryPillRow == null || adapter == null) return;
-        boolean shown = appLibraryPillConfigured
-                && !Kids.active()
-                && adapter.appCount() > 0;
-        libraryPillRow.setVisibility(shown ? View.VISIBLE : View.GONE);
-    }
-
-    /** True while the App library pill is part of Home (config, no Kids/Elders mode, apps to show). */
-    private boolean libraryPillShown() {
-        return libraryPillRow != null && libraryPillRow.getVisibility() == View.VISIBLE;
     }
 
     /**
@@ -2523,18 +2476,46 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
 
     @Override public void onLibraryUp() {
         if (adapter.appCount() == 0) { firstTopButton().requestFocus(); return; }
-        // The pill's row sits under the dock row: Up goes back to the dock when the pill was reached from
-        // there, and to the last row of apps when it was reached from the grid.
-        if (lastFocused < COLUMNS) { focusTile(lastFocused); return; }
         int lastRow = ((adapter.appCount() - 1) / COLUMNS) * COLUMNS;
         focusTile(Math.min(lastRow + lastFocused % COLUMNS, adapter.appCount() - 1));
     }
 
     private void focusLibrary() {
         cancelPendingFocusScroll();
-        if (!libraryPillShown()) return;
-        // The pill has its own row outside the grid: nothing to scroll to, only focus to hand over.
-        if (libraryPill.hasFocus() || libraryPill.requestFocus()) libraryFocusPending = false;
+        int position = adapter.appCount();
+        if (!adapter.isLibraryAt(position)) return;
+        RecyclerView.ViewHolder holder = grid.findViewHolderForAdapterPosition(position);
+        if (holder != null) {
+            View button = holder.itemView.findViewById(R.id.btnLibrary);
+            Rect visible = new Rect();
+            if (button.getGlobalVisibleRect(visible) && visible.height() >= button.getHeight()) {
+                if (button.requestFocus()) libraryFocusPending = false;
+                return;
+            }
+        }
+        if (!animations) {
+            grid.scrollToPosition(position);
+            grid.post(() -> {
+                if (appLibrary != null || !hasWindowFocus()) return;
+                RecyclerView.ViewHolder footer = grid.findViewHolderForAdapterPosition(adapter.appCount());
+                if (footer != null && adapter.isLibraryAt(adapter.appCount())
+                        && footer.itemView.findViewById(R.id.btnLibrary).requestFocus()) libraryFocusPending = false;
+            });
+            return;
+        }
+        pendingFocusScroll = new RecyclerView.OnScrollListener() {
+            @Override public void onScrollStateChanged(@NonNull RecyclerView rv, int state) {
+                if (state != RecyclerView.SCROLL_STATE_IDLE) return;
+                rv.removeOnScrollListener(this);
+                if (pendingFocusScroll != this) return;
+                pendingFocusScroll = null;
+                RecyclerView.ViewHolder footer = rv.findViewHolderForAdapterPosition(position);
+                if (footer != null && footer.itemView.findViewById(R.id.btnLibrary).requestFocus())
+                    libraryFocusPending = false;
+            }
+        };
+        grid.addOnScrollListener(pendingFocusScroll);
+        grid.smoothScrollToPosition(position);
     }
 
     private void cancelPendingFocusScroll() {
@@ -2549,7 +2530,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         libraryFocusPending = false;
         cancelPendingFocusScroll();
         if (adapter.appCount() == 0) {
-            if (libraryPillShown()) focusLibrary();
+            if (adapter.isLibraryAt(0)) focusLibrary();
             else firstTopButton().requestFocus();
             return;
         }
@@ -2855,13 +2836,6 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
     private boolean pinOpen;
     /** The open library came from that button: closing it returns there instead of scrolling to the grid's end. */
     private boolean libraryFromTopBar;
-
-    /** The row the App library pill owns under the grid (gone while the pill is off Home). */
-    private View libraryPillRow;
-    /** The App library pill: a row of its own under the grid, never a grid row itself. */
-    private TextView libraryPill;
-    /** app_library + library_button/show_library_pill (read once in onCreate; cfg is local there). */
-    private boolean appLibraryPillConfigured;
 
     /** Turns a labelled top pill into the round TopButtonIcon shape: no text, the icon centred by even padding. */
     private void makeIconOnly(TextView pill) {

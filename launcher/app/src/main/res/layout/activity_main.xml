@@ -398,24 +398,6 @@
                 android:overScrollMode="never"
                 android:scrollbars="none"
                 android:descendantFocusability="afterDescendants" />
-
-            <!-- The App library pill is no grid row any more: it keeps a row of its own under the grid. -->
-        </FrameLayout>
-
-        <!-- The App library pill's own row: it sits directly under the dock row (which closes the grid)
-             and is centred, so no app tile is ever covered and no tile's size or spacing changes. -->
-        <FrameLayout
-            android:id="@+id/libraryPillRow"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:visibility="gone">
-
-            <TextView
-                android:id="@+id/libraryPill"
-                style="@style/LibraryPill"
-                android:layout_gravity="center_horizontal"
-                android:text="@string/app_library"
-                android:drawableStart="@drawable/ic_apps_pill" />
         </FrameLayout>
     </LinearLayout>
 

@@ -29,8 +29,8 @@ android {
         applicationId providers.gradleProperty('launcherApplicationId').getOrElse('com.gathin.tvhome')
         minSdk 26
         targetSdk 34
-        versionCode 14
-        versionName '2.8.2-library-row'
+        versionCode 13
+        versionName '2.8.1-settings-weather'
         resConfigs 'en', 'zh-rCN'
     }
 
