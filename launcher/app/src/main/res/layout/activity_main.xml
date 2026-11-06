@@ -398,6 +398,17 @@
                 android:overScrollMode="never"
                 android:scrollbars="none"
                 android:descendantFocusability="afterDescendants" />
+
+            <!-- The App library pill is no grid row any more: it floats in the room between the dock
+                 row and the app grid, and drops to the grid's bottom while an app tile is focused.
+                 MainActivity.placeLibraryPill owns its vertical position. -->
+            <TextView
+                android:id="@+id/libraryPill"
+                style="@style/LibraryPill"
+                android:layout_gravity="top|center_horizontal"
+                android:visibility="gone"
+                android:text="@string/app_library"
+                android:drawableStart="@drawable/ic_apps_pill" />
         </FrameLayout>
     </LinearLayout>
 

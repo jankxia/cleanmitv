@@ -578,10 +578,11 @@ public class AppAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
     int appCount() { return items.size(); }
 
     /**
-     * The App library pill after the last row. Kids/Elders mode keeps it off: there Home shows the
-     * picked apps only, and the mode's own card is the one way out.
+     * The App library pill is no longer a row of the grid. It is a view of its own, floating in the room
+     * between the dock row and the app grid (MainActivity.placeLibraryPill); a grid row for it pushed one
+     * row of the owner's apps off a short screen. Kids/Elders mode keeps it off, as before.
      */
-    private boolean footerLibrary() { return showLibrary && kidsAllowed == null; }
+    private boolean footerLibrary() { return false; }
 
     boolean isLibraryAt(int position) { return footerLibrary() && position == items.size(); }
 
