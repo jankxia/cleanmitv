@@ -28,7 +28,7 @@ CleanMiTV 的底子来自 **[CleanYourTV](https://github.com/Gathin23/cleanyourt
 | 🇨🇳 **国行小米适配** | 底栏预设飞牛TV、Nova、云视听极光、云视听小电视；「设置」大齿轮直达小米原生设置；补上原厂「文件管理」入口；直播使用小米 `tvplayer` |
 | 📦 **更小的包** | 只保留简体中文和英文资源，APK 约 360 KB |
 | 👧 **儿童与老人模式** | 移植 [aerial-tv](https://github.com/pengchujin/aerial-tv) 的 Kids Mode：儿童/老人模式、4 位 PIN 锁、时长/作息/休息限制、应用白名单、全屏锁定，详见下方 [儿童与老人模式](#儿童与老人模式kids--elders-mode) |
-| 🏞️ **必应滚动壁纸** | 「壁纸 · 使用已选图片」的选择弹窗里，「跟随主题」「无壁纸」旁边多一格「壁纸 · 必应滚动壁纸」：拉取 [bing.wdbyte.com/zh-cn/](https://bing.wdbyte.com/zh-cn/) 的当日 4K 图（Bing 官方接口兜底），保留最近 7 天、最新在前，选完立刻能看到保留的图片，固定 30 分钟换一张并跟随网站每日自动更新，详见下方 [必应滚动壁纸](#必应滚动壁纸bing-rolling-wallpaper) |
+| 🏞️ **必应滚动壁纸** | 「壁纸 · 使用已选图片」的选择弹窗里，「跟随主题」「无壁纸」旁边多一格「壁纸 · 必应滚动壁纸」：一次拉取 [bing.wdbyte.com/zh-cn/](https://bing.wdbyte.com/zh-cn/) 图集里最近 7 天的 4K 图（Bing 官方接口兜底），保留最近 7 天、最新在前，选完立刻能看到保留的图片，固定 30 分钟换一张并跟随网站每日自动更新，详见下方 [必应滚动壁纸](#必应滚动壁纸bing-rolling-wallpaper) |
 
 同时保留了小爱同学、投屏、HDMI / CEC、幻彩随影、米家和系统更新等原厂功能，只停用了统计和诊断组件。
 
@@ -92,7 +92,8 @@ launcher/app/src/main/res/drawable/
 
 **行为**
 
-- **选中即可见**：点「必应滚动壁纸」后先拉当日图，随后立刻把这个图集弹出来——你能直接看到保留下来的每一张，标题写着「保留 N 张，最新在前」。
+- **选中即可见**：点「必应滚动壁纸」后先拉图，随后立刻把这个图集弹出来——你能直接看到保留下来的每一张，标题写着「保留 N 张，最新在前」。
+- **首次就补满 7 天**：一次抓取就解析站内图集里最近 7 天的 4K 直链（按 `data-date` 取日期、同一天只取一张），缺哪天补哪天，所以第一次选中看到的已经是 7 张，不用等一周才凑齐；已下载的日期会跳过，不会重复占流量。
 - **7 天滚动**：每天一张，存 `files/bing/bing-<日期>.jpg`，最多保留最近 **7 天**，最新的排第一，第 8 天到时最旧那张自动删除。
 - **30 分钟换一张**：这个模式下轮换固定为 30 分钟（不受主题自带轮换设置影响），7 张图循环播放。
 - **自动拉新**：桌面每次回到前台都会检查日期，跨天自动下载当日新图并热刷新壁纸（同一天只下一次）；站点不可达时回退 Bing 官方 `HPImageArchive` JSON，拉不到也不影响已有图集。
@@ -102,7 +103,7 @@ launcher/app/src/main/res/drawable/
 
 ```
 launcher/app/src/main/java/com/gathin/tvhome/
-  BingDaily.java   必应滚动壁纸：解析 wdbyte 页面 4K 直链 / Bing 官方接口兜底，
+  BingDaily.java   必应滚动壁纸：解析 wdbyte 图集最近 7 天的 4K 直链 / Bing 官方接口兜底，
                    后台下载并按日期落盘到 files/bing/，只留最近 7 天、最新在前
 ```
 
@@ -152,6 +153,16 @@ launcher/app/src/main/java/com/gathin/tvhome/
 
 **涉及文件**：`WallpaperPicker.java`、`LauncherSettingsActivity.java`、`Config.java`、`BingDaily.java`、`values/strings.xml`、`values-zh-rCN/strings.xml`、`app/build.gradle`、`.github/workflows/build-apk.yml`。
 
+## v2.7.11 修改记录（实机验证 + 首次补满 7 天）
+
+| # | 反馈 | 原因 | 修复 |
+|---|---|---|---|
+| 1 | 选中「必应滚动壁纸」后只看到 1 张，说好的「保留最近 7 天」要等一周才凑齐 | `BingDaily` 每次只解析站内图集的第一个 4K 直链，存成 `bing-<今天>.jpg` 就结束 —— 天数是靠时间累积，不是靠图集本身 | `BingDaily` 新增 `ENTRY` 正则，按 `<a ... data-date>` 一次解析出最近 7 天的「日期 + 4K 直链」；`fetchToday` 循环下载缺失的日期（已有文件跳过），一次补满 7 张，标题随即显示「保留 7 张，最新在前」 |
+| 2 | 自动拉新不该重复下载已有的图 | 原逻辑只比较「今天抓过没有」 | `DATE_KEY` 仍记当天（同一天只跑一次抓取），但下载按 `bing-<日期>.jpg` 是否存在判断，跨天只补新增的那一张 |
+| 3 | 装到电视后要确认弹窗真有三格、真能看到保留图、桌面真换了图 | 上一版只验证了编译与签名 | 用 `input tap` + `uiautomator dump` + `screencap` 在 MiTV-ASTR0 上实测：「壁纸 · 0 张本地精选」弹窗出现「跟随主题 / 无壁纸 / 必应滚动壁纸」三格 → 点第三格后标题变「壁纸 · 必应滚动壁纸（保留 1 张，最新在前）」并出现带 `2026-11-06` 标签的缩略图 → 设置页该行变「壁纸：必应滚动壁纸（1 张，30 分钟一换）」→ 回桌面背景已换成当日 4K 竹林图，`files/bing/bing-2026-11-06.jpg`（1.9 MB）已落盘 |
+
+**涉及文件**：`BingDaily.java`、`app/build.gradle`（`versionCode` 10 → 11，`versionName` → `2.7.11-bing-seven`）。
+
 ## 实机截图
 
 所有截图都用 adb 直接从电视上截取，没有修图。
@@ -178,7 +189,7 @@ launcher/app/src/main/java/com/gathin/tvhome/
 
 ## 下载与安装
 
-**安装包：** 到 [Releases](https://github.com/sqlsec/cleanmitv/releases/latest) 下载 `CleanMiTV-2.7.5-local-MiTV-OS3.apk`，或直接用仓库里的 [`release/CleanMiTV-2.7.5-local-MiTV-OS3.apk`](release/CleanMiTV-2.7.5-local-MiTV-OS3.apk)（版本 2.7.5-local）
+**安装包：** 到本 fork 的 [Releases](https://github.com/jankxia/cleanmitv/releases) 下载最新的 `tvhome-v*-signed.apk`（当前为 `tvhome-v2.7.11-bing-seven-signed.apk`）；原项目的 `CleanMiTV-2.7.5-local-MiTV-OS3.apk`（版本 2.7.5-local）仍在 [原仓库 release 目录](https://github.com/sqlsec/cleanmitv/tree/main/release)
 
 > ⚠️ 这个包针对小米 OS3 国行固件构建。该固件只允许白名单内的包名成为第三方 Home，所以用 `-PlauncherApplicationId=com.ts.launcher` 编译。Java 代码的命名空间仍然是 `com.gathin.tvhome`，没有修改系统、固件或签名权限。如果你的电视已经装了同包名的其他应用，会出现签名冲突。
 
@@ -186,7 +197,7 @@ launcher/app/src/main/java/com/gathin/tvhome/
 
 ```bash
 adb uninstall com.ts.launcher        # 只会删这一份 launcher 的数据，卸载后马上装新的
-adb install tvhome-v2.7.10-bing-rolling.apk
+adb install tvhome-v2.7.11-bing-seven-signed.apk
 ```
 
 之后再换版本就只需要 `adb install -r`。其他机型请按下方步骤从源码编译默认包名版本。
@@ -211,6 +222,7 @@ cd launcher
 
 - 255 项单元测试通过，`lintRelease` 通过，APK 低于原项目 512 KiB 的上限。
 - 已在 MiTV-MFTR0 上实机验证：Home 接管、重启后仍保持、日夜模式、16 张壁纸、APP 主色切换、文件管理和小米设置入口，以及 HDMI 输入切换。
+- 本 fork 另在 MiTV-ASTR0（Android 11，包名 `com.ts.launcher`）上用 adb 实测：三颗顶栏胶囊、设置下拉菜单（输入源 / 网络 / 隐藏设置 / 系统设置 / 进入儿童模式 / 进入老人模式 / 调整应用顺序）、壁纸弹窗三格（跟随主题 / 无壁纸 / 必应滚动壁纸）、必应图集标题「保留 N 张，最新在前」与日期标签、桌面换成当日必应 4K 图。
 - 这台电视的应用显示模式只有 1080p 60 Hz，所以本项目不宣称桌面能跑到 120 / 144 Hz。CPU 数据来自电视 `top` 的短时采样，只用于同一台机器、同一场景下的前后对比。
 
 ## 许可证
