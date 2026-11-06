@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="lunar_date_format">農曆%2$s月%1$d日 · %3$s</string>
+    <string name="lunar_date_cn">農曆%1$s%2$s · %3$s年</string>
     <string name="lunar_month_leap">閏%1$d</string>
     <string name="lunar_year">%1$s%2$s年</string>
     <string-array name="lunar_stems">

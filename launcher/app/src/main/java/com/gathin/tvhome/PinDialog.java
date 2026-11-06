@@ -142,12 +142,12 @@ public final class PinDialog extends Dialog {
             TextView dot = (TextView) dots.getChildAt(i);
             GradientDrawable g = new GradientDrawable();
             g.setShape(GradientDrawable.OVAL);
-            g.setColor(!arrows && i < entered.length() ? 0xFFFFFFFF : 0x00000000);
+            g.setColor(i < entered.length() ? 0xFFFFFFFF : 0x00000000);
             g.setStroke((int) (1.5f * density), Color.WHITE);
             dot.setBackground(g);
-            // In arrows mode the dot spells the press it holds, so the parent can read the four back.
-            dot.setText(arrows && i < entered.length()
-                    ? String.valueOf(arrowGlyph(entered.charAt(i))) : "");
+            // The dots fill in as presses land, but never spell the press back out: in arrows mode a
+            // shoulder surfer would otherwise read the whole PIN off the screen.
+            dot.setText("");
         }
 
         if (arrows) {

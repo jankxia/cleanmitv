@@ -47,6 +47,7 @@
     <string name="home_settings">Choose default home</string>
     <string name="home_settings_help">Select your original home to stop using CleanYourTV as Home, or CleanYourTV to switch back. The original launcher must be enabled and your TV must provide a home picker; use the restore script first if it was disabled.</string>
     <string name="launcher_settings">隐藏设置</string>
+    <string name="header_settings">设置</string>
     <string name="native_settings">设置</string>
     <string name="columns_label">Apps per row</string>
     <string name="rows_below_dock_label">Rows below dock</string>
@@ -190,6 +191,12 @@
     <string name="kids_mode_exit">Leave Kids mode</string>
     <string name="elders_mode_enter">Open Elders mode</string>
     <string name="elders_mode_exit">Leave Elders mode</string>
+    <string name="kids_elders_mode">Kids / Elders mode</string>
+    <string name="mode_leave">Leave the mode</string>
+    <string name="weather_city">Weather city</string>
+    <string name="weather_city_state">Weather city: %1$s</string>
+    <string name="weather_line">%1$s · %2$s %3$d℃</string>
+    <string name="weather_loading">%1$s · getting the weather…</string>
     <string name="system_settings">System settings</string>
     <string name="kids_no_apps_tip">No app picked: Home shows only the mode card — press it for the PIN to leave.</string>
     <string name="kids_parent">Parent</string>

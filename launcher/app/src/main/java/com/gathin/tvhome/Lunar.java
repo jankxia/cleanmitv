@@ -22,14 +22,34 @@ final class Lunar {
         return "vi".equals(locale.getLanguage()) ? 7 : 8;
     }
 
+    /** 农历月名，index 0 = 正月. */
+    private static final String[] ZH_MONTHS = {
+            "正月", "二月", "三月", "四月", "五月", "六月",
+            "七月", "八月", "九月", "十月", "十一月", "十二月"};
+
+    /** 农历日名，index 1 = 初一 … 30 = 三十. */
+    private static final String[] ZH_DAYS = {
+            "", "初一", "初二", "初三", "初四", "初五", "初六", "初七", "初八", "初九", "初十",
+            "十一", "十二", "十三", "十四", "十五", "十六", "十七", "十八", "十九", "二十",
+            "廿一", "廿二", "廿三", "廿四", "廿五", "廿六", "廿七", "廿八", "廿九", "三十"};
+
     /** Today's lunar date, formatted with the locale's strings. */
     static String today(Resources res, int utcOffset) {
         Calendar c = Calendar.getInstance();
         int[] l = fromSolar(c.get(Calendar.DAY_OF_MONTH), c.get(Calendar.MONTH) + 1, c.get(Calendar.YEAR), utcOffset);
-        String month = l[3] == 1 ? res.getString(R.string.lunar_month_leap, l[1]) : String.valueOf(l[1]);
         String[] stems = res.getStringArray(R.array.lunar_stems);
         String[] branches = res.getStringArray(R.array.lunar_branches);
-        String year = res.getString(R.string.lunar_year, stems[Math.floorMod(l[2] + 6, 10)], branches[Math.floorMod(l[2] + 8, 12)]);
+        String yearName = stems[Math.floorMod(l[2] + 6, 10)] + branches[Math.floorMod(l[2] + 8, 12)];
+        // Chinese reads the date as 十月初七, not 10月7日: the month and day names have their own table.
+        if ("zh".equals(Locale.getDefault().getLanguage())) {
+            String month = (l[3] == 1 ? "闰" : "")
+                    + ZH_MONTHS[Math.max(0, Math.min(ZH_MONTHS.length - 1, l[1] - 1))];
+            String day = ZH_DAYS[Math.max(1, Math.min(ZH_DAYS.length - 1, l[0]))];
+            return res.getString(R.string.lunar_date_cn, month, day, yearName);
+        }
+        String month = l[3] == 1 ? res.getString(R.string.lunar_month_leap, l[1]) : String.valueOf(l[1]);
+        String year = res.getString(R.string.lunar_year, stems[Math.floorMod(l[2] + 6, 10)],
+                branches[Math.floorMod(l[2] + 8, 12)]);
         return res.getString(R.string.lunar_date_format, l[0], month, year);
     }
 

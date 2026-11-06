@@ -3,6 +3,7 @@
      calendar is used (vi, zh-rCN, zh-rTW); other locales show the English names on purpose. -->
 <resources xmlns:tools="http://schemas.android.com/tools" tools:ignore="MissingTranslation">
     <string name="lunar_date_format">Lunar %1$d/%2$s · %3$s</string>
+    <string name="lunar_date_cn">Lunar %1$s %2$s · %3$s</string>
     <string name="lunar_month_leap">%1$d (leap)</string>
     <string name="lunar_year">Year of the %2$s</string>
     <string-array name="lunar_stems">

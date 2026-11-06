@@ -101,6 +101,7 @@ public final class LauncherSettingsActivity extends Activity {
         }
         wallpaperChoice = findViewById(R.id.wallpaperChoice);
         wallpaperChoice.setOnClickListener(v -> showWallpaperPicker());
+        findViewById(R.id.weatherCityChoice).setOnClickListener(v -> showWeatherCityPicker());
         animationsChoice = findViewById(R.id.animationsChoice);
         animationsChoice.setOnClickListener(v -> {
             animations = !animations;
@@ -212,6 +213,28 @@ public final class LauncherSettingsActivity extends Activity {
                     refresh();
                     PersonalAppearance.settings(this);
                 }).setNegativeButton(android.R.string.cancel, null).show();
+    }
+
+    /** The city the weather line reports: one list of every city Weather knows by name. */
+    private void showWeatherCityPicker() {
+        String city = Weather.city(this);
+        int checked = 0;
+        String[] names = new String[Weather.CITIES.length];
+        for (int i = 0; i < names.length; i++) {
+            names[i] = Weather.CITIES[i][0];
+            if (names[i].equals(city)) checked = i;
+        }
+        new AlertDialog.Builder(this)
+                .setTitle(R.string.weather_city)
+                .setSingleChoiceItems(names, checked, (dialog, which) -> {
+                    Weather.setCity(this, names[which]);
+                    // Fetch the new city now, so the line is right the moment Home comes back.
+                    Weather.refresh(this, true, line -> refresh());
+                    refresh();
+                    dialog.dismiss();
+                })
+                .setNegativeButton(android.R.string.cancel, null)
+                .show();
     }
 
     private void showWallpaperPicker() {
@@ -425,6 +448,10 @@ public final class LauncherSettingsActivity extends Activity {
                         : wallpaperCurrent != null ? PersonalAppearance.wallpaperName(wallpaperCurrent)
                         : getString(R.string.wallpaper_theme_default)));
         openOnStartChoice.setText(getString(R.string.open_on_start_state, openOnStartLabel()));
+        TextView weatherCity = findViewById(R.id.weatherCityChoice);
+        if (weatherCity != null) {
+            weatherCity.setText(getString(R.string.weather_city_state, Weather.city(this)));
+        }
         followThemeChoice.setSelected(!hasOnTvChoices());
     }
 

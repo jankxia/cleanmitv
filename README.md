@@ -41,19 +41,19 @@ CleanMiTV 的底子来自 **[CleanYourTV](https://github.com/Gathin23/cleanyourt
 
 - **儿童模式 / 老人模式**：桌面只显示你选择的应用，按选择顺序排列，没有你没选的任何东西。**一个应用都不选也可以进入**——那是「隐藏所有程序」的用法：主页只剩一张「儿童模式」卡片。
 - **时间限制（仅儿童）**：工作日 / 周末每日时长（不限 / 30 / 60 / 90 / 120 分钟）；最晚看到（不限 / 20:00 / 21:00 / 22:00）；休息间隔（关 / 30 / 45 / 60 分钟，看满间隔休息 5 分钟）。
-- **家长 PIN**：4 位 PIN（SHA-256 存储），可选两种输入方式：「4 位数字」（屏幕数字键盘或遥控数字键）、「4 个方向键」（遥控上按 ↑ ↓ ← → 组合，屏幕上会显示已按下的箭头）。退出模式、锁屏后给更多时间（15 / 30 / 60 分钟 / 今天不限）都需 PIN。
+- **家长 PIN**：4 位 PIN（SHA-256 存储），可选两种输入方式：「4 位数字」（屏幕数字键盘或遥控数字键）、「4 个方向键」（遥控上按 ↑ ↓ ← → 组合；屏幕上只把 4 个圆点逐格填满，**不回显按了哪个方向**，防止旁边的人照着屏幕记下 PIN）。退出模式、锁屏后给更多时间（15 / 30 / 60 分钟 / 今天不限）都需 PIN。
 - **全屏锁定**：今日时长用完 / 超过最晚时间 / 休息中都会全屏锁定，按返回键无效；锁定期间点任何应用都会直接弹出锁定界面（而不是看起来「点了没反应」）。
-- **家长退出入口**：右上角按钮在三种模式下**保持原样**（同样的按钮、同样的位置、同样的文字，不会变成「家长」按钮）。点「设置」弹出下拉菜单，其中固定有「系统设置」「桌面设置」以及「进入儿童模式 / 退出儿童模式」「进入老人模式 / 退出老人模式」——菜单文案随当前模式自动切换。退出同样要输 PIN；主页里的「儿童模式」卡片、遥控器的设置键 / 菜单键也都是同一个 PIN 退出。
+- **家长退出入口**：右上角按钮在三种模式下**保持原样**（同样的按钮、同样的位置、同样的文字，不会变成「家长」按钮）。顶栏那颗胶囊现在叫「设置」（点开后页内大标题仍是「隐藏设置」），下拉菜单行序为：输入源 / 网络 / 隐藏设置 / 系统设置 / **儿童/老人模式** / 调整应用顺序；「儿童/老人模式」是一行按钮，点开二级列表再选「进入儿童模式」「进入老人模式」，模式开着时多一项「退出当前模式」。退出同样要输 PIN；主页里的「儿童模式」卡片、遥控器的设置键 / 菜单键也都是同一个 PIN 退出。
 - **防绕过**：家长用 PIN 退出后，电视熄屏或屏保出现时自动恢复模式。
 - **阻止其他应用（仅儿童，默认开启）**：锁定时任何应用都进不去；未锁定且「阻止」开启时，非允许应用也会被拉回桌面（无障碍服务为主，UsageStats 兜底）。
 
 **开启方法**
 
-1. 桌面顶栏点「设置」→ 下拉菜单里点「进入儿童模式」/「进入老人模式」（也会打开同一个设置界面）。
+1. 桌面顶栏点「设置」→ 下拉菜单里点「儿童/老人模式」→ 选「进入儿童模式」/「进入老人模式」（也会打开同一个设置界面）。
 2. 右侧选择要给孩子用的应用，左侧设置对象（儿童/老人）、时长、最晚时间、休息间隔。**不选任何应用也可以**：这时主页不显示任何程序，只剩一张「儿童模式」卡片。
 3. 点「设置 PIN」设一个 4 位家长 PIN，弹窗里选输入方式：数字或方向键（未设置 PIN 时点「启动」会先要求设置，设完直接进模式）。
 4. 点「启动儿童模式」/「启动老人模式」。
-5. 想退出：再点「设置」→ 下拉菜单里点「退出儿童模式」/「退出老人模式」，输 PIN 即可（主页那张「儿童模式」卡片、遥控设置键也是同一入口）。
+5. 想退出：再点「设置」→「儿童/老人模式」→「退出当前模式」，输 PIN 即可（主页那张「儿童模式」卡片、遥控设置键也是同一入口）。
 
 **新增文件**
 
@@ -163,6 +163,29 @@ launcher/app/src/main/java/com/gathin/tvhome/
 
 **涉及文件**：`BingDaily.java`、`app/build.gradle`（`versionCode` 10 → 11，`versionName` → `2.7.11-bing-seven`）。
 
+## v2.8.0 修改记录（设置菜单、儿童/老人模式、天气与农历）
+
+| # | 反馈 | 原因 | 修复 |
+|---|---|---|---|
+| 1 | 顶栏「隐藏设置」胶囊改叫「设置」，点开后页内标题仍要叫「隐藏设置」 | 顶栏胶囊和设置页大标题共用同一个 `R.string.launcher_settings`，直接改会把页内标题一起改掉 | 新增独立字符串 `header_settings`（中英各一条），顶栏胶囊改用它；设置页标题继续绑 `launcher_settings`，两处从此互不影响 |
+| 2 | 齿轮下拉里「进入儿童模式」「进入老人模式」两行合成一个按钮「儿童/老人模式」 | 七行菜单太长，两个模式行又各占一行 | `showGearMenu()` 只留一行「儿童/老人模式」（图标 `ic_kids_mode`），点击弹二级列表：进入儿童模式 / 进入老人模式 /（模式开着时）退出当前模式；`enterKidsMode()` 与 `leaveKidsMode()` 的原有逻辑（含 PIN 校验）不变 |
+| 3 | 进入儿童模式后，页面下面的「应用库」胶囊不该出现 | footer 的可见条件只看 `showLibrary`，没有考虑模式 | `AppAdapter` 新增 `footerLibrary() = showLibrary && kidsAllowed == null`，`getItemCount()` / `isLibraryAt()` / `getItemViewType()` 全部走它；模式里只剩选定应用 + 模式卡片 |
+| 4 | 家长 PIN 用方向键输入时，不要把按的方向显示出来 | `PinDialog.redraw()` 在 arrows 模式下把每个圆点写成 ↑↓←→，旁边的人照着屏幕就能抄下 PIN | 圆点只按已输入长度填实心，文本恒为空；底部那行 ↑ ↓ ← → 仍作为「按方向键」的按键提示保留（那是键位说明，不是输入回显） |
+| 5 | 在主页按遥控器返回键，要直接回到主页程序坞 | 非重排状态直接把 `super.dispatchKeyEvent()`，Back 交给系统，可能离开桌面或把焦点落到奇怪的位置 | `dispatchKeyEvent` 在无弹窗、无卡片提示、不在 PIN 输入时拦下 BACK / ESC，`focusTile(0)` 把焦点送回程序坞第一格并消费该键；重排 / 编辑程序坞里的 Back 行为保持原样 |
+| 6 | 没有选进程序坞的 app 不要在程序坞下面「冒头」 | `rows_below_dock = 0` 只是把程序坞往下推，`RecyclerView` 照样把其余应用排在下方的行里，看起来就是冒出来一截 | `AppAdapter.reload()` 在 `rowsBelowDock == 0`、`dockRow`、非单行、非重排、非儿童/老人模式时，把程序坞行之后的多余条目截掉；重排与「编辑程序坞」时仍列出全部应用，方便从网格里挑进程序坞 |
+| 7 | 日期下面要加天气显示、农历显示 | 农历视图 `lunarDate` 早就存在，但 `R.bool/lunar_date` 默认是 `false`，一直不显示；天气完全没有 | `lunar_date` 默认改 `true`；中文农历改成「农历十月初七 · 丙午年」（`Lunar` 内置月名/日名对照表，不再显示「10月7日」）；新增 `Weather.java`（Open-Meteo 免 key 接口 + 45 个城市坐标表 + 上次结果缓存），`activity_main.xml` 在日期下加 `@id/weather` 一行，`MainActivity.onResume` 刷新，最多 30 分钟请求一次 |
+| 8 | 隐藏设置里要能选天气城市 | 原来没有任何入口，城市只能写死 | `activity_launcher_settings.xml` 增加「天气城市」行，点击弹 45 个城市的单选列表（`Weather.CITIES`），选中即写入 `weather_city` 并立刻拉一次该城市天气，回桌面即可看到 |
+
+**涉及文件**：`Weather.java`（新增）、`MainActivity.java`、`AppAdapter.java`、`PinDialog.java`、`Lunar.java`、`LauncherSettingsActivity.java`、`activity_main.xml`、`activity_launcher_settings.xml`、`values/strings.xml`、`values-zh-rCN/strings.xml`、`values/lunar.xml`、`values-zh-rCN/lunar.xml`、`values-zh-rTW/lunar.xml`、`values/config.xml`、`app/build.gradle`（`versionCode` 11 → 12，`versionName` → `2.8.0-settings-weather`）。
+
+### 天气与农历（Weather & Lunar）
+
+- **数据源**：`https://api.open-meteo.com/v1/forecast` 的 `current=temperature_2m,weather_code`，免 key、免注册，只读当前温度与 WMO 天气代码；`Weather.describe()` 把代码翻成中文（晴 / 多云 / 阴 / 小雨 / 雷阵雨 …）。
+- **显示**：日期下面一行「成都 · 多云 18℃」，字号 14sp、颜色 `#A6FFFFFF`，与日期同一栏。
+- **节流与离线**：最多 30 分钟请求一次；结果（温度、代码、时间）写进 `launcher_settings`，断网时继续显示上一次的数字，不会空一行。
+- **城市**：`Weather.CITIES` 内置 45 个城市（成都、北京、上海、广州、深圳、重庆、杭州、南京、武汉、西安、天津、苏州、郑州、长沙、东莞、沈阳、青岛、合肥、佛山、福州、厦门、昆明、哈尔滨、济南、南昌、贵阳、南宁、石家庄、太原、长春、大连、无锡、宁波、温州、珠海、三亚、海口、兰州、西宁、银川、乌鲁木齐、呼和浩特、拉萨、香港、澳门、台北），默认成都。
+- **农历**：`Lunar` 纯算法（无 ICU）算出当天农历，中文用「农历十月初七 · 丙午年」，闰月显示「闰四月」。UTC 偏移默认 +8，可在主题 `config.json` 的 `lunar_utc_offset` 覆盖。
+
 ## 实机截图
 
 所有截图都用 adb 直接从电视上截取，没有修图。
@@ -189,7 +212,7 @@ launcher/app/src/main/java/com/gathin/tvhome/
 
 ## 下载与安装
 
-**安装包：** 到本 fork 的 [Releases](https://github.com/jankxia/cleanmitv/releases) 下载最新的 `tvhome-v*-signed.apk`（当前为 `tvhome-v2.7.11-bing-seven-signed.apk`）；原项目的 `CleanMiTV-2.7.5-local-MiTV-OS3.apk`（版本 2.7.5-local）仍在 [原仓库 release 目录](https://github.com/sqlsec/cleanmitv/tree/main/release)
+**安装包：** 到本 fork 的 [Releases](https://github.com/jankxia/cleanmitv/releases) 下载最新的 `tvhome-v*-signed.apk`（当前为 `tvhome-v2.8.0-settings-weather-signed.apk`）；原项目的 `CleanMiTV-2.7.5-local-MiTV-OS3.apk`（版本 2.7.5-local）仍在 [原仓库 release 目录](https://github.com/sqlsec/cleanmitv/tree/main/release)
 
 > ⚠️ 这个包针对小米 OS3 国行固件构建。该固件只允许白名单内的包名成为第三方 Home，所以用 `-PlauncherApplicationId=com.ts.launcher` 编译。Java 代码的命名空间仍然是 `com.gathin.tvhome`，没有修改系统、固件或签名权限。如果你的电视已经装了同包名的其他应用，会出现签名冲突。
 
@@ -197,7 +220,7 @@ launcher/app/src/main/java/com/gathin/tvhome/
 
 ```bash
 adb uninstall com.ts.launcher        # 只会删这一份 launcher 的数据，卸载后马上装新的
-adb install tvhome-v2.7.11-bing-seven-signed.apk
+adb install tvhome-v2.8.0-settings-weather-signed.apk
 ```
 
 之后再换版本就只需要 `adb install -r`。其他机型请按下方步骤从源码编译默认包名版本。

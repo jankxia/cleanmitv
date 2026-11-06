@@ -3,6 +3,7 @@ package com.gathin.tvhome;
 import android.animation.ArgbEvaluator;
 import android.animation.ValueAnimator;
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.app.Dialog;
 import android.content.ActivityNotFoundException;
 import android.content.BroadcastReceiver;
@@ -186,6 +187,8 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
     private TextView lunarDate;
     private boolean lunar;
     private int lunarOffset;
+    /** The weather line under the date ("成都 · 多云 18℃"); see Weather. */
+    private TextView weatherLine;
     private TextView stats;
     private List<RaceWeekend.Race> raceCalendar;
     private View racePanel;
@@ -498,6 +501,14 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         lunar = cfg.lunarDate;
         lunarOffset = Lunar.offsetFor(cfg.lunarUtcOffset, Locale.getDefault());
         if (lunar) lunarDate.setVisibility(View.VISIBLE);
+        // Weather under the date: the last answer shows at once, the network catches up in onResume.
+        weatherLine = findViewById(R.id.weather);
+        if (weatherLine != null) {
+            String cachedWeather = Weather.cached(this);
+            weatherLine.setText(cachedWeather.isEmpty()
+                    ? getString(R.string.weather_loading, Weather.city(this)) : cachedWeather);
+            weatherLine.setVisibility(View.VISIBLE);
+        }
         greetingName = cfg.greetingName;
         if (cfg.dateBelowClock) moveDateBelowClock();
         if (shamsi) {
@@ -708,7 +719,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         });
         launcherSettingsButton = cfg.launcherSettingsButton;
         if (launcherSettingsButton) {
-            ((TextView) btnSettings).setText(R.string.launcher_settings);
+            ((TextView) btnSettings).setText(R.string.header_settings);
             ((TextView) btnSettings).setCompoundDrawablesRelativeWithIntrinsicBounds(R.drawable.ic_controls, 0, 0, 0);
         }
         // The gear is the same gear in every mode: it drops a menu with the system settings, the
@@ -1035,6 +1046,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         }
         if (openLiveTvAfterBoot()) return;
         updateGreeting();
+        updateWeather();
         updateRace();
         // The network and Inputs pills keep their state while Home is in the background, and callbacks update them
         // when the network or the inputs change, so this refresh only catches anything missed. Its binder calls
@@ -1360,6 +1372,15 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
     @Override
     public boolean dispatchKeyEvent(KeyEvent event) {
         if (handleSettingsKey(event)) return true;
+        // Back on Home puts the focus back on the dock, the first row of apps, instead of leaving
+        // Home or dragging the grid: one press always lands on the shelf the owner starts from.
+        if (!reordering && !pinOpen && openPopup == null && cardPrompt == null
+                && event.getAction() == KeyEvent.ACTION_UP
+                && (event.getKeyCode() == KeyEvent.KEYCODE_BACK
+                    || event.getKeyCode() == KeyEvent.KEYCODE_ESCAPE)) {
+            focusTile(0);
+            return true;
+        }
         if (tileMenuEnabled && !reordering && openPopup == null && cardPrompt == null
                 && event.getKeyCode() == KeyEvent.KEYCODE_MENU) {
             int position = focusedTilePosition();
@@ -2612,6 +2633,19 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         if (lunar) lunarDate.setText(Lunar.today(getResources(), lunarOffset));
     }
 
+    /**
+     * The weather under the date line. Weather asks Open-Meteo at most once per half hour, so the
+     * ordinary resume costs nothing; the cached numbers stay up when a fetch fails.
+     */
+    private void updateWeather() {
+        if (weatherLine == null) return;
+        Weather.refresh(this, false, line -> {
+            if (isDestroyed() || weatherLine == null) return;
+            if (!line.isEmpty()) weatherLine.setText(line);
+            weatherLine.setVisibility(View.VISIBLE);
+        });
+    }
+
     // ---- race-weekend panel (a theme's race_calendar) -----------------------------------------------
 
     private static final int RACE_RED = 0xFFFF3B2F;
@@ -3323,19 +3357,33 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         // The TV's own settings: the page with Accounts & Security, where ADB is switched on.
         addInputRow(rows, popup, R.drawable.ic_settings, getString(R.string.system_settings), -1,
                 () -> open(systemIntent(Settings.ACTION_SETTINGS)));
-        boolean kidsOn = Kids.active() && Kids.kind() == Kids.Kind.KIDS;
-        boolean eldersOn = Kids.active() && Kids.kind() == Kids.Kind.ELDERS;
+        // One row for both modes: it opens a short list to enter Kids, enter Elders or leave the one on.
         addInputRow(rows, popup, R.drawable.ic_kids_mode,
-                getString(kidsOn ? R.string.kids_mode_exit : R.string.kids_mode_enter), -1,
-                kidsOn ? this::leaveKidsMode : () -> enterKidsMode(Kids.Kind.KIDS));
-        addInputRow(rows, popup, R.drawable.ic_kids_mode,
-                getString(eldersOn ? R.string.elders_mode_exit : R.string.elders_mode_enter), -1,
-                eldersOn ? this::leaveKidsMode : () -> enterKidsMode(Kids.Kind.ELDERS));
+                getString(R.string.kids_elders_mode), -1, this::showModePicker);
         addInputRow(rows, popup, R.drawable.ic_swap_vert, getString(R.string.reorder), -1, this::toggleReorder);
         panel.measure(View.MeasureSpec.UNSPECIFIED, View.MeasureSpec.UNSPECIFIED);
         popup.setWidth(Math.max((int) (240 * density), Math.min(panel.getMeasuredWidth(), (int) (380 * density))));
         dropIn(popup, panel, anchor, getResources().getBoolean(R.bool.rtl_menu_bar) ? Gravity.START : Gravity.END);
         rows.getChildAt(0).requestFocus();
+    }
+
+    /**
+     * The Kids/Elders row in the gear's dropdown: a second, short list picks the mode or leaves the
+     * one that is on. Two separate rows used to sit here; one row keeps the menu short.
+     */
+    private void showModePicker() {
+        List<String> labels = new ArrayList<>();
+        labels.add(getString(R.string.kids_mode_enter));
+        labels.add(getString(R.string.elders_mode_enter));
+        if (Kids.active()) labels.add(getString(R.string.mode_leave));
+        new AlertDialog.Builder(this)
+                .setTitle(R.string.kids_elders_mode)
+                .setItems(labels.toArray(new String[0]), (dialog, which) -> {
+                    if (which == 0) enterKidsMode(Kids.Kind.KIDS);
+                    else if (which == 1) enterKidsMode(Kids.Kind.ELDERS);
+                    else if (Kids.active()) leaveKidsMode();
+                })
+                .show();
     }
 
     /**

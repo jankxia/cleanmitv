@@ -368,6 +368,12 @@ public class AppAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                     new ComponentName(ctx, MainActivity.class), null,
                     ctx.getDrawable(R.drawable.ic_kids_mode), null, 0));
         }
+        // rows_below_dock = 0: the dock row is all Home shows. The spare apps live in the App library
+        // instead of peeking out under the dock; reorder (and edit dock) still list them to pick from.
+        if (dockRow && !singleRow && rowsBelowDock == 0 && !reordering && kidsAllowed == null
+                && fresh.size() > dockSize) {
+            fresh.subList(Math.max(dockSize, docked), fresh.size()).clear();
+        }
         items.clear();
         items.addAll(fresh);
         notifyDataSetChanged();
@@ -572,12 +578,18 @@ public class AppAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
 
     @Override
     public int getItemCount() {
-        return items.size() + (showLibrary ? 1 : 0);
+        return items.size() + (footerLibrary() ? 1 : 0);
     }
 
     int appCount() { return items.size(); }
 
-    boolean isLibraryAt(int position) { return showLibrary && position == items.size(); }
+    /**
+     * The App library pill after the last row. Kids/Elders mode keeps it off: there Home shows the
+     * picked apps only, and the mode's own card is the one way out.
+     */
+    private boolean footerLibrary() { return showLibrary && kidsAllowed == null; }
+
+    boolean isLibraryAt(int position) { return footerLibrary() && position == items.size(); }
 
     @Override public int getItemViewType(int position) { return isLibraryAt(position) ? 1 : 0; }
 

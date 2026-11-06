@@ -97,6 +97,11 @@
             android:layout_marginTop="28dp" />
 
         <TextView
+            android:id="@+id/weatherCityChoice"
+            style="@style/SettingsRow"
+            android:layout_marginTop="18dp" />
+
+        <TextView
             android:id="@+id/animationsChoice"
             style="@style/SettingsRow"
             android:layout_marginTop="28dp" />
