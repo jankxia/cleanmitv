@@ -178,6 +178,14 @@ launcher/app/src/main/java/com/gathin/tvhome/
 
 **涉及文件**：`Weather.java`（新增）、`MainActivity.java`、`AppAdapter.java`、`PinDialog.java`、`Lunar.java`、`LauncherSettingsActivity.java`、`activity_main.xml`、`activity_launcher_settings.xml`、`values/strings.xml`、`values-zh-rCN/strings.xml`、`values/lunar.xml`、`values-zh-rCN/lunar.xml`、`values-zh-rTW/lunar.xml`、`values/config.xml`、`app/build.gradle`（`versionCode` 11 → 12，`versionName` → `2.8.0-settings-weather`）。
 
+## v2.8.1 修改记录（回退程序坞截断）
+
+| # | 反馈 | 处置 |
+|---|---|---|
+| 1 | 「程序坞的改变回到上一版」 | `2.8.0` 里那段「`rows_below_dock = 0` 就截掉程序坞行之后的所有条目」在电视上把主页削得只剩程序坞一行，添加到主页的应用也一起消失。已整段删除，主页恢复成 `2.7.11` 的样子：程序坞照旧贴底，其余应用按 `rows_below_dock` 排在网格里；想要程序坞下面留几行，在隐藏设置里把「程序坞下方行数」改成 1 / 2 / 3 即可 |
+
+**涉及文件**：`AppAdapter.java`（删掉截断段）、`app/build.gradle`（`versionCode` 12 → 13，`versionName` → `2.8.1-settings-weather`）、`README.md`（实机截图换成本 fork 的电视截图）。
+
 ### 天气与农历（Weather & Lunar）
 
 - **数据源**：`https://api.open-meteo.com/v1/forecast` 的 `current=temperature_2m,weather_code`，免 key、免注册，只读当前温度与 WMO 天气代码；`Weather.describe()` 把代码翻成中文（晴 / 多云 / 阴 / 小雨 / 雷阵雨 …）。
@@ -188,7 +196,21 @@ launcher/app/src/main/java/com/gathin/tvhome/
 
 ## 实机截图
 
-所有截图都用 adb 直接从电视上截取，没有修图。
+下面 8 张全部在小米电视 **MiTV-ASTR0**（Android 11，1920×1080）上用 `adb shell screencap` 直接截取，没有修图，对应 `2.8.1-settings-weather`：
+
+| 主页：农历在日期上一行、天气在下一行 | 设置下拉：输入源 / 网络 / 隐藏设置 / 系统设置 / 儿童/老人模式 / 调整应用顺序 |
+|---|---|
+| ![](docs/tvhome/01-home.jpg) | ![](docs/tvhome/02-settings-menu.jpg) |
+| **儿童/老人模式：点开是二级列表** | **隐藏设置：壁纸与天气城市并列成行** |
+| ![](docs/tvhome/03-mode-picker.jpg) | ![](docs/tvhome/04-hidden-settings.jpg) |
+| **天气城市：45 个城市单选，默认成都** | **壁纸：跟随主题 / 无壁纸 / 必应滚动壁纸（保留 7 张）** |
+| ![](docs/tvhome/05-weather-city.jpg) | ![](docs/tvhome/06-wallpaper-picker.jpg) |
+| **儿童模式：底部没有「应用库」胶囊** | **家长 PIN：圆点只填实，不回显按过的方向** |
+| ![](docs/tvhome/07-kids-mode.jpg) | ![](docs/tvhome/08-parent-pin.jpg) |
+
+### 原项目的主题与视频
+
+4 套主题配色、16 张本地精选壁纸的实机图，以及演示视频，来自上游项目 `sqlsec/cleanmitv`，仍放在 `docs/cleanmitv/`：
 
 | 蓝色 · 飞牛TV | 红色 · 网易云音乐 |
 |---|---|
@@ -204,15 +226,13 @@ launcher/app/src/main/java/com/gathin/tvhome/
 
 ![16 张本地精选壁纸](docs/cleanmitv/09-wallpaper-gallery.png)
 
-### 视频
-
 - 横屏演示（1920×1080，27 秒）：[cleanmitv-demo-landscape.mp4](docs/cleanmitv/cleanmitv-demo-landscape.mp4)
 - 竖屏版（1080×1920，适合小红书 / 抖音）：[cleanmitv-xiaohongshu-vertical.mp4](docs/cleanmitv/cleanmitv-xiaohongshu-vertical.mp4)
 - 双画面竖屏版（1080×1920，8 秒，上下两段实机录屏）：[cleanmitv-dual-vertical.mp4](docs/cleanmitv/cleanmitv-dual-vertical.mp4)
 
 ## 下载与安装
 
-**安装包：** 到本 fork 的 [Releases](https://github.com/jankxia/cleanmitv/releases) 下载最新的 `tvhome-v*-signed.apk`（当前为 `tvhome-v2.8.0-settings-weather-signed.apk`）；原项目的 `CleanMiTV-2.7.5-local-MiTV-OS3.apk`（版本 2.7.5-local）仍在 [原仓库 release 目录](https://github.com/sqlsec/cleanmitv/tree/main/release)
+**安装包：** 到本 fork 的 [Releases](https://github.com/jankxia/cleanmitv/releases) 下载最新的 `tvhome-v*-signed.apk`（当前为 `tvhome-v2.8.1-settings-weather-signed.apk`）；原项目的 `CleanMiTV-2.7.5-local-MiTV-OS3.apk`（版本 2.7.5-local）仍在 [原仓库 release 目录](https://github.com/sqlsec/cleanmitv/tree/main/release)
 
 > ⚠️ 这个包针对小米 OS3 国行固件构建。该固件只允许白名单内的包名成为第三方 Home，所以用 `-PlauncherApplicationId=com.ts.launcher` 编译。Java 代码的命名空间仍然是 `com.gathin.tvhome`，没有修改系统、固件或签名权限。如果你的电视已经装了同包名的其他应用，会出现签名冲突。
 
@@ -220,7 +240,7 @@ launcher/app/src/main/java/com/gathin/tvhome/
 
 ```bash
 adb uninstall com.ts.launcher        # 只会删这一份 launcher 的数据，卸载后马上装新的
-adb install tvhome-v2.8.0-settings-weather-signed.apk
+adb install tvhome-v2.8.1-settings-weather-signed.apk
 ```
 
 之后再换版本就只需要 `adb install -r`。其他机型请按下方步骤从源码编译默认包名版本。
