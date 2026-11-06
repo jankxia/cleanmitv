@@ -173,7 +173,7 @@ launcher/app/src/main/java/com/gathin/tvhome/
 | 4 | 家长 PIN 用方向键输入时，不要把按的方向显示出来 | `PinDialog.redraw()` 在 arrows 模式下把每个圆点写成 ↑↓←→，旁边的人照着屏幕就能抄下 PIN | 圆点只按已输入长度填实心，文本恒为空；底部那行 ↑ ↓ ← → 仍作为「按方向键」的按键提示保留（那是键位说明，不是输入回显） |
 | 5 | 在主页按遥控器返回键，要直接回到主页程序坞 | 非重排状态直接把 `super.dispatchKeyEvent()`，Back 交给系统，可能离开桌面或把焦点落到奇怪的位置 | `dispatchKeyEvent` 在无弹窗、无卡片提示、不在 PIN 输入时拦下 BACK / ESC，`focusTile(0)` 把焦点送回程序坞第一格并消费该键；重排 / 编辑程序坞里的 Back 行为保持原样 |
 | 6 | 没有选进程序坞的 app 不要在程序坞下面「冒头」 | `rows_below_dock = 0` 只是把程序坞往下推，`RecyclerView` 照样把其余应用排在下方的行里，看起来就是冒出来一截 | `AppAdapter.reload()` 在 `rowsBelowDock == 0`、`dockRow`、非单行、非重排、非儿童/老人模式时，把程序坞行之后的多余条目截掉；重排与「编辑程序坞」时仍列出全部应用，方便从网格里挑进程序坞 |
-| 7 | 日期下面要加天气显示、农历显示 | 农历视图 `lunarDate` 早就存在，但 `R.bool/lunar_date` 默认是 `false`，一直不显示；天气完全没有 | `lunar_date` 默认改 `true`；中文农历改成「农历十月初七 · 丙午年」（`Lunar` 内置月名/日名对照表，不再显示「10月7日」）；新增 `Weather.java`（Open-Meteo 免 key 接口 + 45 个城市坐标表 + 上次结果缓存），`activity_main.xml` 在日期下加 `@id/weather` 一行，`MainActivity.onResume` 刷新，最多 30 分钟请求一次 |
+| 7 | 日期下面要加天气显示、农历显示 | 农历视图 `lunarDate` 早就存在，但 `R.bool/lunar_date` 默认是 `false`，一直不显示；天气完全没有 | `lunar_date` 默认改 `true`；中文农历改成「农历九月廿八 丙午年」并挪到「11月6日 星期五」**上面一排**（`Lunar` 内置月名/日名对照表，不再显示「9月28日」）；天气行放在日期下面；新增 `Weather.java`（Open-Meteo 免 key 接口 + 45 个城市坐标表 + 上次结果缓存），`activity_main.xml` 在日期下加 `@id/weather` 一行，`MainActivity.onResume` 刷新，最多 30 分钟请求一次 |
 | 8 | 隐藏设置里要能选天气城市 | 原来没有任何入口，城市只能写死 | `activity_launcher_settings.xml` 增加「天气城市」行，点击弹 45 个城市的单选列表（`Weather.CITIES`），选中即写入 `weather_city` 并立刻拉一次该城市天气，回桌面即可看到 |
 
 **涉及文件**：`Weather.java`（新增）、`MainActivity.java`、`AppAdapter.java`、`PinDialog.java`、`Lunar.java`、`LauncherSettingsActivity.java`、`activity_main.xml`、`activity_launcher_settings.xml`、`values/strings.xml`、`values-zh-rCN/strings.xml`、`values/lunar.xml`、`values-zh-rCN/lunar.xml`、`values-zh-rTW/lunar.xml`、`values/config.xml`、`app/build.gradle`（`versionCode` 11 → 12，`versionName` → `2.8.0-settings-weather`）。
@@ -181,10 +181,10 @@ launcher/app/src/main/java/com/gathin/tvhome/
 ### 天气与农历（Weather & Lunar）
 
 - **数据源**：`https://api.open-meteo.com/v1/forecast` 的 `current=temperature_2m,weather_code`，免 key、免注册，只读当前温度与 WMO 天气代码；`Weather.describe()` 把代码翻成中文（晴 / 多云 / 阴 / 小雨 / 雷阵雨 …）。
-- **显示**：日期下面一行「成都 · 多云 18℃」，字号 14sp、颜色 `#A6FFFFFF`，与日期同一栏。
+- **显示**：时钟下方三行依次是「农历九月廿八 丙午年」（农历，日期上一行）→「11月6日 星期五」（日期）→「成都 · 多云 18℃」（天气，日期下一行）。
 - **节流与离线**：最多 30 分钟请求一次；结果（温度、代码、时间）写进 `launcher_settings`，断网时继续显示上一次的数字，不会空一行。
 - **城市**：`Weather.CITIES` 内置 45 个城市（成都、北京、上海、广州、深圳、重庆、杭州、南京、武汉、西安、天津、苏州、郑州、长沙、东莞、沈阳、青岛、合肥、佛山、福州、厦门、昆明、哈尔滨、济南、南昌、贵阳、南宁、石家庄、太原、长春、大连、无锡、宁波、温州、珠海、三亚、海口、兰州、西宁、银川、乌鲁木齐、呼和浩特、拉萨、香港、澳门、台北），默认成都。
-- **农历**：`Lunar` 纯算法（无 ICU）算出当天农历，中文用「农历十月初七 · 丙午年」，闰月显示「闰四月」。UTC 偏移默认 +8，可在主题 `config.json` 的 `lunar_utc_offset` 覆盖。
+- **农历**：`Lunar` 纯算法（无 ICU）算出当天农历，中文用「农历九月廿八 丙午年」（月名正月…腊月，日名初一…三十），闰月显示「闰四月」；排在公历日期上面一行。UTC 偏移默认 +8，可在主题 `config.json` 的 `lunar_utc_offset` 覆盖。
 
 ## 实机截图
 
