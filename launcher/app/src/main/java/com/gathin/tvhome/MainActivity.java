@@ -712,7 +712,10 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
             ((TextView) btnSettings).setCompoundDrawablesRelativeWithIntrinsicBounds(R.drawable.ic_controls, 0, 0, 0);
         }
         btnSettings.setOnClickListener(v -> {
-            if (launcherSettingsButton) startActivityForResult(
+            // In the Kids mode the gear is the parent's way out (PIN), not a way into Settings.
+            if (Kids.active()) {
+                leaveKidsMode();
+            } else if (launcherSettingsButton) startActivityForResult(
                     new Intent(this, LauncherSettingsActivity.class), LAUNCHER_SETTINGS_REQUEST);
             else open(systemIntent(Settings.ACTION_SETTINGS));
         });
@@ -749,7 +752,13 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
             ((TextView) btnSettings).setText(R.string.settings);
             ((TextView) btnSettings).setCompoundDrawablesRelativeWithIntrinsicBounds(R.drawable.ic_settings, 0, 0, 0);
             if (!iconOnlyButtons) makeIconOnly((TextView) btnSettings);
-            btnSettings.setOnClickListener(v -> showTopMenu());
+            btnSettings.setOnClickListener(v -> {
+                if (Kids.active()) {
+                    leaveKidsMode();
+                } else {
+                    showTopMenu();
+                }
+            });
             // The lone gear sits at the header's middle, not on its bottom line like the row of pills.
             LinearLayout topButtons = findViewById(R.id.topButtons);
             RelativeLayout.LayoutParams tlp = (RelativeLayout.LayoutParams) topButtons.getLayoutParams();
@@ -862,13 +871,20 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         TextView gear = findViewById(R.id.btnSettings);
         if (gear != null) {
             if (active) {
-                if (gearClick == null) gearClick = gear.getOnClickListener();
+                if (!gearStyled) {
+                    // Remember what the gear looked like so leaving the mode puts its own label back.
+                    gearText = gear.getText();
+                    gearIcons = gear.getCompoundDrawablesRelative();
+                    gearStyled = true;
+                }
                 gear.setText(R.string.kids_parent);
-                gear.setOnClickListener(v -> leaveKidsMode());
-            } else if (gearClick != null) {
-                gear.setText(R.string.settings);
-                gear.setOnClickListener(gearClick);
-                gearClick = null;
+                gear.setCompoundDrawablesRelativeWithIntrinsicBounds(R.drawable.ic_controls, 0, 0, 0);
+            } else if (gearStyled) {
+                if (gearText != null) gear.setText(gearText);
+                if (gearIcons != null && gearIcons.length == 4) {
+                    gear.setCompoundDrawablesRelative(gearIcons[0], gearIcons[1], gearIcons[2], gearIcons[3]);
+                }
+                gearStyled = false;
             }
         }
         // A parent who left the mode (PIN) gets the whole Home back; entering it shows only the chosen tiles.
@@ -2816,8 +2832,11 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
     private ColorStateList wifiNoInternetTint, wifiOfflineTint;
     /** The app library button in the top bar (library_button). */
     private View btnLibraryTop;
-    /** The gear's own click while the Kids mode borrows it as the parent's button. */
-    private View.OnClickListener gearClick;
+    /** The gear's label and icons before the Kids mode borrowed it as the parent's button. */
+    private CharSequence gearText;
+    private Drawable[] gearIcons;
+    /** True while the gear shows the parent's label. */
+    private boolean gearStyled;
     /** A PIN dialog is open: the second press of the parent button does nothing. */
     private boolean pinOpen;
     /** The open library came from that button: closing it returns there instead of scrolling to the grid's end. */

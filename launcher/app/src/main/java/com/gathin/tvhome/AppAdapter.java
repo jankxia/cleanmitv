@@ -545,6 +545,7 @@ public class AppAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         Intent systemApp = PersonalSystemApps.launch(ctx, e.pkg);
         if (systemApp != null) i = systemApp.setComponent(e.component);
         try {
+            Kids.noteLaunch(e.pkg);
             ctx.startActivity(i);
             if (cinematic) LastOpened.record(ctx, e.pkg);
         } catch (Exception ex) {

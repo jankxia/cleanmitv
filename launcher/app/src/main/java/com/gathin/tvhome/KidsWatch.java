@@ -168,6 +168,8 @@ public final class KidsWatch {
      */
     public static boolean keepsAway(Context ctx, String pkg) {
         if (!Kids.active() || pkg == null || pkg.equals(ctx.getPackageName())) return false;
+        // The tile just picked on Home: never bounce the app the tap was meant to open.
+        if (Kids.justLaunched(pkg)) return false;
         Kids.Lock l = Kids.lock;
         if (l == null && (!Kids.blockOthers() || Kids.allowedPackages().contains(pkg))) return false;
         if (pkg.equals(keyboard(ctx))) return false;

@@ -524,6 +524,31 @@ public final class Kids {
     public static Set<String> allowedPackages() { return allowedPackages; }
     public static Set<String> sourcePlayers() { return sourcePlayers; }
     public static boolean blockOthers() { return blockOthers; }
+
+    /** How long the app picked on Home is let through even if the allow-list missed it. */
+    private static final long LAUNCH_GRACE_MS = 8_000;
+    private static final java.util.Map<String, Long> launched = new java.util.HashMap<>();
+
+    /**
+     * The parent (or child) picked this tile on Home just now. The guard must not fight the tap it
+     * came from, so this app is let through for a few seconds even when the allow-list is stale.
+     */
+    public static void noteLaunch(String pkg) {
+        if (pkg == null) return;
+        synchronized (launched) {
+            long now = android.os.SystemClock.elapsedRealtime();
+            launched.entrySet().removeIf(e -> now - e.getValue() > LAUNCH_GRACE_MS);
+            launched.put(pkg, now);
+        }
+    }
+
+    public static boolean justLaunched(String pkg) {
+        if (pkg == null) return false;
+        synchronized (launched) {
+            Long at = launched.get(pkg);
+            return at != null && android.os.SystemClock.elapsedRealtime() - at <= LAUNCH_GRACE_MS;
+        }
+    }
     public static Rules rules() { return rules; }
     public static Usage usage() { return usage; }
     public static boolean suspended() { return suspended; }
