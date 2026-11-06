@@ -595,6 +595,10 @@ final class Config {
                 : string(json, "wallpaper_order", WallpaperRotation.ORDER_SHUFFLE);
         // An unknown order must not silently change how an existing collection rotates.
         if (!WallpaperRotation.validOrder(wallpaperOrder)) wallpaperOrder = WallpaperRotation.ORDER_SHUFFLE;
+        boolean personalized = PersonalAppearance.enabled(ctx);
+        boolean bing = personalized && "bing".equals(
+                ctx.getSharedPreferences(SETTINGS_NAME, Context.MODE_PRIVATE)
+                        .getString(PersonalAppearance.BACKGROUND_KEY, "app"));
         List<File> wallpapers = new ArrayList<>();
         if (rotationMinutes > 0 && dir != null && wallpaperEnabled) {
             wallpapers.addAll(WallpaperRotation.images(new File(dir, "wallpapers")));
@@ -602,7 +606,7 @@ final class Config {
         if (wallpapers.isEmpty() && wallpaper != null) wallpapers.add(wallpaper);
         // An on-TV wallpaper pick overrides the theme: a filename from the wallpapers/
         // collection, or "none". Unset means the theme decides (off by default).
-        String wallpaperChoice = choices.getString(WALLPAPER_CHOICE_KEY, null);
+        String wallpaperChoice = bing ? null : choices.getString(WALLPAPER_CHOICE_KEY, null);
         List<File> chosen = WallpaperRotation.chosen(dir == null ? Collections.emptyList()
                 : WallpaperRotation.images(new File(dir, "wallpapers")), wallpaper, wallpaperChoice);
         if (chosen != null) {
@@ -611,7 +615,16 @@ final class Config {
             wallpaper = chosen.isEmpty() ? null : chosen.get(0);
             wallpaperEnabled = !chosen.isEmpty();
         }
-        if (PersonalAppearance.enabled(ctx)) {
+        if (bing) {
+            // "必应每日精选" is the day pictures collected under files/bing/, newest first: a real
+            // collection (it rotates and the picker shows them), not the single overwritten file.
+            wallpapers.clear();
+            wallpapers.addAll(BingDaily.wallpapers(ctx));
+            wallpaper = wallpapers.isEmpty() ? null : wallpapers.get(0);
+            wallpaperEnabled = !wallpapers.isEmpty();
+            if (rotationMinutes <= 0) rotationMinutes = 30;
+        }
+        if (personalized) {
             background = PersonalAppearance.background(ctx);
             skyIntensity = 0;
             ambientGlow = false;

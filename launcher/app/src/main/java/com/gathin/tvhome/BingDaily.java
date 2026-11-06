@@ -21,14 +21,19 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * The day's Bing picture for the wallpaper picker's "必应每日精选" choice. Pulls the 4K image
- * from bing.wdbyte.com's gallery (the site the user picked), falling back to Bing's own
- * HPImageArchive JSON, and saves it over the theme's single wallpaper. Once a day: the fetch
- * date is remembered, so coming back to Home updates the picture on new days only.
+ * The Bing pictures for the wallpaper picker's "必应每日精选" choice. Pulls the 4K image from
+ * bing.wdbyte.com's gallery (the site the user picked), falling back to Bing's own HPImageArchive
+ * JSON, and keeps one file per day under {@code files/bing/} — so the choice is a small collection
+ * that grows a picture a day rather than a single file overwritten each morning. Once a day: the
+ * fetch date is remembered, so coming back to Home updates the pictures on new days only.
  */
 final class BingDaily {
-    /** The local date the current picture was fetched on (Config.SETTINGS_NAME). */
+    /** The local date the day's picture was fetched on (Config.SETTINGS_NAME). */
     static final String DATE_KEY = "bing_daily_date";
+    /** Where the day's pictures live, beside the theme's wallpapers/ collection. */
+    static final String DIR = "bing";
+    /** How many days are kept; older pictures are deleted as new ones arrive. */
+    private static final int KEEP = 10;
 
     private static final String PAGE_URL = "https://bing.wdbyte.com/zh-cn/";
     private static final String JSON_URL =
@@ -63,9 +68,10 @@ final class BingDaily {
             boolean ok = false;
             String message = "";
             File dir = Config.dir(context);
-            File target = dir == null ? null : new File(dir, Config.WALLPAPER_NAME);
+            File folder = dir == null ? null : new File(dir, DIR);
+            File target = folder == null ? null : new File(folder, "bing-" + today + ".jpg");
             try {
-                if (target != null) target.getParentFile().mkdirs();
+                if (folder != null) folder.mkdirs();
                 String imageUrl = pageImage();
                 if (imageUrl == null) imageUrl = jsonImage();
                 if (imageUrl == null) {
@@ -77,9 +83,9 @@ final class BingDaily {
                     } else if (target == null) {
                         message = "壁纸目录不可用";
                     } else {
-                        // Write beside the wallpaper first, then move it into place, so WallpaperPlayer
+                        // Write beside the picture first, then move it into place, so WallpaperPlayer
                         // never decodes a half-written file.
-                        File tmp = new File(dir, Config.WALLPAPER_NAME + ".tmp");
+                        File tmp = new File(folder, target.getName() + ".tmp");
                         FileOutputStream out = new FileOutputStream(tmp);
                         out.write(bytes);
                         out.close();
@@ -94,6 +100,7 @@ final class BingDaily {
                             tmp.delete();
                         }
                         prefs.edit().putString(DATE_KEY, today).apply();
+                        prune(folder);
                         ok = true;
                         message = "必应今日壁纸已应用";
                     }
@@ -112,6 +119,36 @@ final class BingDaily {
                 }
             });
         }, "bing-daily").start();
+    }
+
+    /** Keeps the newest {@link #KEEP} day files; the names sort by date. */
+    private static void prune(File folder) {
+        File[] entries = folder.listFiles();
+        if (entries == null) return;
+        java.util.Arrays.sort(entries, (a, b) -> b.getName().compareTo(a.getName()));
+        int kept = 0;
+        for (File entry : entries) {
+            if (!entry.isFile() || !entry.getName().endsWith(".jpg")) continue;
+            if (++kept > KEEP) entry.delete();
+        }
+    }
+
+    /**
+     * The kept day files, newest first, for Config to use as the wallpaper collection while the
+     * "必应每日精选" choice is on. Empty when nothing was fetched yet.
+     */
+    static java.util.List<File> wallpapers(Context context) {
+        java.util.List<File> out = new java.util.ArrayList<>();
+        File dir = Config.dir(context);
+        File folder = dir == null ? null : new File(dir, DIR);
+        File[] entries = folder == null ? null : folder.listFiles();
+        if (entries == null) return out;
+        java.util.Arrays.sort(entries, (a, b) -> b.getName().compareTo(a.getName()));
+        for (File entry : entries) {
+            if (entry.isFile() && entry.length() > 0 && entry.getName().endsWith(".jpg")) out.add(entry);
+            if (out.size() >= KEEP) break;
+        }
+        return out;
     }
 
     /** The first 4K gallery image on bing.wdbyte.com/zh-cn/, or null when the page is unreachable. */

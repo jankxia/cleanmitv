@@ -165,6 +165,12 @@
     <string name="kids_start_elders">启动老人模式</string>
     <string name="kids_pin_set">设置 PIN</string>
     <string name="kids_pin_change">修改 PIN</string>
+    <string name="kids_pin_first">请先设置家长 PIN，退出模式要用到它。</string>
+    <string name="kids_pin_kind">PIN 类型</string>
+    <string name="pin_kind_digits">4 位数字 · 屏幕键盘或遥控数字键</string>
+    <string name="pin_kind_arrows">4 个方向键 · 遥控上按 ↑ ↓ ← →</string>
+    <string name="pin_kind_digits_short">数字</string>
+    <string name="pin_kind_arrows_short">方向键</string>
     <string name="kids_turn_off">关闭模式</string>
     <string name="kids_apps">应用（%1$d）</string>
     <string name="kids_apps_hint">选择在这里显示的应用，按选择顺序排列。</string>

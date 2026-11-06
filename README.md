@@ -28,7 +28,7 @@ CleanMiTV 的底子来自 **[CleanYourTV](https://github.com/Gathin23/cleanyourt
 | 🇨🇳 **国行小米适配** | 底栏预设飞牛TV、Nova、云视听极光、云视听小电视；「设置」大齿轮直达小米原生设置；补上原厂「文件管理」入口；直播使用小米 `tvplayer` |
 | 📦 **更小的包** | 只保留简体中文和英文资源，APK 约 360 KB |
 | 👧 **儿童与老人模式** | 移植 [aerial-tv](https://github.com/pengchujin/aerial-tv) 的 Kids Mode：儿童/老人模式、4 位 PIN 锁、时长/作息/休息限制、应用白名单、全屏锁定，详见下方 [儿童与老人模式](#儿童与老人模式kids--elders-mode) |
-| 🏞️ **必应每日精选壁纸** | 「壁纸 · 使用已选图片」下新增「壁纸 · 必应每日精选」：拉取 [bing.wdbyte.com/zh-cn/](https://bing.wdbyte.com/zh-cn/) 的当日 4K 图（Bing 官方接口兜底）保存为单图壁纸，并跟随网站每日自动更新，详见下方 [必应每日精选壁纸](#必应每日精选壁纸bing-daily-wallpaper) |
+| 🏞️ **必应每日精选壁纸** | 「壁纸 · 使用已选图片」下新增「壁纸 · 必应每日精选」：拉取 [bing.wdbyte.com/zh-cn/](https://bing.wdbyte.com/zh-cn/) 的当日 4K 图（Bing 官方接口兜底），按日保存最近 10 天作为壁纸集并跟随网站每日自动更新，详见下方 [必应每日精选壁纸](#必应每日精选壁纸bing-daily-wallpaper) |
 
 同时保留了小爱同学、投屏、HDMI / CEC、幻彩随影、米家和系统更新等原厂功能，只停用了统计和诊断组件。
 
@@ -41,16 +41,17 @@ CleanMiTV 的底子来自 **[CleanYourTV](https://github.com/Gathin23/cleanyourt
 
 - **儿童模式 / 老人模式**：桌面只显示你选择的应用，按选择顺序排列，没有你没选的任何东西。
 - **时间限制（仅儿童）**：工作日 / 周末每日时长（不限 / 30 / 60 / 90 / 120 分钟）；最晚看到（不限 / 20:00 / 21:00 / 22:00）；休息间隔（关 / 30 / 45 / 60 分钟，看满间隔休息 5 分钟）。
-- **家长 PIN**：4 位 PIN（SHA-256 存储）。退出模式、锁屏后给更多时间（15 / 30 / 60 分钟 / 今天不限）都需 PIN；支持遥控器数字键和屏幕数字键盘。
-- **全屏锁定**：今日时长用完 / 超过最晚时间 / 休息中都会全屏锁定，按返回键无效。
-- **防绕过**：家长用 PIN 退出后，电视熄屏或屏保出现时自动恢复模式；儿童模式下隐藏顶栏设置按钮、屏蔽遥控器设置键，孩子无法进入设置关闭模式。
+- **家长 PIN**：4 位 PIN（SHA-256 存储），可选两种输入方式：「4 位数字」（屏幕数字键盘或遥控数字键）、「4 个方向键」（遥控上按 ↑ ↓ ← → 组合，屏幕上会显示已按下的箭头）。退出模式、锁屏后给更多时间（15 / 30 / 60 分钟 / 今天不限）都需 PIN。
+- **全屏锁定**：今日时长用完 / 超过最晚时间 / 休息中都会全屏锁定，按返回键无效；锁定期间点任何应用都会直接弹出锁定界面（而不是看起来「点了没反应」）。
+- **家长退出入口**：儿童模式的主页顶栏只保留一个「家长」按钮，点击后输入 PIN 即可退出；遥控器的设置键 / 菜单键同样会弹出 PIN 框。
+- **防绕过**：家长用 PIN 退出后，电视熄屏或屏保出现时自动恢复模式。
 - **阻止其他应用（仅儿童，默认开启）**：锁定时任何应用都进不去；未锁定且「阻止」开启时，非允许应用也会被拉回桌面（无障碍服务为主，UsageStats 兜底）。
 
 **开启方法**
 
 1. 桌面顶栏点「设置」→「儿童与老人模式」（或在遥控器设置键面板中找到入口）。
 2. 右侧选择要给孩子用的应用，左侧设置对象（儿童/老人）、时长、最晚时间、休息间隔。
-3. 点「设置 PIN」设一个 4 位家长 PIN（必须设置，否则无法退出）。
+3. 点「设置 PIN」设一个 4 位家长 PIN，弹窗里选输入方式：数字或方向键（未设置 PIN 时点「启动」会先要求设置，否则进去就退不出来）。
 4. 点「启动儿童模式」/「启动老人模式」。
 
 **新增文件**
@@ -81,7 +82,7 @@ launcher/app/src/main/res/drawable/
 |---|---|---|
 | UI 技术 | Jetpack Compose | 原生 View + XML（与 cleanmitv 一致） |
 | 老人模式大图标 | 图标放大 + 显示名称 | 保持 cleanmitv 原有图标样式，仅过滤应用 |
-| 方向键 PIN | 支持 4 方向 PIN | 仅数字 PIN（屏幕键盘 + 遥控数字键） |
+| 方向键 PIN | 支持 4 方向 PIN | 支持，可在设置 PIN 时二选一（数字 / 方向键） |
 | 阻止其他应用 | 无障碍服务 + UsageStats 双保险 | 无障碍服务为主，UsageStats 为辅（需授权） |
 
 ## 必应每日精选壁纸（Bing Daily Wallpaper）
@@ -90,8 +91,10 @@ launcher/app/src/main/res/drawable/
 
 **行为**
 
-- 选中即下载当天图片（站点页内直接提取 4K 直链，站点不可达时自动回退到 Bing 官方 `HPImageArchive` JSON），保存为桌面单图壁纸后立即生效；失败时保留前一天图片不中断。
+- 选中即下载当天图片（站点页内直接提取 4K 直链，站点不可达时自动回退到 Bing 官方 `HPImageArchive` JSON），保存到 `files/bing/bing-<日期>.jpg` 后立即生效；失败时保留之前的图片不中断。
+- **多日图集**：每天的图各存一张，最多保留最近 10 天，最新的排第一；「必应每日精选」就是这一小组图片（按 30 分钟轮换，和原来的多图壁纸一样有轮播），不再是一张被反复覆盖的 `wallpaper.jpg`。
 - **每日自动更新**：桌面每次回到前台都会检查日期，跨天后自动拉取当日新图并热刷新壁纸，无需手动干预（同一天内不重复下载）。
+- 在「壁纸：必应每日精选」这一行点一下＝立刻重新拉取当日图片；需要手动挑单张图时，请切回「壁纸 · 使用已选图片」。
 - 需要联网权限；下载在后台线程完成，不阻塞首帧。
 
 **新增文件**
@@ -99,10 +102,22 @@ launcher/app/src/main/res/drawable/
 ```
 launcher/app/src/main/java/com/gathin/tvhome/
   BingDaily.java   必应每日精选：解析 wdbyte 页面 4K 直链 / Bing 官方接口兜底，
-                   后台下载并落盘为 wallpaper.jpg，记录拉取日期
+                   后台下载并按日期落盘到 files/bing/，保留最近 10 天
 ```
 
-**涉及修改**：`AndroidManifest.xml` 新增 `INTERNET` 权限；`LauncherSettingsActivity.java` 背景风格单选新增第三项；`MainActivity.java` 每次回前台检查日期并热重建壁纸播放器；`WallpaperPlayer.java` 关闭时摘下图片视图以支持原地刷新。
+**涉及修改**：`AndroidManifest.xml` 新增 `INTERNET` 权限；`LauncherSettingsActivity.java` 背景风格单选新增第三项；`Config.java` 在「必应每日精选」下把 `files/bing/` 的每日图作为壁纸集；`MainActivity.java` 每次回前台检查日期并热重建壁纸播放器；`WallpaperPlayer.java` 关闭时摘下图片视图以支持原地刷新。
+
+## v2.7.7 修复记录（实机反馈）
+
+小米电视（MiTV-ASTR0，包名 `com.ts.launcher`）上装机后反馈的 5 个问题：
+
+| # | 问题 | 原因 | 修复 |
+|---|---|---|---|
+| 1 | 儿童模式不支持上下左右方向键做 PIN | `PinDialog` 里方向键分支是死代码：`show()` 每次都把 `arrows` 硬置 `false`，也没有任何入口把它设为 `true` | `PinDialog` 新增 `arrows` 构造参数并去掉硬置；设置 PIN 时先选「数字 / 方向键」，方向键模式屏幕上显示 ↑ ↓ ← → 已输入序列；锁屏验证按已存的类型打开 |
+| 2 | 儿童模式能显示选中的 APP，但点击打不开 | 锁定状态下点应用后 `KidsWatch` 只把 Home 拉回前台，用户看不到任何提示；另外 `PinDialog` 收不到按键也放大了这个问题 | 锁定时 `bringBack` 直接打开 `KidsLockActivity`（看到「时间到 / 该休息」和家长按钮）；PIN 对话框改为在 `dispatchKeyEvent` 收键，不再被聚焦的按键吞掉 |
+| 3 | 无法输入 PIN 退出儿童模式 | 两处：① 未锁定时主页没有任何退出入口，设置键被直接吞掉；② 允许不设 PIN 就启动模式，`pinMatches` 永远为 false | 主页顶栏在模式中只保留一个「家长」按钮（点击即 PIN → 退出），设置键 / 菜单键同样弹 PIN；未设 PIN 时「启动」会先要求设置 PIN |
+| 4 | 壁纸选项「原来的方案」没有保存下来 | 装机版是 `com.gathin.tvhome`，与 TV 原有桌面 `com.ts.launcher` 的数据目录、`SharedPreferences` 完全独立，原设置当然不会跟过来 | 用 `com.ts.launcher` 包名构建并 `adb install -r` 覆盖升级（签名相同、versionCode 相同即可原地升级，设置与壁纸都保留） |
+| 5 | 必应壁纸「选中的是一张 JPG 图片」 | 原实现把每日图覆盖写入 `files/wallpaper.jpg`，`files/wallpapers/` 目录为空时它就变成唯一一张可选图 | 必应图改存 `files/bing/bing-<日期>.jpg`（保留最近 10 天、最新在前），`Config` 在该模式下把这一小组作为壁纸集（30 分钟轮换）；「壁纸」行点击＝重新拉当日图，不再把 `wallpaper.jpg` 混进手选列表 |
 
 **编译验证**：已通过 GitHub Actions 云端 `./gradlew assembleRelease` 编译（含 R8 压缩），
 产物以 `tvhome-app-release` artifact 上传至 [Actions 页面](https://github.com/jankxia/cleanmitv/actions/workflows/build-apk.yml)。

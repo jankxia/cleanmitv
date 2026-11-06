@@ -170,6 +170,12 @@
     <string name="kids_start_elders">Start older people\'s mode</string>
     <string name="kids_pin_set">Set PIN</string>
     <string name="kids_pin_change">Change PIN</string>
+    <string name="kids_pin_first">Set a parent PIN first — it is how the mode is left.</string>
+    <string name="kids_pin_kind">PIN type</string>
+    <string name="pin_kind_digits">Four digits — on-screen keypad or number keys</string>
+    <string name="pin_kind_arrows">Four arrows — ↑ ↓ ← → on the remote</string>
+    <string name="pin_kind_digits_short">digits</string>
+    <string name="pin_kind_arrows_short">arrows</string>
     <string name="kids_turn_off">Turn mode off</string>
     <string name="kids_apps">Apps (%1$d)</string>
     <string name="kids_apps_hint">Pick what belongs here; it shows in the order picked.</string>

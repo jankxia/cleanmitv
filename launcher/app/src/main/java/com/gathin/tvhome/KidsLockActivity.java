@@ -105,7 +105,8 @@ public class KidsLockActivity extends Activity {
 
     private void askParent() {
         pinOpen = true;
-        PinDialog verify = new PinDialog(this, PinDialog.VERIFY, new PinDialog.PinListener() {
+        PinDialog verify = new PinDialog(this, PinDialog.VERIFY, Kids.pinArrows(),
+                new PinDialog.PinListener() {
             @Override public void onPin(String pin) {
                 pinOpen = false;
                 if (Kids.pinMatches(pin)) {

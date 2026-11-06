@@ -151,7 +151,11 @@ public final class KidsWatch {
         if (now - broughtBackAt < 3_000) return;
         broughtBackAt = now;
         try {
-            Intent i = new Intent(ctx, MainActivity.class);
+            // Locked: show the lock itself, not a Home that would only be covered again on the next
+            // tick. A child tapping an app then sees why it will not open, and the parent's PIN is
+            // right there; unlocked keep-away just puts Home back in front.
+            Intent i = Kids.lock != null ? new Intent(ctx, KidsLockActivity.class)
+                    : new Intent(ctx, MainActivity.class);
             i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
             ctx.startActivity(i);
         } catch (Exception ignored) {

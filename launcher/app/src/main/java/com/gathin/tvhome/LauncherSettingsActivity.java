@@ -170,12 +170,12 @@ public final class LauncherSettingsActivity extends Activity {
                                     refresh();
                                 } else {
                                     choices.edit().putString(PersonalAppearance.BACKGROUND_KEY, "bing")
-                                            .putString(Config.WALLPAPER_CHOICE_KEY, Config.WALLPAPER_NAME)
+                                            .remove(Config.WALLPAPER_CHOICE_KEY)
                                             .apply();
                                     changed();
                                     refresh();
-                                    // Bring today's picture down right away; the saved choice shows it
-                                    // even if the fetch fails (the previous day's file stays).
+                                    // Bring today's picture down right away; the saved choice shows the
+                                    // days collected so far even if the fetch fails.
                                     BingDaily.fetchToday(this, true, (ok, message) -> {
                                         Toast.makeText(this, message, Toast.LENGTH_SHORT).show();
                                         if (ok) changed();
@@ -215,6 +215,15 @@ public final class LauncherSettingsActivity extends Activity {
     }
 
     private void showWallpaperPicker() {
+        // "必应每日精选": the row fetches today's picture again instead of offering single files.
+        if ("bing".equals(choices.getString(PersonalAppearance.BACKGROUND_KEY, "app"))) {
+            BingDaily.fetchToday(this, true, (ok, message) -> {
+                Toast.makeText(this, message, Toast.LENGTH_SHORT).show();
+                if (ok) changed();
+                refresh();
+            });
+            return;
+        }
         File dir = Config.dir(this);
         List<File> images = new java.util.ArrayList<>(WallpaperRotation.images(
                 dir == null ? null : new File(dir, "wallpapers")));

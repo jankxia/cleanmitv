@@ -23,11 +23,11 @@ public final class PinDialog extends Dialog {
     public static final int VERIFY = 1;
 
     private final int mode;
+    private final boolean arrows;
     private final PinListener listener;
 
     private String entered = "";
     private String first;
-    private boolean arrows;
     private TextView title;
     private TextView hint;
     private LinearLayout dots;
@@ -43,8 +43,14 @@ public final class PinDialog extends Dialog {
     }
 
     public PinDialog(Context context, int mode, PinListener listener) {
+        this(context, mode, false, listener);
+    }
+
+    /** arrows: the PIN is four D-pad presses (↑ ↓ ← →) rather than four digits. */
+    public PinDialog(Context context, int mode, boolean arrows, PinListener listener) {
         super(context, android.R.style.Theme_Black_NoTitleBar_Fullscreen);
         this.mode = mode;
+        this.arrows = arrows;
         this.listener = listener;
     }
 
@@ -53,6 +59,12 @@ public final class PinDialog extends Dialog {
         super.onCreate(state);
         getWindow().setBackgroundDrawableResource(android.R.color.transparent);
         setContentView(build());
+        setOnShowListener(dialog -> keypad.post(() -> {
+            if (padFocus != null) padFocus.requestFocus();
+            else if (keypad.getChildCount() > 0 && ((LinearLayout) keypad.getChildAt(0)).getChildCount() > 0) {
+                ((LinearLayout) keypad.getChildAt(0)).getChildAt(0).requestFocus();
+            }
+        }));
     }
 
     private View build() {
@@ -109,35 +121,46 @@ public final class PinDialog extends Dialog {
     }
 
     private void redraw() {
-        int width = (int) (64 * getContext().getResources().getDisplayMetrics().density);
-        int height = (int) (48 * getContext().getResources().getDisplayMetrics().density);
+        float density = getContext().getResources().getDisplayMetrics().density;
+        int width = (int) (64 * density);
+        int height = (int) (48 * density);
         if (dots.getChildCount() != 4) {
             dots.removeAllViews();
             for (int i = 0; i < 4; i++) {
-                View dot = new View(getContext());
-                int size = (int) (14 * getContext().getResources().getDisplayMetrics().density);
+                TextView dot = new TextView(getContext());
+                int size = (int) (30 * density);
                 LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(size, size);
-                if (i > 0) lp.leftMargin = (int) (16 * getContext().getResources().getDisplayMetrics().density);
+                if (i > 0) lp.leftMargin = (int) (12 * density);
                 dot.setLayoutParams(lp);
+                dot.setGravity(Gravity.CENTER);
+                dot.setTextSize(20);
+                dot.setTextColor(Color.WHITE);
                 dots.addView(dot);
             }
         }
         for (int i = 0; i < 4; i++) {
-            View dot = dots.getChildAt(i);
+            TextView dot = (TextView) dots.getChildAt(i);
             GradientDrawable g = new GradientDrawable();
             g.setShape(GradientDrawable.OVAL);
-            g.setColor(i < entered.length() ? 0xFFFFFFFF : 0x00000000);
-            g.setStroke((int) (1.5f * getContext().getResources().getDisplayMetrics().density), Color.WHITE);
+            g.setColor(!arrows && i < entered.length() ? 0xFFFFFFFF : 0x00000000);
+            g.setStroke((int) (1.5f * density), Color.WHITE);
             dot.setBackground(g);
+            // In arrows mode the dot spells the press it holds, so the parent can read the four back.
+            dot.setText(arrows && i < entered.length()
+                    ? String.valueOf(arrowGlyph(entered.charAt(i))) : "");
         }
 
         if (arrows) {
             keypad.removeAllViews();
             TextView pad = new TextView(getContext());
-            pad.setText("");
+            pad.setText("\u2191   \u2193   \u2190   \u2192");
+            pad.setTextColor(Color.parseColor("#FFACB8C1"));
+            pad.setTextSize(30);
+            pad.setGravity(Gravity.CENTER);
+            pad.setPadding((int) (28 * density), (int) (10 * density), (int) (28 * density), (int) (10 * density));
             pad.setFocusable(true);
             pad.setFocusableInTouchMode(true);
-            keypad.addView(pad);
+            keypad.addView(pad, lp(density, ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT));
             padFocus = pad;
             return;
         }
@@ -185,22 +208,29 @@ public final class PinDialog extends Dialog {
 
     @Override
     public void show() {
-        super.show();
         entered = "";
         first = null;
-        arrows = false;
         errorRes = 0;
+        super.show();
         refresh();
-        if (getWindow() != null) getWindow().getDecorView().setOnKeyListener((v, keyCode, event) -> {
-            if (event.getAction() != KeyEvent.ACTION_DOWN) return false;
+    }
+
+    /**
+     * Keys are taken here rather than from a decor-view listener: a focused key on the on-screen pad
+     * consumed D-pad presses first, so the PIN never filled in. Arrows mode only listens to the four
+     * D-pad directions, digits mode only to the number keys; Back still closes the dialog.
+     */
+    @Override
+    public boolean dispatchKeyEvent(KeyEvent event) {
+        if (event.getAction() == KeyEvent.ACTION_DOWN) {
+            int keyCode = event.getKeyCode();
             if (arrows) {
                 char symbol = arrowOf(keyCode);
-                if (symbol == 0) return keyCode == KeyEvent.KEYCODE_DPAD_CENTER
-                        || keyCode == KeyEvent.KEYCODE_ENTER || keyCode == KeyEvent.KEYCODE_BACK;
-                type(symbol);
-                return true;
-            }
-            if (keyCode >= KeyEvent.KEYCODE_0 && keyCode <= KeyEvent.KEYCODE_9) {
+                if (symbol != 0) {
+                    type(symbol);
+                    return true;
+                }
+            } else if (keyCode >= KeyEvent.KEYCODE_0 && keyCode <= KeyEvent.KEYCODE_9) {
                 type((char) ('0' + keyCode - KeyEvent.KEYCODE_0));
                 return true;
             }
@@ -208,14 +238,18 @@ public final class PinDialog extends Dialog {
                 erase();
                 return true;
             }
-            return false;
-        });
-        keypad.post(() -> {
-            if (padFocus != null) padFocus.requestFocus();
-            else if (keypad.getChildCount() > 0 && ((LinearLayout) keypad.getChildAt(0)).getChildCount() > 0) {
-                ((LinearLayout) keypad.getChildAt(0)).getChildAt(0).requestFocus();
-            }
-        });
+        }
+        return super.dispatchKeyEvent(event);
+    }
+
+    private static char arrowGlyph(char symbol) {
+        switch (symbol) {
+            case 'U': return '\u2191';
+            case 'D': return '\u2193';
+            case 'L': return '\u2190';
+            case 'R': return '\u2192';
+            default: return symbol;
+        }
     }
 
     private char arrowOf(int keyCode) {

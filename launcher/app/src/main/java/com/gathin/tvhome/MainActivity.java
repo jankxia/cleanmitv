@@ -843,9 +843,34 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
     private void applyKidsMode() {
         boolean active = Kids.active();
         adapter.setKidsMode(active ? Kids.allowed() : null);
-        // The child gets no Settings or Inputs buttons; the mode's Home is just the tiles.
+        // The child gets no Inputs or Library buttons, but the gear becomes the parent's own button:
+        // with the PIN it is the only way out of the mode while the mode is on.
         View topButtons = findViewById(R.id.topButtons);
-        if (topButtons != null) topButtons.setVisibility(active ? View.GONE : View.VISIBLE);
+        if (topButtons != null) topButtons.setVisibility(View.VISIBLE);
+        if (topButtons instanceof ViewGroup) {
+            ViewGroup bar = (ViewGroup) topButtons;
+            Config conf = active ? null : Config.load(this);
+            for (int i = 0; i < bar.getChildCount(); i++) {
+                View child = bar.getChildAt(i);
+                boolean parent = child.getId() == R.id.btnSettings;
+                if (active) child.setVisibility(parent ? View.VISIBLE : View.GONE);
+                else if (child.getId() == R.id.btnLibraryTop) {
+                    child.setVisibility(conf.libraryButton && conf.appLibrary ? View.VISIBLE : View.GONE);
+                } else child.setVisibility(View.VISIBLE);
+            }
+        }
+        TextView gear = findViewById(R.id.btnSettings);
+        if (gear != null) {
+            if (active) {
+                if (gearClick == null) gearClick = gear.getOnClickListener();
+                gear.setText(R.string.kids_parent);
+                gear.setOnClickListener(v -> leaveKidsMode());
+            } else if (gearClick != null) {
+                gear.setText(R.string.settings);
+                gear.setOnClickListener(gearClick);
+                gearClick = null;
+            }
+        }
         // A parent who left the mode (PIN) gets the whole Home back; entering it shows only the chosen tiles.
         if (lastKidsActive != null && lastKidsActive != active) reloadApps(true);
         else if (active && !tilesMatchKidsMode()) reloadApps(true);
@@ -856,6 +881,40 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
             i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP);
             startActivity(i);
         }
+    }
+
+    /**
+     * Leaving the mode from Home: the parent's button (or the Settings key) asks for the PIN and
+     * then suspends the mode, which comes back once the TV sleeps again.
+     */
+    private void leaveKidsMode() {
+        if (pinOpen) return;
+        if (!Kids.pinSet()) {
+            // No PIN was ever set: leave rather than lock the parent out of their own Home.
+            Kids.suspend();
+            KidsWatch.poke();
+            applyKidsMode();
+            return;
+        }
+        pinOpen = true;
+        PinDialog verify = new PinDialog(this, PinDialog.VERIFY, Kids.pinArrows(),
+                new PinDialog.PinListener() {
+            @Override public void onPin(String pin) {
+                pinOpen = false;
+                if (Kids.pinMatches(pin)) {
+                    Kids.suspend();
+                    KidsWatch.poke();
+                    applyKidsMode();
+                } else {
+                    Toast.makeText(MainActivity.this, R.string.pin_wrong, Toast.LENGTH_LONG).show();
+                }
+            }
+
+            @Override public void onCancel() {
+                pinOpen = false;
+            }
+        });
+        verify.show();
     }
 
     /** Whether the tiles shown are already the mode's; avoids rebuilding on every resume. */
@@ -1283,8 +1342,16 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
      * nothing even on Home.
      */
     private boolean handleSettingsKey(KeyEvent event) {
-        // Kids/Elders mode: the child gets no settings; the key does nothing here.
-        if (Kids.active()) return true;
+        // Kids/Elders mode: the child gets no settings; the Settings (or Menu) key asks the parent
+        // for the PIN instead, which is how the mode is left without a time limit running out.
+        if (Kids.active()) {
+            int code = event.getKeyCode();
+            boolean settings = code == KeyEvent.KEYCODE_SETTINGS || code == KeyEvent.KEYCODE_MENU;
+            for (int c : settingsKeycodes) if (c == code) settings = true;
+            if (!settings) return false;
+            if (event.getAction() == KeyEvent.ACTION_UP && !event.isCanceled()) leaveKidsMode();
+            return true;
+        }
         for (int code : settingsKeycodes) {
             if (event.getKeyCode() != code) continue;
             if (event.getAction() == KeyEvent.ACTION_UP && !event.isCanceled()) {
@@ -2749,6 +2816,10 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
     private ColorStateList wifiNoInternetTint, wifiOfflineTint;
     /** The app library button in the top bar (library_button). */
     private View btnLibraryTop;
+    /** The gear's own click while the Kids mode borrows it as the parent's button. */
+    private View.OnClickListener gearClick;
+    /** A PIN dialog is open: the second press of the parent button does nothing. */
+    private boolean pinOpen;
     /** The open library came from that button: closing it returns there instead of scrolling to the grid's end. */
     private boolean libraryFromTopBar;
 

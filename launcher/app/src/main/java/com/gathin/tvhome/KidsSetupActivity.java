@@ -1,6 +1,7 @@
 package com.gathin.tvhome;
 
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
@@ -123,6 +124,12 @@ public class KidsSetupActivity extends Activity {
                 Toast.makeText(this, R.string.kids_pick_first, Toast.LENGTH_LONG).show();
                 return;
             }
+            // No PIN means no way out again: the mode can only be left with one, so ask for it here.
+            if (!Kids.pinSet()) {
+                Toast.makeText(this, R.string.kids_pin_first, Toast.LENGTH_LONG).show();
+                createPin();
+                return;
+            }
             // Into the mode: enabled, and not the suspended "parent is still here" state.
             Kids.chooseEnabled(true);
             Kids.start();
@@ -136,8 +143,9 @@ public class KidsSetupActivity extends Activity {
         });
         pinButton.setOnClickListener(v -> {
             if (Kids.pinSet()) {
-                // Set again: verify the old one first.
-                PinDialog verify = new PinDialog(this, PinDialog.VERIFY, new PinDialog.PinListener() {
+                // Set again: verify the old one first, in the kind it was entered in.
+                PinDialog verify = new PinDialog(this, PinDialog.VERIFY, Kids.pinArrows(),
+                        new PinDialog.PinListener() {
                     @Override public void onPin(String pin) {
                         if (Kids.pinMatches(pin)) createPin();
                         else toastWrong();
@@ -153,10 +161,19 @@ public class KidsSetupActivity extends Activity {
         });
     }
 
+    /** Asks which kind of PIN to set, then opens the pad for it: four digits, or four D-pad presses. */
     private void createPin() {
-        PinDialog create = new PinDialog(this, PinDialog.CREATE, new PinDialog.PinListener() {
+        String[] kinds = {getString(R.string.pin_kind_digits), getString(R.string.pin_kind_arrows)};
+        new AlertDialog.Builder(this)
+                .setTitle(R.string.kids_pin_kind)
+                .setItems(kinds, (dialog, which) -> showCreatePin(which == 1))
+                .show();
+    }
+
+    private void showCreatePin(boolean arrows) {
+        PinDialog create = new PinDialog(this, PinDialog.CREATE, arrows, new PinDialog.PinListener() {
             @Override public void onPin(String pin) {
-                Kids.choosePin(pin, false);
+                Kids.choosePin(pin, arrows);
                 refresh();
                 Toast.makeText(KidsSetupActivity.this, R.string.pin_saved, Toast.LENGTH_SHORT).show();
             }
@@ -233,7 +250,10 @@ public class KidsSetupActivity extends Activity {
         boolean kids = kind == Kids.Kind.KIDS;
         startButton.setText(kids ? R.string.kids_start_kids : R.string.kids_start_elders);
         turnOffButton.setVisibility(Kids.enabled() ? View.VISIBLE : View.GONE);
-        pinButton.setText(Kids.pinSet() ? R.string.kids_pin_change : R.string.kids_pin_set);
+        pinButton.setText(Kids.pinSet()
+                ? getString(R.string.kids_pin_change) + " · " + getString(
+                        Kids.pinArrows() ? R.string.pin_kind_arrows_short : R.string.pin_kind_digits_short)
+                : getString(R.string.kids_pin_set));
         appsTitle.setText(getString(R.string.kids_apps, Kids.allowed().size()));
         appsHint.setText(getString(kids ? R.string.kids_apps_hint : R.string.kids_elders_apps_hint));
         if (adapter != null) adapter.notifyDataSetChanged();
