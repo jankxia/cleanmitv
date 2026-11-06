@@ -765,6 +765,8 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         // while an app tile is focused (placeLibraryPill). It is no longer the row after the last app, so
         // the grid keeps its rows for apps only.
         libraryPill = findViewById(R.id.libraryPill);
+        appLibraryPillConfigured = cfg.appLibrary
+                && LibraryApps.showPill(cfg.appLibrary, cfg.libraryButton, cfg.showLibraryPill);
         libraryPill.setOnClickListener(v -> onLibraryRequested());
         libraryPill.setOnFocusChangeListener((v, focused) -> { if (focused) onLibraryFocused(); });
         libraryPill.setOnKeyListener((v, keyCode, event) -> {
@@ -2471,8 +2473,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
     /** Shows the App library pill where the config asks for it (never in Kids/Elders mode) and reserves its row. */
     private void updateLibraryPill() {
         if (libraryPill == null || adapter == null) return;
-        boolean shown = cfg.appLibrary
-                && LibraryApps.showPill(cfg.appLibrary, cfg.libraryButton, cfg.showLibraryPill)
+        boolean shown = appLibraryPillConfigured
                 && !Kids.active()
                 && adapter.appCount() > 0;
         libraryPill.setVisibility(shown ? View.VISIBLE : View.GONE);
@@ -2988,6 +2989,8 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
     private boolean libraryPillPlaced;
     /** The grid's own bottom padding (before the pill's bottom row is added to it); -1 until read. */
     private int gridBaseBottom = -1;
+    /** app_library + library_button/show_library_pill (read once in onCreate; cfg is local there). */
+    private boolean appLibraryPillConfigured;
 
     /** Turns a labelled top pill into the round TopButtonIcon shape: no text, the icon centred by even padding. */
     private void makeIconOnly(TextView pill) {
