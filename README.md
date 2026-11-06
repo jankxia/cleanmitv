@@ -1,6 +1,6 @@
 # CleanMiTV · 小米电视的干净桌面
 
-> 基于 [Gathin23/cleanyourtv](https://github.com/Gathin23/cleanyourtv) 二次开发，针对**国行小米电视**（实测 MiTV S65 Mini LED / MiTV-MFTR0，Android 14，小米 OS3）做了本地化和视觉体验改造。
+> 基于 [Gathin23/cleanyourtv](https://github.com/Gathin23/cleanyourtv) 二次开发，本项目fork至感谢 sqlsec/cleanmitv 针对**国行小米电视**（实测 MiTV S65 Mini LED / MiTV-MFTR0，Android 14，小米 OS3）做了本地化和视觉体验改造。
 
 ![CleanMiTV 主页演示](docs/tvhome/home-demo.gif)
 
