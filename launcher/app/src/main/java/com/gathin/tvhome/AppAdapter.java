@@ -578,9 +578,8 @@ public class AppAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
     int appCount() { return items.size(); }
 
     /**
-     * The App library pill is no longer a row of the grid. It is a view of its own, floating in the room
-     * between the dock row and the app grid (MainActivity.placeLibraryPill); a grid row for it pushed one
-     * row of the owner's apps off a short screen. Kids/Elders mode keeps it off, as before.
+     * The App library pill is not a row of the grid: it has a row of its own under the grid (MainActivity
+     * libraryPillRow), so every grid row is an app and no app row is pushed off a short screen.
      */
     private boolean footerLibrary() { return false; }
 

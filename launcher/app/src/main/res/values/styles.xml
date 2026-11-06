@@ -40,6 +40,8 @@
          fits the room a dock row leaves under its captions, and no start margin so it centres. -->
     <style name="LibraryPill" parent="TopButtonBase">
         <item name="android:layout_marginStart">0dp</item>
+        <item name="android:layout_marginTop">6dp</item>
+        <item name="android:layout_marginBottom">8dp</item>
         <item name="android:layout_height">36dp</item>
         <item name="android:paddingStart">14dp</item>
         <item name="android:paddingEnd">16dp</item>
