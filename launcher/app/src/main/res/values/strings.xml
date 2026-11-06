@@ -183,6 +183,11 @@
     <string name="kids_pick_first">Pick at least one app first.</string>
     <string name="kids_mode_card">Kids mode</string>
     <string name="elders_mode_card">Elders mode</string>
+    <string name="kids_mode_enter">Open Kids mode</string>
+    <string name="kids_mode_exit">Leave Kids mode</string>
+    <string name="elders_mode_enter">Open Elders mode</string>
+    <string name="elders_mode_exit">Leave Elders mode</string>
+    <string name="system_settings">System settings</string>
     <string name="kids_no_apps_tip">No app picked: Home shows only the mode card — press it for the PIN to leave.</string>
     <string name="kids_parent">Parent</string>
     <string name="kids_lock_break">Break time</string>

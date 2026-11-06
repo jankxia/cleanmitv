@@ -711,14 +711,9 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
             ((TextView) btnSettings).setText(R.string.launcher_settings);
             ((TextView) btnSettings).setCompoundDrawablesRelativeWithIntrinsicBounds(R.drawable.ic_controls, 0, 0, 0);
         }
-        btnSettings.setOnClickListener(v -> {
-            // In the Kids mode the gear is the parent's way out (PIN), not a way into Settings.
-            if (Kids.active()) {
-                leaveKidsMode();
-            } else if (launcherSettingsButton) startActivityForResult(
-                    new Intent(this, LauncherSettingsActivity.class), LAUNCHER_SETTINGS_REQUEST);
-            else open(systemIntent(Settings.ACTION_SETTINGS));
-        });
+        // The gear is the same gear in every mode: it drops a menu with the system settings, the
+        // launcher's own settings and the Kids/Elders mode in or out (behind the parent PIN).
+        btnSettings.setOnClickListener(v -> showGearMenu());
         btnReorder = findViewById(R.id.btnReorder);
         btnReorder.setOnClickListener(v -> toggleReorder());
         btnReorder.setVisibility(cfg.reorderButton ? View.VISIBLE : View.GONE);
@@ -752,13 +747,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
             ((TextView) btnSettings).setText(R.string.settings);
             ((TextView) btnSettings).setCompoundDrawablesRelativeWithIntrinsicBounds(R.drawable.ic_settings, 0, 0, 0);
             if (!iconOnlyButtons) makeIconOnly((TextView) btnSettings);
-            btnSettings.setOnClickListener(v -> {
-                if (Kids.active()) {
-                    leaveKidsMode();
-                } else {
-                    showTopMenu();
-                }
-            });
+            btnSettings.setOnClickListener(v -> showGearMenu());
             // The lone gear sits at the header's middle, not on its bottom line like the row of pills.
             LinearLayout topButtons = findViewById(R.id.topButtons);
             RelativeLayout.LayoutParams tlp = (RelativeLayout.LayoutParams) topButtons.getLayoutParams();
@@ -852,41 +841,11 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
     private void applyKidsMode() {
         boolean active = Kids.active();
         adapter.setKidsMode(active ? Kids.allowed() : null);
-        // The child gets no Inputs or Library buttons, but the gear becomes the parent's own button:
-        // with the PIN it is the only way out of the mode while the mode is on.
+        // The header keeps its ordinary look in every mode — same buttons, same labels, same order.
+        // Getting in and out of a mode is a row in the gear's dropdown (see showGearMenu), so the gear
+        // never turns into a "parent" button and nothing is hidden from the parent.
         View topButtons = findViewById(R.id.topButtons);
         if (topButtons != null) topButtons.setVisibility(View.VISIBLE);
-        if (topButtons instanceof ViewGroup) {
-            ViewGroup bar = (ViewGroup) topButtons;
-            Config conf = active ? null : Config.load(this);
-            for (int i = 0; i < bar.getChildCount(); i++) {
-                View child = bar.getChildAt(i);
-                boolean parent = child.getId() == R.id.btnSettings;
-                if (active) child.setVisibility(parent ? View.VISIBLE : View.GONE);
-                else if (child.getId() == R.id.btnLibraryTop) {
-                    child.setVisibility(conf.libraryButton && conf.appLibrary ? View.VISIBLE : View.GONE);
-                } else child.setVisibility(View.VISIBLE);
-            }
-        }
-        TextView gear = findViewById(R.id.btnSettings);
-        if (gear != null) {
-            if (active) {
-                if (!gearStyled) {
-                    // Remember what the gear looked like so leaving the mode puts its own label back.
-                    gearText = gear.getText();
-                    gearIcons = gear.getCompoundDrawablesRelative();
-                    gearStyled = true;
-                }
-                gear.setText(R.string.kids_parent);
-                gear.setCompoundDrawablesRelativeWithIntrinsicBounds(R.drawable.ic_controls, 0, 0, 0);
-            } else if (gearStyled) {
-                if (gearText != null) gear.setText(gearText);
-                if (gearIcons != null && gearIcons.length == 4) {
-                    gear.setCompoundDrawablesRelative(gearIcons[0], gearIcons[1], gearIcons[2], gearIcons[3]);
-                }
-                gearStyled = false;
-            }
-        }
         // A parent who left the mode (PIN) gets the whole Home back; entering it shows only the chosen tiles.
         if (lastKidsActive != null && lastKidsActive != active) reloadApps(true);
         else if (active && !tilesMatchKidsMode()) reloadApps(true);
@@ -899,7 +858,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         }
     }
 
-    /** The mode's own torch on Home: the same PIN exit as the "parent" button in the top bar. */
+    /** The mode's own card on Home: the same PIN exit as the mode row in the gear's dropdown. */
     void kidsParentPressed() {
         if (!Kids.active()) return;
         leaveKidsMode();
@@ -2839,11 +2798,6 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
     private ColorStateList wifiNoInternetTint, wifiOfflineTint;
     /** The app library button in the top bar (library_button). */
     private View btnLibraryTop;
-    /** The gear's label and icons before the Kids mode borrowed it as the parent's button. */
-    private CharSequence gearText;
-    private Drawable[] gearIcons;
-    /** True while the gear shows the parent's label. */
-    private boolean gearStyled;
     /** A PIN dialog is open: the second press of the parent button does nothing. */
     private boolean pinOpen;
     /** The open library came from that button: closing it returns there instead of scrolling to the grid's end. */
@@ -3340,6 +3294,64 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         popup.setWidth(Math.max((int) (220 * density), Math.min(panel.getMeasuredWidth(), (int) (360 * density))));
         dropIn(popup, panel, anchor, getResources().getBoolean(R.bool.rtl_menu_bar) ? Gravity.START : Gravity.END);
         rows.getChildAt(0).requestFocus();
+    }
+
+    /**
+     * The gear's dropdown: the quick rows it always had, then the system settings and the two modes.
+     * A mode row reads "leave …" while that mode is on and "open …" while it is off, so the same menu
+     * works in the normal Home, in the Kids mode and in the Elders mode.
+     */
+    private void showGearMenu() {
+        View anchor = findViewById(R.id.btnSettings);
+        View panel = getLayoutInflater().inflate(R.layout.popup_inputs, root, false);
+        LinearLayout rows = panel.findViewById(R.id.rows);
+        PopupWindow popup = glassPopup(panel, (int) (240 * density));
+        // Inputs opens its own list once this one has closed.
+        if (showInputsMenuRow) addInputRow(rows, popup, R.drawable.ic_input, getString(R.string.inputs), -1,
+                () -> root.post(this::showInputs));
+        addInputRow(rows, popup, R.drawable.ic_wifi, getString(R.string.quick_network), -1, this::openNetworkPill);
+        CharSequence network = wifiIconOnly ? btnWifi.getContentDescription() : btnWifi.getText();
+        if (!TextUtils.isEmpty(network)) {
+            TextView status = rows.getChildAt(rows.getChildCount() - 1).findViewById(R.id.status);
+            status.setText(network);
+            status.setVisibility(View.VISIBLE);
+        }
+        if (launcherSettingsButton) {
+            addInputRow(rows, popup, R.drawable.ic_home_settings_pill, getString(R.string.launcher_settings), -1,
+                    () -> startActivityForResult(new Intent(this, LauncherSettingsActivity.class), LAUNCHER_SETTINGS_REQUEST));
+        }
+        // The TV's own settings: the page with Accounts & Security, where ADB is switched on.
+        addInputRow(rows, popup, R.drawable.ic_settings, getString(R.string.system_settings), -1,
+                () -> open(systemIntent(Settings.ACTION_SETTINGS)));
+        boolean kidsOn = Kids.active() && Kids.kind() == Kids.Kind.KIDS;
+        boolean eldersOn = Kids.active() && Kids.kind() == Kids.Kind.ELDERS;
+        addInputRow(rows, popup, R.drawable.ic_kids_mode,
+                getString(kidsOn ? R.string.kids_mode_exit : R.string.kids_mode_enter), -1,
+                kidsOn ? this::leaveKidsMode : () -> enterKidsMode(Kids.Kind.KIDS));
+        addInputRow(rows, popup, R.drawable.ic_kids_mode,
+                getString(eldersOn ? R.string.elders_mode_exit : R.string.elders_mode_enter), -1,
+                eldersOn ? this::leaveKidsMode : () -> enterKidsMode(Kids.Kind.ELDERS));
+        addInputRow(rows, popup, R.drawable.ic_swap_vert, getString(R.string.reorder), -1, this::toggleReorder);
+        panel.measure(View.MeasureSpec.UNSPECIFIED, View.MeasureSpec.UNSPECIFIED);
+        popup.setWidth(Math.max((int) (240 * density), Math.min(panel.getMeasuredWidth(), (int) (380 * density))));
+        dropIn(popup, panel, anchor, getResources().getBoolean(R.bool.rtl_menu_bar) ? Gravity.START : Gravity.END);
+        rows.getChildAt(0).requestFocus();
+    }
+
+    /**
+     * Into a mode from the gear menu: a mode that was set up before and only suspended (the parent left
+     * with the PIN) comes back at once; otherwise the setup screen opens on the kind that was asked for.
+     */
+    private void enterKidsMode(Kids.Kind kind) {
+        if (Kids.enabled() && Kids.pinSet() && Kids.kind() == kind) {
+            Kids.start();
+            KidsWatch.poke();
+            applyKidsMode();
+            return;
+        }
+        Intent i = new Intent(this, KidsSetupActivity.class);
+        i.putExtra(KidsSetupActivity.EXTRA_KIND, kind == Kids.Kind.ELDERS ? "elders" : "kids");
+        startActivity(i);
     }
 
     /** The header opens launcher settings directly; hold OK keeps the extra home actions available. */

@@ -178,6 +178,11 @@
     <string name="kids_pick_first">请先至少选择一个应用。</string>
     <string name="kids_mode_card">儿童模式</string>
     <string name="elders_mode_card">老人模式</string>
+    <string name="kids_mode_enter">进入儿童模式</string>
+    <string name="kids_mode_exit">退出儿童模式</string>
+    <string name="elders_mode_enter">进入老人模式</string>
+    <string name="elders_mode_exit">退出老人模式</string>
+    <string name="system_settings">系统设置</string>
     <string name="kids_no_apps_tip">没有选择任何应用：主页只显示模式卡片，点它输 PIN 即可退出。</string>
     <string name="kids_parent">家长</string>
     <string name="kids_lock_break">休息时间</string>

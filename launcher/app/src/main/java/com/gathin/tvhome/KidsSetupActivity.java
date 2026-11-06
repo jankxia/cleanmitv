@@ -30,6 +30,9 @@ import java.util.List;
  */
 public class KidsSetupActivity extends Activity {
 
+    /** "kids" or "elders": which mode this screen opens on (the gear's menu passes it). */
+    static final String EXTRA_KIND = "kids_kind";
+
     private final List<App> apps = new ArrayList<>();
     private AppListAdapter adapter;
     private TextView appsTitle;
@@ -61,6 +64,11 @@ public class KidsSetupActivity extends Activity {
         startButton = findViewById(R.id.startButton);
         turnOffButton = findViewById(R.id.turnOffButton);
         pinButton = findViewById(R.id.pinButton);
+
+        // Opened from the gear's menu: the kind it asked for is the one this screen starts on.
+        String asked = getIntent().getStringExtra(EXTRA_KIND);
+        if ("elders".equals(asked)) Kids.chooseKind(Kids.Kind.ELDERS);
+        else if ("kids".equals(asked)) Kids.chooseKind(Kids.Kind.KIDS);
 
         RecyclerView list = findViewById(R.id.appsList);
         list.setLayoutManager(new LinearLayoutManager(this));
