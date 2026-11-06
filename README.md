@@ -2,7 +2,7 @@
 
 > 基于 [Gathin23/cleanyourtv](https://github.com/Gathin23/cleanyourtv) 二次开发，针对**国行小米电视**（实测 MiTV S65 Mini LED / MiTV-MFTR0，Android 14，小米 OS3）做了本地化和视觉体验改造。
 
-![CleanMiTV 演示](docs/cleanmitv/demo-preview.gif)
+![CleanMiTV 主页演示](docs/tvhome/home-demo.gif)
 
 ## 致敬原项目
 
@@ -207,28 +207,6 @@ launcher/app/src/main/java/com/gathin/tvhome/
 | ![](docs/tvhome/05-weather-city.jpg) | ![](docs/tvhome/06-wallpaper-picker.jpg) |
 | **儿童模式：底部没有「应用库」胶囊** | **家长 PIN：圆点只填实，不回显按过的方向** |
 | ![](docs/tvhome/07-kids-mode.jpg) | ![](docs/tvhome/08-parent-pin.jpg) |
-
-### 原项目的主题与视频
-
-4 套主题配色、16 张本地精选壁纸的实机图，以及演示视频，来自上游项目 `sqlsec/cleanmitv`，仍放在 `docs/cleanmitv/`：
-
-| 蓝色 · 飞牛TV | 红色 · 网易云音乐 |
-|---|---|
-| ![](docs/cleanmitv/01-home-blue.png) | ![](docs/cleanmitv/02-home-red.png) |
-| **绿色 · 米家** | **粉色 · 云视听小电视** |
-| ![](docs/cleanmitv/03-home-green.png) | ![](docs/cleanmitv/04-home-pink.png) |
-
-| 完整应用网格 | 隐藏设置 |
-|---|---|
-| ![](docs/cleanmitv/05-app-grid.png) | ![](docs/cleanmitv/06-settings-top.png) |
-| **背景风格：APP 主色渐变 / 壁纸** | **动态效果与动态背景开关** |
-| ![](docs/cleanmitv/07-background-picker.png) | ![](docs/cleanmitv/08-motion-settings.png) |
-
-![16 张本地精选壁纸](docs/cleanmitv/09-wallpaper-gallery.png)
-
-- 横屏演示（1920×1080，27 秒）：[cleanmitv-demo-landscape.mp4](docs/cleanmitv/cleanmitv-demo-landscape.mp4)
-- 竖屏版（1080×1920，适合小红书 / 抖音）：[cleanmitv-xiaohongshu-vertical.mp4](docs/cleanmitv/cleanmitv-xiaohongshu-vertical.mp4)
-- 双画面竖屏版（1080×1920，8 秒，上下两段实机录屏）：[cleanmitv-dual-vertical.mp4](docs/cleanmitv/cleanmitv-dual-vertical.mp4)
 
 ## 下载与安装
 
