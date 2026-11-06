@@ -172,7 +172,7 @@ launcher/app/src/main/java/com/gathin/tvhome/
 | 3 | 进入儿童模式后，页面下面的「应用库」胶囊不该出现 | footer 的可见条件只看 `showLibrary`，没有考虑模式 | `AppAdapter` 新增 `footerLibrary() = showLibrary && kidsAllowed == null`，`getItemCount()` / `isLibraryAt()` / `getItemViewType()` 全部走它；模式里只剩选定应用 + 模式卡片 |
 | 4 | 家长 PIN 用方向键输入时，不要把按的方向显示出来 | `PinDialog.redraw()` 在 arrows 模式下把每个圆点写成 ↑↓←→，旁边的人照着屏幕就能抄下 PIN | 圆点只按已输入长度填实心，文本恒为空；底部那行 ↑ ↓ ← → 仍作为「按方向键」的按键提示保留（那是键位说明，不是输入回显） |
 | 5 | 在主页按遥控器返回键，要直接回到主页程序坞 | 非重排状态直接把 `super.dispatchKeyEvent()`，Back 交给系统，可能离开桌面或把焦点落到奇怪的位置 | `dispatchKeyEvent` 在无弹窗、无卡片提示、不在 PIN 输入时拦下 BACK / ESC，`focusTile(0)` 把焦点送回程序坞第一格并消费该键；重排 / 编辑程序坞里的 Back 行为保持原样 |
-| 6 | 没有选进程序坞的 app 不要在程序坞下面「冒头」 | `rows_below_dock = 0` 只是把程序坞往下推，`RecyclerView` 照样把其余应用排在下方的行里，看起来就是冒出来一截 | `AppAdapter.reload()` 在 `rowsBelowDock == 0`、`dockRow`、非单行、非重排、非儿童/老人模式时，把程序坞行之后的多余条目截掉；重排与「编辑程序坞」时仍列出全部应用，方便从网格里挑进程序坞 |
+| 6 | 没有选进程序坞的 app 不要在程序坞下面「冒头」 | `rows_below_dock = 0` 只是把程序坞往下推，`RecyclerView` 照样把其余应用排在下方的行里，看起来就是冒出来一截 | 试过 `AppAdapter.reload()` 在 `rowsBelowDock == 0` 时截掉程序坞行之后的多余条目，实机反馈「主页少了一大片 app、看不见添加到主页的应用」后**已回退**：主页照旧列出全部应用，行数仍由 `rows_below_dock` 控制 |
 | 7 | 日期下面要加天气显示、农历显示 | 农历视图 `lunarDate` 早就存在，但 `R.bool/lunar_date` 默认是 `false`，一直不显示；天气完全没有 | `lunar_date` 默认改 `true`；中文农历改成「农历九月廿八 丙午年」并挪到「11月6日 星期五」**上面一排**（`Lunar` 内置月名/日名对照表，不再显示「9月28日」）；天气行放在日期下面；新增 `Weather.java`（Open-Meteo 免 key 接口 + 45 个城市坐标表 + 上次结果缓存），`activity_main.xml` 在日期下加 `@id/weather` 一行，`MainActivity.onResume` 刷新，最多 30 分钟请求一次 |
 | 8 | 隐藏设置里要能选天气城市 | 原来没有任何入口，城市只能写死 | `activity_launcher_settings.xml` 增加「天气城市」行，点击弹 45 个城市的单选列表（`Weather.CITIES`），选中即写入 `weather_city` 并立刻拉一次该城市天气，回桌面即可看到 |
 

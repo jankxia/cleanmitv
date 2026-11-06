@@ -368,12 +368,6 @@ public class AppAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                     new ComponentName(ctx, MainActivity.class), null,
                     ctx.getDrawable(R.drawable.ic_kids_mode), null, 0));
         }
-        // rows_below_dock = 0: the dock row is all Home shows. The spare apps live in the App library
-        // instead of peeking out under the dock; reorder (and edit dock) still list them to pick from.
-        if (dockRow && !singleRow && rowsBelowDock == 0 && !reordering && kidsAllowed == null
-                && fresh.size() > dockSize) {
-            fresh.subList(Math.max(dockSize, docked), fresh.size()).clear();
-        }
         items.clear();
         items.addAll(fresh);
         notifyDataSetChanged();
