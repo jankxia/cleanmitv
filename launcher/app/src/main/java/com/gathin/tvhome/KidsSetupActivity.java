@@ -13,6 +13,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -373,22 +374,108 @@ public class KidsSetupActivity extends Activity {
         });
     }
 
+    /** The stage the two rows below were last built for. */
+    private String chipsStage;
+    private final List<TextView> gradeChips = new ArrayList<>();
+    private final List<TextView> subjectChips = new ArrayList<>();
+
+    /** The grade row and the subject rows belong to a stage: rebuilt only when the stage changes. */
+    private void ensureChips(KidsPlan plan) {
+        if (plan.stage.equals(chipsStage)) return;
+        chipsStage = plan.stage;
+
+        LinearLayout gradeRow = findViewById(R.id.gradeRow);
+        LinearLayout subjectRow1 = findViewById(R.id.subjectRow1);
+        LinearLayout subjectRow2 = findViewById(R.id.subjectRow2);
+        gradeRow.removeAllViews();
+        subjectRow1.removeAllViews();
+        subjectRow2.removeAllViews();
+        gradeChips.clear();
+        subjectChips.clear();
+
+        LayoutInflater inflater = getLayoutInflater();
+        for (int grade : KidsPlan.grades(plan.stage)) {
+            TextView chip = (TextView) inflater.inflate(R.layout.kids_chip, gradeRow, false);
+            chip.setText(gradeLabel(grade));
+            chip.setTag(grade);
+            chip.setOnClickListener(v -> {
+                plan.grade = (Integer) v.getTag();
+                Kids.savePlan();
+                KidsWatch.poke();
+                refresh();
+            });
+            gradeRow.addView(chip);
+            gradeChips.add(chip);
+        }
+
+        String[] keys = KidsPlan.stageSubjects(plan.stage);
+        for (int i = 0; i < keys.length; i++) {
+            final String key = keys[i];
+            LinearLayout row = i < 5 ? subjectRow1 : subjectRow2;
+            TextView chip = (TextView) inflater.inflate(R.layout.kids_chip, row, false);
+            chip.setText(subjectLabel(key));
+            chip.setTag(key);
+            chip.setOnClickListener(v -> {
+                // Turning the last subject off would ask every subject again, so it stays on.
+                if (plan.subject(key) && plan.subjectCount() <= 1) {
+                    Toast.makeText(this, R.string.kids_subject_need, Toast.LENGTH_SHORT).show();
+                    return;
+                }
+                plan.setSubject(key, !plan.subject(key));
+                Kids.savePlan();
+                KidsWatch.poke();
+                refresh();
+            });
+            row.addView(chip);
+            subjectChips.add(chip);
+        }
+        subjectRow2.setVisibility(keys.length > 5 ? View.VISIBLE : View.GONE);
+    }
+
+    private String gradeLabel(int grade) {
+        switch (grade) {
+            case 1: return getString(R.string.kids_grade_1);
+            case 2: return getString(R.string.kids_grade_2);
+            case 3: return getString(R.string.kids_grade_3);
+            case 4: return getString(R.string.kids_grade_4);
+            case 5: return getString(R.string.kids_grade_5);
+            case 6: return getString(R.string.kids_grade_6);
+            case 7: return getString(R.string.kids_grade_7);
+            case 8: return getString(R.string.kids_grade_8);
+            case 9: return getString(R.string.kids_grade_9);
+            case 10: return getString(R.string.kids_grade_10);
+            case 11: return getString(R.string.kids_grade_11);
+            case 12: return getString(R.string.kids_grade_12);
+            default: return String.valueOf(grade);
+        }
+    }
+
+    private String subjectLabel(String key) {
+        switch (key) {
+            case "chinese": return getString(R.string.kids_subject_chinese);
+            case "math": return getString(R.string.kids_subject_math);
+            case "english": return getString(R.string.kids_subject_english);
+            case "history": return getString(R.string.kids_subject_history);
+            case "physics": return getString(R.string.kids_subject_physics);
+            case "chemistry": return getString(R.string.kids_subject_chemistry);
+            case "biology": return getString(R.string.kids_subject_biology);
+            case "geography": return getString(R.string.kids_subject_geography);
+            case "politics": return getString(R.string.kids_subject_politics);
+            default: return key;
+        }
+    }
+
     /** The quiz-for-time choices: what a round buys, which questions it asks, and the day's grid. */
     private void bindPlanChips() {
         final KidsPlan plan = Kids.plan();
         planChoice(R.id.quizOn, () -> plan.quizGate = true);
         planChoice(R.id.quizOff, () -> plan.quizGate = false);
 
-        planChoice(R.id.stagePrimary, () -> plan.stage = KidsPlan.STAGE_PRIMARY);
-        // The other stages have no questions yet: the chips say so rather than pretend.
-        View.OnClickListener later = v -> Toast.makeText(this, R.string.kids_stage_later,
-                Toast.LENGTH_SHORT).show();
-        findViewById(R.id.stageMiddle).setOnClickListener(later);
-        findViewById(R.id.stageHigh).setOnClickListener(later);
-
-        planChoice(R.id.subjectChinese, () -> plan.subjectChinese = !plan.subjectChinese);
-        planChoice(R.id.subjectMath, () -> plan.subjectMath = !plan.subjectMath);
-        planChoice(R.id.subjectEnglish, () -> plan.subjectEnglish = !plan.subjectEnglish);
+        // Stage, grade and subject: the grade and subject rows are rebuilt for each stage, because
+        // primary asks three subjects and high school asks nine.
+        planChoice(R.id.stagePrimary, () -> plan.chooseStage(KidsPlan.STAGE_PRIMARY));
+        planChoice(R.id.stageMiddle, () -> plan.chooseStage(KidsPlan.STAGE_MIDDLE));
+        planChoice(R.id.stageHigh, () -> plan.chooseStage(KidsPlan.STAGE_HIGH));
 
         planChoice(R.id.quizMin5, () -> plan.sessionMinutes = 5);
         planChoice(R.id.quizMin10, () -> plan.sessionMinutes = 10);
@@ -497,11 +584,16 @@ public class KidsSetupActivity extends Activity {
         setSelected(R.id.quizOn, plan.quizGate);
         setSelected(R.id.quizOff, !plan.quizGate);
         setSelected(R.id.stagePrimary, KidsPlan.STAGE_PRIMARY.equals(plan.stage));
-        setSelected(R.id.stageMiddle, false);
-        setSelected(R.id.stageHigh, false);
-        setSelected(R.id.subjectChinese, plan.subjectChinese);
-        setSelected(R.id.subjectMath, plan.subjectMath);
-        setSelected(R.id.subjectEnglish, plan.subjectEnglish);
+        setSelected(R.id.stageMiddle, KidsPlan.STAGE_MIDDLE.equals(plan.stage));
+        setSelected(R.id.stageHigh, KidsPlan.STAGE_HIGH.equals(plan.stage));
+        ensureChips(plan);
+        int gradeNow = plan.grade();
+        for (TextView chip : gradeChips) {
+            chip.setSelected(((Integer) chip.getTag()) == gradeNow);
+        }
+        for (TextView chip : subjectChips) {
+            chip.setSelected(plan.subject((String) chip.getTag()));
+        }
         setSelected(R.id.quizMin5, plan.sessionMinutes == 5);
         setSelected(R.id.quizMin10, plan.sessionMinutes == 10);
         setSelected(R.id.quizMin15, plan.sessionMinutes == 15);

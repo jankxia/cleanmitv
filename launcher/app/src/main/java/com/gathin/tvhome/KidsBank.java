@@ -34,14 +34,20 @@ public final class KidsBank {
     /** One question. */
     public static final class Q {
         public final String id;
+        /** primary / middle / high, and the grade inside it: 1-6, 7-9, 10-12. */
+        public final String stage;
+        public final int grade;
         public final String subject;
         public final String text;
         public final String[] options;
         public final int answer;
         public final int level;
 
-        Q(String id, String subject, String text, String[] options, int answer, int level) {
+        Q(String id, String stage, int grade, String subject, String text, String[] options,
+           int answer, int level) {
             this.id = id;
+            this.stage = stage;
+            this.grade = grade;
             this.subject = subject;
             this.text = text;
             this.options = options;
@@ -70,8 +76,9 @@ public final class KidsBank {
                 for (int j = 0; j < options.length; j++) options[j] = opts.getString(j);
                 int answer = o.getInt("a");
                 if (options.length < 2 || answer < 0 || answer >= options.length) continue;
-                list.add(new Q(o.getString("id"), o.optString("s", "common"),
-                        o.getString("q"), options, answer, o.optInt("l", 1)));
+                list.add(new Q(o.getString("id"), o.optString("st", "primary"), o.optInt("g", 1),
+                        o.optString("s", "common"), o.getString("q"), options, answer,
+                        o.optInt("l", 1)));
             }
         } catch (Exception e) {
             list.clear();
@@ -82,19 +89,30 @@ public final class KidsBank {
 
     /** A round of up to n questions: not asked today first, then never answered right, then the rest. */
     public static List<Q> pick(Context context, int n) {
-        return pick(context, n, null);
+        return pick(context, n, null, 0, null);
     }
 
     /** The same, only from the subjects picked; an empty set means every subject. */
     public static List<Q> pick(Context context, int n, Set<String> subjects) {
+        return pick(context, n, null, 0, subjects);
+    }
+
+    /**
+     * The same, only from one stage and grade; an empty subject set means every subject of that
+     * grade. A grade with nothing on file falls back to the rest of its stage, then to the whole
+     * bank, so a thin year can never leave the round empty.
+     */
+    public static List<Q> pick(Context context, int n, String stage, int grade, Set<String> subjects) {
         List<Q> all = all(context);
+        List<Q> pool = within(all, stage, grade, subjects);
+        if (pool.isEmpty()) pool = within(all, stage, 0, subjects);
+        if (pool.isEmpty()) pool = within(all, null, 0, null);
+
         Set<String> seen = seenToday(context);
-        boolean filter = subjects != null && !subjects.isEmpty();
         List<Q> fresh = new ArrayList<>();
         List<Q> unseen = new ArrayList<>();
         List<Q> rest = new ArrayList<>();
-        for (Q q : all) {
-            if (filter && !subjects.contains(q.subject)) continue;
+        for (Q q : pool) {
             if (seen.contains(q.id)) rest.add(q);
             else if (right(context, q.id) == 0) unseen.add(q);
             else fresh.add(q);
@@ -107,10 +125,21 @@ public final class KidsBank {
         add(out, unseen, n);
         add(out, fresh, n);
         add(out, rest, n);
-        // A subject picked with nothing in the bank would leave the round empty: take any subject.
-        if (out.isEmpty() && filter) return pick(context, n, null);
         Collections.shuffle(out, random);
         return out.size() > n ? new ArrayList<>(out.subList(0, n)) : out;
+    }
+
+    /** Every question in one stage (grade 0 = any grade) whose subject is on. */
+    private static List<Q> within(List<Q> all, String stage, int grade, Set<String> subjects) {
+        boolean bySubject = subjects != null && !subjects.isEmpty();
+        List<Q> out = new ArrayList<>();
+        for (Q q : all) {
+            if (stage != null && !stage.equals(q.stage)) continue;
+            if (grade > 0 && q.grade != grade) continue;
+            if (bySubject && !subjects.contains(q.subject)) continue;
+            out.add(q);
+        }
+        return out;
     }
 
     private static void add(List<Q> out, List<Q> from, int n) {
@@ -121,12 +150,14 @@ public final class KidsBank {
     }
 
     /** A round of the given size, the practice pool first, then the usual pick. */
-    public static List<Q> pickWithPractice(Context context, int n, int practice, Set<String> subjects) {
-        List<Q> list = new ArrayList<>(pick(context, n, subjects));
+    public static List<Q> pickWithPractice(Context context, int n, int practice, String stage,
+                                          int grade, Set<String> subjects) {
+        List<Q> list = new ArrayList<>(pick(context, n, stage, grade, subjects));
         if (practice > 0) {
-            List<Q> extra = pick(context, practice, subjects);
+            List<Q> extra = pick(context, practice, stage, grade, subjects);
             for (Q q : extra) {
                 if (list.size() >= n + practice) break;
+                if (list.contains(q)) continue;
                 list.add(q);
             }
         }

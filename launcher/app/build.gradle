@@ -29,8 +29,8 @@ android {
         applicationId providers.gradleProperty('launcherApplicationId').getOrElse('com.gathin.tvhome')
         minSdk 26
         targetSdk 34
-        versionCode 19
-        versionName '2.8.8-linked-limits'
+        versionCode 20
+        versionName '2.8.9-stage-grades'
         resConfigs 'en', 'zh-rCN'
     }
 

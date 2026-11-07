@@ -95,7 +95,8 @@ public class KidsQuizActivity extends Activity {
         waitingNext = false;
         resultPanel.setVisibility(View.GONE);
         int n = Math.max(1, practice ? Math.max(2, plan.extraQuestions) : plan.questionsPerRound);
-        round.addAll(KidsBank.pickWithPractice(this, n, practice ? 0 : ledger.extraPool, plan.subjects()));
+        round.addAll(KidsBank.pickWithPractice(this, n, practice ? 0 : ledger.extraPool,
+                plan.stage, plan.grade(), plan.subjects()));
         if (round.isEmpty()) {
             Kids.grantQuizTime(plan.sessionMinutes);
             close();
@@ -150,11 +151,13 @@ public class KidsQuizActivity extends Activity {
             feedback.setText(R.string.quiz_right);
         } else {
             streak = 0;
+            // The wrong pick keeps its red frame and the right one goes green; the line below spells
+            // out which option was picked, so the wrong answer stays readable after the round moves on.
             optionViews.get(choice).setBackgroundResource(R.drawable.quiz_option_wrong);
             if (q.answer < optionViews.size()) {
                 optionViews.get(q.answer).setBackgroundResource(R.drawable.quiz_option_right);
             }
-            feedback.setText(getString(R.string.quiz_wrong, q.options[q.answer]));
+            feedback.setText(getString(R.string.quiz_wrong_pick, q.options[choice], q.options[q.answer]));
         }
         score.setText(getString(R.string.quiz_score, correct));
 
