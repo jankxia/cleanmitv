@@ -244,6 +244,38 @@ v2.8.4 的补丁。原来时长档位最小是 30 分钟，想验证「答完一
 
 **涉及文件**：`activity_kids_setup.xml`、`KidsSetupActivity.java`、`app/build.gradle`（`versionCode` 15 → 16，`versionName` → `2.8.5-ten-minutes`）。
 
+## v2.8.6 修改记录（休息间隔 5/10 分钟，退出必输 PIN）
+
+两条要求一起改：休息间隔要有更短的档位，时长用满之后不许一个按钮就溜出儿童模式。
+
+| 改动 | 说明 |
+|---|---|
+| 休息间隔多 **5 分钟**、**10 分钟** | 档位从 关 / 30 / 45 / 60 改成 关 / 5 / 10 / 30 |
+| 休息间隔删掉 **45 分钟**、**60 分钟** | 两档太接近 30，且从没被用过；旧的 45/60 设置读取时回落成「关」，不会出现整行无选中 |
+| 时长用满后点「退出儿童模式」要输 PIN | 原来 `KidsLockActivity.leave()` 直接 `suspend()`，只靠按钮的可见性挡着，等于没有校验 |
+
+`Rules.breakEvery` 存的就是分钟数，`KidsTime.advance/lock` 早就按 `breakEvery * 60_000` 判休息，所以计时逻辑一行没动，只改档位与绑定。
+
+退出这一侧补了五个口子：
+
+| 位置 | 原来 | 现在 |
+|---|---|---|
+| `KidsLockActivity.leave()` | 谁调用都放行 | 只有 PIN 刚校验通过（`granting`）才 `suspend()` |
+| `KidsLockActivity.lockCheck()` | 只看缓存的 `Kids.lock`，字段过期会在该锁的时候把锁屏关掉 | 每轮自己 `Kids.lockNow()` 重算，只在返回 `null` 时 `finish()` |
+| `KidsLockActivity.askParent()` | 没设 PIN 也弹键盘，永远「PIN 错误」 | 先判 `pinSet()`，没设就提示去设 PIN |
+| `MainActivity.leaveKidsMode()`（设置胶囊里的「退出当前模式」） | `!pinSet()` 时直接 `suspend()` | 不放行，改为提示并跳去儿童设置页设 PIN |
+| `KidsSetupActivity` 的「关闭模式」 | 点一下就关 | 有 PIN 且不在 `unlockedRecently()` 里，先验 PIN 再 `Kids.turnOff()` |
+
+答题入口按约定**不验 PIN**：`KidsTime.ruleLock()` 的顺序是 不允许 → 最晚时间 → 时长用完 → 休息，过了「最晚看到」先返回 `LATE`，锁屏直接变成「该睡觉了」，答题按钮不会再冒出来顶替。
+
+**体积**：APK 从 434,052 B 到 434,392 B，多了 340 B。
+
+**涉及文件**：`activity_kids_setup.xml`、`KidsSetupActivity.java`、`KidsLockActivity.java`、`MainActivity.java`、`app/build.gradle`（`versionCode` 16 → 17，`versionName` → `2.8.6-short-breaks`）。
+
+**实机验证**（MiTV-ASTR0，adb 实拍）：错 PIN → Toast「PIN 错误。」；对 PIN → 出现 15 / 30 / 60 / 今天不限 + 退出儿童模式；点「退出儿童模式」回主页、儿童模式已挂起；休息设 5 分钟后连续观看约 5 分钟弹出「休息时间 / 2:29 后恢复。」。设置胶囊里的「退出当前模式」现在同样先弹 PIN。休息行确认只剩 关 / 5 / 10 / 30。
+
+**已知限制**：锁屏靠 `startActivity` 拉起，第三方播放器在前台时会被 Android 11 的后台启动限制挡掉（本应用 `SYSTEM_ALERT_WINDOW` 为 `default`），所以视频正在播的时候休息页要等按一次 HOME 才出现；给这个应用打开「显示在其他应用上层」后该限制解除。
+
 ## 实机截图
 
 下面 8 张全部在小米电视 **MiTV-ASTR0**（Android 11，1920×1080）上用 `adb shell screencap` 直接截取，没有修图，对应 `2.8.1-settings-weather`（v2.8.3 的界面截图待补）：
