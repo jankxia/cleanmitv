@@ -336,6 +336,84 @@ mResumedActivity（5 分钟后）→  com.ts.launcher/com.gathin.tvhome.KidsLock
 
 **涉及文件**：`AndroidManifest.xml`、`activity_kids_setup.xml`、`strings.xml`、`KidsSetupActivity.java`、`KidsWatch.java`、`app/build.gradle`（`versionCode` 18 → 19，`versionName` → `2.8.8-linked-limits`）。
 
+## v2.8.9 修改记录（学段→年级→科目三级选卷、题库 2210 题、程序坞归位）
+
+### 一、题库从「三档」升级成「学段 → 年级 → 科目」
+
+以前只有小学 / 初中 / 高中三档、每档三门课。现在按真实课表排：**先选学段，再选年级，再选科目**，年级和科目两行随学段重建。
+
+| 学段 | 年级 | 科目 | 题量目标 | 实际 |
+|---|---|---|---|---|
+| 小学 | 一年级 … 六年级 | 语文、数学、英语 | 500 | **503** |
+| 初中 | 初一、初二、初三 | 语文、数学、英语、历史、物理、化学 | 700 | **700** |
+| 高中 | 高一、高二、高三 | 语文、数学、英语、物理、化学、生物、历史、地理、政治 | 1000 | **1007** |
+
+合计 **2210 题**，`assets/kids-quiz.json` 363,141 B，字段 `st`（学段）/ `g`（年级）/ `s`（科目）/ `q` / `o` / `a` / `l`。题量比目标上下浮动几道，是为了每个「年级 × 科目」都凑成整组、不留半空的池子。
+
+| 改动 | 位置 |
+|---|---|
+| 年级、六个科目开关持久化；`grades(stage)` / `stageSubjects(stage)` / `stageOf(grade)` / `chooseStage()` | `KidsPlan.java` |
+| 题目带学段年级，`pick(context,n,stage,grade,subjects)` 只在本年级本学段出题，空池按「本年级 → 本学段 → 全库」三级回退 | `KidsBank.java` |
+| 学段行固定三个芯片；年级行按学段动态生成（超过 3 个折成两行）；科目行最多两行 | `KidsSetupActivity.ensureChips()`、`activity_kids_setup.xml`、`kids_chip.xml` |
+| 科目至少留一科，关到 0 时提示 | `kids_subject_need` |
+
+### 二、答错时把错误答案打出来
+
+以前只写「正确答案是 X」。现在写「**你选的是 X，正确答案是 Y**」，红框留在错选项、绿框标出正确项。
+
+### 三、程序坞跑到时钟下面：回归修掉
+
+现象：儿童模式下主页只有 2 个图标，偶尔会浮到左上角时间下面，不回底部；有时过一会儿又自己好了。
+
+根因是程序坞的垂直位置只在 `grid.addOnLayoutChangeListener` 里算一次，而进出模式会 `reloadApps`：如果那一刻 grid 还没测量完（宽高为 0），算出来的 padding 极小，程序坞就被顶到时钟下面，之后没有新的布局事件，位置就卡在那儿。
+
+| 改动 | 位置 |
+|---|---|
+| 位置计算抽成 `fitDockPadding(int,int)`，入口挡住 0 宽高 | `MainActivity.java` |
+| `reloadApps` 末尾、模式切换后、`onWindowFocusChanged(true)` 各补一次重算 | 同上 |
+
+实机验证（MiTV-ASTR0，装包后 `pkill` 再启动，冷启动直接进儿童模式）：
+
+```
+02:22 截图 → 儿童模式 / 飞牛TV 两个图标贴在屏幕底部，「儿童模式」大标题在上方
+把 `DockFit` 日志临时打开时读到：w=1696 h=841 dockRow=true single=false rows=0 tileW=279 itemH=247 want=498 padTop=20 → 498
+```
+
+### 四、三个时间真正跟着「最晚看到」走
+
+v2.8.8 已经做了「休息要落在当天分钟之内」，但窗口取的是 `最晚 - 开始时段`（固定 16 小时），所以任何时候 10/30/60/90/120 全都摆着，看着像没联动。
+
+现在窗口改成**从此刻到下一个「最晚看到」还能用多久**（在时段之外则用整天窗口，晚上写的设置对明天照样有效），并把它同时约束三项：
+
+| 现在 | 最晚看到 | 时长行 | 休息行 |
+|---|---|---|---|
+| 20:00 | 22:00 | 全部档位（还剩 120 分钟） | 关 / 5 / 10 / 30 |
+| 21:00 | 22:00 | 只剩 10 / 30 / 60，90 和 120 收起 | 关 / 5 / 10 |
+| 21:40 | 22:00 | 只剩 10 | 关 / 5 |
+| 22:30（已过点） | 22:00 | 全部档位（今天已锁，设置是给明天） | 全开 |
+| 任意 | 不限 | 全部档位 | 全开 |
+
+选任一项都会重算另外两项：超出窗口的时长自动降到最长可行档并提示，休息再跟着新的最短时长收缩；进页面时也会先把历史遗留的矛盾值收一遍，不会出现整行没选中或选了却不生效。
+
+规则复算脚本 `link_check.py`（仓库外本地跑）对 7 个场景断言「收下来的值必须在可见档位里、不能超出窗口、休息必须落在最短时长内」，全部通过。
+
+### 五、设置页那条英文按钮改成中文
+
+「Lock screen over video: on / off」在中文界面一直是英文，因为 `values-zh-rCN` 里根本没有 `kids_overlay_*` 四条。补齐后：
+
+```
+kids_overlay_ask  = 允许锁屏盖住正在播放的视频
+kids_overlay_on   = 锁屏盖住视频：已开启
+kids_overlay_off  = 锁屏盖住视频：未开启，点一下去开启
+kids_overlay_need = 家长：请允许本应用「显示在其他应用的上层」，否则视频播放时锁屏盖不住。
+```
+
+打包后核验 `resources.arsc`：四条中文串 4/4 命中。中文资源里不再有整条英文的按钮（`check_zh.py` 扫过只剩 `%1$s` 这类格式串）。
+
+**体积**：436,708 B（v2.8.8）→ 537,484 B。涨的 100 KB 几乎全是题库（363 KB JSON 压进 APK 后约 100 KB）。
+
+**涉及文件**：`assets/kids-quiz.json`、`KidsPlan.java`、`KidsBank.java`、`KidsSetupActivity.java`、`KidsQuizActivity.java`、`MainActivity.java`、`activity_kids_setup.xml`、`kids_chip.xml`、`values/strings.xml`、`values-zh-rCN/strings.xml`、`app/build.gradle`（`versionCode` 19 → 20，`versionName` → `2.8.9-stage-grades`）。
+
 ## 实机截图
 
 下面 8 张全部在小米电视 **MiTV-ASTR0**（Android 11，1920×1080）上用 `adb shell screencap` 直接截取，没有修图，对应 `2.8.1-settings-weather`（v2.8.3 的界面截图待补）：
@@ -376,9 +454,17 @@ mResumedActivity（5 分钟后）→  com.ts.launcher/com.gathin.tvhome.KidsLock
 | **休息锁屏直接压在正在播放的飞牛TV 上，没有按 HOME** | |
 | ![](docs/tvhome/21-kids-break-over-player.jpg) | |
 
+下面 4 张是 **v2.8.9** 的（本机新装后 `pkill` 重启、冷启动直接进儿童模式时截的）：
+
+| 学段选小学：年级折成两行（一 / 二 / 三年级，四 / 五 / 六年级） | 学段选高中：高一 / 高二 / 高三，九科分两行 |
+|---|---|
+| ![](docs/tvhome/22-kids-grade-rows.jpg) | ![](docs/tvhome/23-kids-high-subjects.jpg) |
+| **三个时间：工作日不允许 / 周末 10 / 最晚不限 / 休息关** | **程序坞归位：两个图标贴在屏幕底部，大标题在上方** |
+| ![](docs/tvhome/24-kids-times.jpg) | ![](docs/tvhome/25-kids-dock-fixed.jpg) |
+
 ## 下载与安装
 
-**安装包：** 到本 fork 的 [Releases](https://github.com/jankxia/cleanmitv/releases) 下载最新的 `tvhome-v*-signed.apk`（当前为 `tvhome-v2.8.8-linked-limits-signed.apk`）；原项目的 `CleanMiTV-2.7.5-local-MiTV-OS3.apk`（版本 2.7.5-local）仍在 [原仓库 release 目录](https://github.com/sqlsec/cleanmitv/tree/main/release)
+**安装包：** 到本 fork 的 [Releases](https://github.com/jankxia/cleanmitv/releases) 下载最新的 `tvhome-v*-signed.apk`（当前为 `tvhome-v2.8.9-stage-grades-signed.apk`）；原项目的 `CleanMiTV-2.7.5-local-MiTV-OS3.apk`（版本 2.7.5-local）仍在 [原仓库 release 目录](https://github.com/sqlsec/cleanmitv/tree/main/release)
 
 > ⚠️ 这个包针对小米 OS3 国行固件构建。该固件只允许白名单内的包名成为第三方 Home，所以用 `-PlauncherApplicationId=com.ts.launcher` 编译。Java 代码的命名空间仍然是 `com.gathin.tvhome`，没有修改系统、固件或签名权限。如果你的电视已经装了同包名的其他应用，会出现签名冲突。
 
