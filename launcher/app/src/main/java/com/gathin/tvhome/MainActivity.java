@@ -132,6 +132,8 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
 
     private AppAdapter adapter;
     private RecyclerView grid;
+    /** The loaded config; kept because the dock padding is recomputed long after onCreate. */
+    private Config cfg;
     private FrameLayout root;
     private WallpaperPlayer wallpaperPlayer;
     private GlassView glass;
@@ -386,7 +388,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         dayAppearance = PersonalAppearance.day(this);
         density = getResources().getDisplayMetrics().density;
         // config.xml, overlaid by config.json from a pushed theme (see Config and tools/theme.sh).
-        Config cfg = Config.load(this);
+        cfg = Config.load(this);
         appLibrarySelection = cfg.appLibrarySelection;
         libraryOkOpens = cfg.libraryOkOpens;
         // restore_key_services: after a force stop, put back the remote's accessibility helpers that Android took
@@ -612,47 +614,8 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
 
         // tvOS layout: push the dock row towards the bottom of the screen, leaving room for
         // rows_below_dock grid rows under it; the rest of the grid stays below until you press Down.
-        int rowsBelowDock = cfg.rowsBelowDock;
         grid.addOnLayoutChangeListener((v, l, t, r, b, ol, ot, or, ob) -> {
-            int h = b - t;
-            // Item height follows the tile size, which follows the columns and the rows that must fit (AppAdapter.tileWidthPx).
-            int inner = (r - l) - grid.getPaddingLeft() - grid.getPaddingRight();
-            int tileW = AppAdapter.tileWidthPx(inner, h, COLUMNS, rowsBelowDock, cfg.dockTitle, cfg.dockRow, density);
-            int itemH = AppAdapter.itemHeightPx(AppAdapter.tileHeightPx(tileW), density);
-            int dockRow = itemH + (int) (AppAdapter.DOCK_EXTRA_DP * density);   // item height plus DockDecoration offsets
-            int gridRows = itemH * rowsBelowDock;
-            // Keep the hero below the header when the library is enabled on a short screen,
-            // even when the theme requests an extra visible row below the dock.
-            int shelfClearance = cfg.appLibrary ? hero.getMeasuredHeight() + (int) (40 * density) : 0;
-            int want = Math.max(shelfClearance, h - dockRow - gridRows - (int) (AppAdapter.BOTTOM_ROOM_DP * density));
-            // Where the rows cannot fit even at the smallest tile (3 rows with the title on), the title keeps its
-            // room above the dock and the last rows run off the bottom instead of the title drawing over the clock.
-            if (MainActivity.this.dockRow && cfg.dockTitle && rowsBelowDock > 0) want = Math.max(want, (int) (AppAdapter.TITLE_ROOM_DP * density));
-            // No dock to push down: the grid starts at the top, with room for the first row's zoom and glass.
-            if (!MainActivity.this.dockRow) want = (int) (AppAdapter.TOP_ROOM_DP * density);
-            // A single row never shows the names under its tiles (the title above the row names the app), so the
-            // 7dp gap and 22dp label item_app.xml keeps for them would only lift the row: sit it that much lower.
-            if (singleRow && !cfg.alwaysShowNames) want += (int) (29 * density);
-            if (grid.getPaddingTop() != want) {
-                grid.setPadding(grid.getPaddingLeft(), want, grid.getPaddingRight(), grid.getPaddingBottom());
-                // A vertical grid parks the dock on the new padding line by scrolling (onTileFocused); a sideways
-                // row cannot scroll vertically, and the layout request made from inside this layout pass is
-                // dropped, so lay the row out again on the next frame. The glass and the title were placed for the
-                // old position, so fit them again once it has moved.
-                if (singleRow) grid.post(() -> {
-                    grid.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
-                        @Override
-                        public void onGlobalLayout() {
-                            grid.getViewTreeObserver().removeOnGlobalLayoutListener(this);
-                            int pos = Math.max(0, Math.min(lastFocused, adapter.appCount() - 1));
-                            RecyclerView.ViewHolder vh = grid.findViewHolderForAdapterPosition(pos);
-                            View card = vh == null ? null : vh.itemView.findViewById(R.id.card);
-                            if (card != null && card.isFocused()) onTileFocused(pos, card);
-                        }
-                    });
-                    grid.requestLayout();
-                });
-            }
+            fitDockPadding(r - l, b - t);
             // Cold start or column count > 4: the first focus can run before the grid has its final width or
             // padding, leaving the glass at the XML design size until a key is pressed.
             grid.post(this::refitGlass);
@@ -842,6 +805,61 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         applyKidsMode();
     }
 
+    /**
+     * Where the dock row sits on the screen: pushed down so rows_below_dock rows fit under it. The
+     * grid's own size decides it, so it is worked out whenever the grid is measured, and again after
+     * a mode change reloads the tiles (see applyKidsMode): that reload can land while the grid is
+     * still unmeasured, and the padding set then would park the dock under the clock until something
+     * else forces a layout.
+     */
+    private void fitDockPadding(int width, int height) {
+        if (grid == null || cfg == null || width <= 0 || height <= 0) return;
+        int rowsBelowDock = cfg.rowsBelowDock;
+        // Item height follows the tile size, which follows the columns and the rows that must fit (AppAdapter.tileWidthPx).
+        int inner = width - grid.getPaddingLeft() - grid.getPaddingRight();
+        int tileW = AppAdapter.tileWidthPx(inner, height, COLUMNS, rowsBelowDock, cfg.dockTitle, dockRow, density);
+        int itemH = AppAdapter.itemHeightPx(AppAdapter.tileHeightPx(tileW), density);
+        int dockH = itemH + (int) (AppAdapter.DOCK_EXTRA_DP * density);   // item height plus DockDecoration offsets
+        int gridRows = itemH * rowsBelowDock;
+        // Keep the hero below the header when the library is enabled on a short screen,
+        // even when the theme requests an extra visible row below the dock.
+        int shelfClearance = cfg.appLibrary ? hero.getMeasuredHeight() + (int) (40 * density) : 0;
+        int want = Math.max(shelfClearance, height - dockH - gridRows - (int) (AppAdapter.BOTTOM_ROOM_DP * density));
+        // Where the rows cannot fit even at the smallest tile (3 rows with the title on), the title keeps its
+        // room above the dock and the last rows run off the bottom instead of the title drawing over the clock.
+        if (dockRow && cfg.dockTitle && rowsBelowDock > 0) want = Math.max(want, (int) (AppAdapter.TITLE_ROOM_DP * density));
+        // No dock to push down: the grid starts at the top, with room for the first row's zoom and glass.
+        if (!dockRow) want = (int) (AppAdapter.TOP_ROOM_DP * density);
+        // A single row never shows the names under its tiles (the title above the row names the app), so the
+        // 7dp gap and 22dp label item_app.xml keeps for them would only lift the row: sit it that much lower.
+        if (singleRow && !cfg.alwaysShowNames) want += (int) (29 * density);
+        if (grid.getPaddingTop() == want) return;
+        grid.setPadding(grid.getPaddingLeft(), want, grid.getPaddingRight(), grid.getPaddingBottom());
+        // A vertical grid parks the dock on the new padding line by scrolling (onTileFocused); a sideways
+        // row cannot scroll vertically, and the layout request made from inside this layout pass is
+        // dropped, so lay the row out again on the next frame. The glass and the title were placed for the
+        // old position, so fit them again once it has moved.
+        if (singleRow) grid.post(() -> {
+            grid.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
+                @Override
+                public void onGlobalLayout() {
+                    grid.getViewTreeObserver().removeOnGlobalLayoutListener(this);
+                    int pos = Math.max(0, Math.min(lastFocused, adapter.appCount() - 1));
+                    RecyclerView.ViewHolder vh = grid.findViewHolderForAdapterPosition(pos);
+                    View card = vh == null ? null : vh.itemView.findViewById(R.id.card);
+                    if (card != null && card.isFocused()) onTileFocused(pos, card);
+                }
+            });
+            grid.requestLayout();
+        });
+    }
+
+    /** A mode change swaps the tiles; put the dock back where the grid's size now wants it. */
+    private void refitDockAfterReload() {
+        if (grid == null) return;
+        grid.post(() -> fitDockPadding(grid.getWidth(), grid.getHeight()));
+    }
+
     /** Kids/Elders mode was on at the last applyKidsMode; null until the first look. */
     private Boolean lastKidsActive;
 
@@ -858,8 +876,13 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         View topButtons = findViewById(R.id.topButtons);
         if (topButtons != null) topButtons.setVisibility(View.VISIBLE);
         // A parent who left the mode (PIN) gets the whole Home back; entering it shows only the chosen tiles.
-        if (lastKidsActive != null && lastKidsActive != active) reloadApps(true);
-        else if (active && !tilesMatchKidsMode()) reloadApps(true);
+        if (lastKidsActive != null && lastKidsActive != active) {
+            reloadApps(true);
+            refitDockAfterReload();
+        } else if (active && !tilesMatchKidsMode()) {
+            reloadApps(true);
+            refitDockAfterReload();
+        }
         lastKidsActive = active;
         Kids.Lock lock = Kids.lockNow(System.currentTimeMillis());
         if (lock != null && !KidsWatch.lockScreenShowing) {

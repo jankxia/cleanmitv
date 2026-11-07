@@ -232,6 +232,10 @@
     <string name="kids_stage_middle">初中</string>
     <string name="kids_stage_high">高中</string>
     <string name="kids_stage_note">每个学段有自己的题库：先选学段，再选年级和科目。</string>
+    <string name="kids_overlay_ask">允许锁屏盖住正在播放的视频</string>
+    <string name="kids_overlay_on">锁屏盖住视频：已开启</string>
+    <string name="kids_overlay_off">锁屏盖住视频：未开启，点一下去开启</string>
+    <string name="kids_overlay_need">家长：请允许本应用「显示在其他应用的上层」，否则视频播放时锁屏盖不住。</string>
     <string name="kids_stage_later">初中、高中的题库以后再加</string>
     <string name="kids_grade">年级</string>
     <string name="kids_grade_1">一年级</string>
