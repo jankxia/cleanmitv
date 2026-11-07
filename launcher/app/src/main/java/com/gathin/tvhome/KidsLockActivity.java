@@ -68,13 +68,23 @@ public class KidsLockActivity extends Activity {
         handler.post(lockCheck);
     }
 
-    /** The lock can clear on its own (a day rolls over, an allowance was set elsewhere): close. */
+    /**
+     * The lock is re-judged here rather than trusted from the last guard tick: a stale field once
+     * let the screen close while the day was still spent, which is the one thing it must not do.
+     */
     private final Runnable lockCheck = new Runnable() {
         @Override
         public void run() {
-            if (!isFinishing() && Kids.lock == null && !granting) {
-                finish();
-                return;
+            Kids.Lock fresh = Kids.lockNow(System.currentTimeMillis());
+            if (fresh == null) {
+                Kids.lock = null;
+                if (!isFinishing() && !granting) {
+                    finish();
+                    return;
+                }
+            } else if (fresh != Kids.lock) {
+                Kids.lock = fresh;
+                render();
             }
             handler.postDelayed(this, 2_000);
         }
@@ -135,6 +145,11 @@ public class KidsLockActivity extends Activity {
     }
 
     private void askParent() {
+        // Without a PIN nothing could ever match, so the lock would report a wrong PIN forever.
+        if (!Kids.pinSet()) {
+            Toast.makeText(this, R.string.kids_pin_first, Toast.LENGTH_LONG).show();
+            return;
+        }
         pinOpen = true;
         PinDialog verify = new PinDialog(this, PinDialog.VERIFY, Kids.pinArrows(),
                 new PinDialog.PinListener() {
@@ -162,6 +177,8 @@ public class KidsLockActivity extends Activity {
     }
 
     private void leave() {
+        // Behind the PIN only: granting is set when a parent's PIN has just been verified.
+        if (!granting) return;
         Kids.suspend();
         KidsWatch.poke();
         finish();

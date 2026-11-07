@@ -882,10 +882,10 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
     private void leaveKidsMode() {
         if (pinOpen) return;
         if (!Kids.pinSet()) {
-            // No PIN was ever set: leave rather than lock the parent out of their own Home.
-            Kids.suspend();
-            KidsWatch.poke();
-            applyKidsMode();
+            // Leaving takes a PIN. With none set there is no way to tell a parent from a child, so
+            // this sends them to set one instead of opening the Home for whoever is holding the remote.
+            Toast.makeText(this, R.string.kids_pin_first, Toast.LENGTH_LONG).show();
+            startActivity(new Intent(this, KidsSetupActivity.class));
             return;
         }
         pinOpen = true;

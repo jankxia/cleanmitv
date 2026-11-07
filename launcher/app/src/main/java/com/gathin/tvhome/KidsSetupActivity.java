@@ -123,6 +123,8 @@ public class KidsSetupActivity extends Activity {
         bindLatest(R.id.latest21, 21 * 60);
         bindLatest(R.id.latest22, 22 * 60);
         bindBreak(R.id.break0, 0);
+        bindBreak(R.id.break5, 5);
+        bindBreak(R.id.break10, 10);
         bindBreak(R.id.break30, 30);
         bindBreak(R.id.break45, 45);
         bindBreak(R.id.break60, 60);
@@ -138,9 +140,22 @@ public class KidsSetupActivity extends Activity {
             beginMode();
         });
         turnOffButton.setOnClickListener(v -> {
-            Kids.turnOff();
-            KidsWatch.poke();
-            finish();
+            // Turning the mode off is leaving it; the parent's PIN is the only way through.
+            if (Kids.pinSet() && !Kids.unlockedRecently()) {
+                PinDialog verify = new PinDialog(this, PinDialog.VERIFY, Kids.pinArrows(),
+                        new PinDialog.PinListener() {
+                    @Override public void onPin(String pin) {
+                        if (Kids.pinMatches(pin)) turnOff();
+                        else toastWrong();
+                    }
+
+                    @Override public void onCancel() {
+                    }
+                });
+                verify.show();
+                return;
+            }
+            turnOff();
         });
         pinButton.setOnClickListener(v -> {
             if (Kids.pinSet()) {
@@ -160,6 +175,13 @@ public class KidsSetupActivity extends Activity {
                 createPin(false);
             }
         });
+    }
+
+    /** Off for good: the mode is disabled rather than suspended, so it does not come back at sleep. */
+    private void turnOff() {
+        Kids.turnOff();
+        KidsWatch.poke();
+        finish();
     }
 
     /** Into the mode: enabled, and not the suspended "parent is still here" state. */
@@ -326,6 +348,8 @@ public class KidsSetupActivity extends Activity {
         setSelected(R.id.latest21, rules.endMinute == 21 * 60);
         setSelected(R.id.latest22, rules.endMinute == 22 * 60);
         setSelected(R.id.break0, rules.breakEvery == 0);
+        setSelected(R.id.break5, rules.breakEvery == 5);
+        setSelected(R.id.break10, rules.breakEvery == 10);
         setSelected(R.id.break30, rules.breakEvery == 30);
         setSelected(R.id.break45, rules.breakEvery == 45);
         setSelected(R.id.break60, rules.breakEvery == 60);

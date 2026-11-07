@@ -459,6 +459,10 @@
 
                 <TextView android:id="@+id/break0" style="@style/KidsChip" android:layout_marginEnd="10dp"
                     android:text="@string/st_off" />
+                <TextView android:id="@+id/break5" style="@style/KidsChip" android:layout_marginEnd="10dp"
+                    android:text="5" />
+                <TextView android:id="@+id/break10" style="@style/KidsChip" android:layout_marginEnd="10dp"
+                    android:text="10" />
                 <TextView android:id="@+id/break30" style="@style/KidsChip" android:layout_marginEnd="10dp"
                     android:text="30" />
                 <TextView android:id="@+id/break45" style="@style/KidsChip" android:layout_marginEnd="10dp"
