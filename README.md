@@ -276,6 +276,25 @@ v2.8.4 的补丁。原来时长档位最小是 30 分钟，想验证「答完一
 
 **已知限制**：锁屏靠 `startActivity` 拉起，第三方播放器在前台时会被 Android 11 的后台启动限制挡掉（本应用 `SYSTEM_ALERT_WINDOW` 为 `default`），所以视频正在播的时候休息页要等按一次 HOME 才出现；给这个应用打开「显示在其他应用上层」后该限制解除。
 
+## v2.8.7 修改记录（24 小时制时钟，每次选择都要 PIN）
+
+三条要求：主页时钟走 24 小时制；「今天的时长用完了」不再给「今天不限」；面板上点任何一个按钮都要再输一次家长 PIN。这一版也把答题流程第一次在电视上跑通。
+
+| 改动 | 说明 |
+|---|---|
+| 主页时钟改 **24 小时制** | `TextClock` 的 `format12Hour` 从 `h:mm` 改成 `HH:mm`（`format24Hour` 本来就是 `HH:mm`），显示午别的小字 `@id/ampm` 加 `visibility="gone"`；平板变体 `layout-iw` 同步改 |
+| 用完时**隐藏「今天不限」** | `render()` 里 `lock == DAY_USED` 时把 `grantDay` 置 `GONE`，面板只剩 15 / 30 / 60 分钟 |
+| 每个加时按钮**单独验 PIN** | 新增 `grantBehindPin(minutes)`：点 15 / 30 / 60 都弹一次 `PinDialog(VERIFY)`，验过才 `grant()`。面板开着不再等于有权限 |
+| 守卫诊断日志 | `KidsWatch.tick()` 每 6 个 tick（约 1 分钟）写一行 `Log.d("KidsWatch", ...)`，带 `watch= / used= / lock=`，用 `adb logcat -s KidsWatch` 就能核对当天到底记了多少分钟 |
+
+**答题入口以前为什么不出现**——这次查实了：`dailyCapMs = (limitToday + roundsPerDay × sessionMinutes) × 60_000`。当时周末 60 分钟、每组加时还是 **5** 分钟、每天 3 组，上限只有 75 分钟，而那天已经看了 77 分钟，`canEarnMore()` 恒为 false，`lockNow()` 就一直停在 `DAY_USED`，永远升不到 `QUIZ`。把「每组加时」调到 15 分钟后上限变 105 分钟，入口立刻冒出来。
+
+**实机验证**（MiTV-ASTR0，adb 实拍）：时钟 21:45、22:09 均为 24 小时制、无午别；锁屏「今天的时长用完了 / 今天已看 1 小时 17 分」下方只有「家长」，验 PIN 后的面板只有 15 / 30 / 60 分钟 + 退出儿童模式；再点「15 分钟」会**第二次**弹家长 PIN；答题整轮跑通：出题 → 判对（所选项变绿、答对计数上涨）→ 结算「通过啦 / 答对 2 / 3，加了 12 分钟」→ 回桌面不再锁屏。
+
+**体积**：APK 434,392 B → 434,980 B，多了 588 B。
+
+**涉及文件**：`activity_main.xml`、`layout-iw/activity_main.xml`、`KidsLockActivity.java`、`KidsWatch.java`、`app/build.gradle`（`versionCode` 17 → 18，`versionName` → `2.8.7-pin-every-choice`）。
+
 ## 实机截图
 
 下面 8 张全部在小米电视 **MiTV-ASTR0**（Android 11，1920×1080）上用 `adb shell screencap` 直接截取，没有修图，对应 `2.8.1-settings-weather`（v2.8.3 的界面截图待补）：
@@ -300,9 +319,17 @@ v2.8.4 的补丁。原来时长档位最小是 30 分钟，想验证「答完一
 | **时长用完后点「家长」验 PIN 才出现的加时面板** | **休息间隔到点弹出的休息锁屏（倒计时）** |
 | ![](docs/tvhome/12-kids-used-up.jpg) | ![](docs/tvhome/13-kids-break.jpg) |
 
+下面 4 张是 **v2.8.7** 的：
+
+| 主页时钟：24 小时制，没有午别 | 用完状态：面板只剩 15 / 30 / 60，没有「今天不限」 |
+|---|---|
+| ![](docs/tvhome/15-kids-24h.jpg) | ![](docs/tvhome/16-kids-used-up-panel.jpg) |
+| **答题入口：答对 3 道题可以再看 15 分钟** | **结算：通过啦，答对 2 / 3，加了 12 分钟** |
+| ![](docs/tvhome/17-kids-quiz.jpg) | ![](docs/tvhome/18-kids-quiz-pass.jpg) |
+
 ## 下载与安装
 
-**安装包：** 到本 fork 的 [Releases](https://github.com/jankxia/cleanmitv/releases) 下载最新的 `tvhome-v*-signed.apk`（当前为 `tvhome-v2.8.6-short-breaks-signed.apk`）；原项目的 `CleanMiTV-2.7.5-local-MiTV-OS3.apk`（版本 2.7.5-local）仍在 [原仓库 release 目录](https://github.com/sqlsec/cleanmitv/tree/main/release)
+**安装包：** 到本 fork 的 [Releases](https://github.com/jankxia/cleanmitv/releases) 下载最新的 `tvhome-v*-signed.apk`（当前为 `tvhome-v2.8.7-pin-every-choice-signed.apk`）；原项目的 `CleanMiTV-2.7.5-local-MiTV-OS3.apk`（版本 2.7.5-local）仍在 [原仓库 release 目录](https://github.com/sqlsec/cleanmitv/tree/main/release)
 
 > ⚠️ 这个包针对小米 OS3 国行固件构建。该固件只允许白名单内的包名成为第三方 Home，所以用 `-PlauncherApplicationId=com.ts.launcher` 编译。Java 代码的命名空间仍然是 `com.gathin.tvhome`，没有修改系统、固件或签名权限。如果你的电视已经装了同包名的其他应用，会出现签名冲突。
 
