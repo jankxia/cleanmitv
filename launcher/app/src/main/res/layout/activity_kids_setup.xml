@@ -78,6 +78,17 @@
                     android:text="@string/kids_block_off" />
             </LinearLayout>
 
+            <!-- Without this the lock screen cannot be raised over a video that is already playing. -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:orientation="horizontal">
+
+                <TextView android:id="@+id/overlayButton" style="@style/KidsChip"
+                    android:text="@string/kids_overlay_ask" />
+            </LinearLayout>
+
             <LinearLayout
                 android:id="@+id/quizSection"
                 android:layout_width="match_parent"

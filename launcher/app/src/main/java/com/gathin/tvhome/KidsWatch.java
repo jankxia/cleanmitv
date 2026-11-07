@@ -41,6 +41,9 @@ public final class KidsWatch {
     private static long broughtBackAt = Long.MIN_VALUE / 2;
     /** Ticks since the last log line: one line a minute is enough to read the counter back. */
     private static int silentTicks;
+    /** Ticks spent asking for the lock screen without it coming up: the launch is being refused. */
+    private static int failedRaises;
+    private static long toldOverlayAt = Long.MIN_VALUE / 2;
 
     /** Home (or the clock) is resumed: time there is not counted. */
     private static boolean homeInFront;
@@ -124,6 +127,17 @@ public final class KidsWatch {
         Kids.lock = lock;
         if (lock != null && interactive && !homeInFront && !lockScreenShowing && !quizShowing) {
             bringBack(ctx, "locked (" + lockName(lock) + ")");
+            // It only stays away when the launch is turned down: a video on top, and no permission
+            // to draw over it. Say it once in a while instead of failing silently every tick.
+            if (++failedRaises >= 3) {
+                failedRaises = 0;
+                if (!Settings.canDrawOverlays(ctx) && now - toldOverlayAt > 10 * 60_000L) {
+                    toldOverlayAt = now;
+                    warn(ctx, ctx.getString(R.string.kids_overlay_need));
+                }
+            }
+        } else {
+            failedRaises = 0;
         }
 
         if (watching && lock == null) warnIfDue(ctx, now);

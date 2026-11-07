@@ -6,7 +6,9 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
 import android.graphics.drawable.Drawable;
+import android.net.Uri;
 import android.os.Bundle;
+import android.provider.Settings;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -127,6 +129,9 @@ public class KidsSetupActivity extends Activity {
         bindBreak(R.id.break10, 10);
         bindBreak(R.id.break30, 30);
 
+        // Raising the lock screen over a video needs this: without it Android 11 refuses the launch.
+        findViewById(R.id.overlayButton).setOnClickListener(v -> openOverlaySettings());
+
         startButton.setOnClickListener(v -> {
             // No PIN means no way out again: the mode can only be left with one, so ask for it here
             // and go straight into the mode once it is set.
@@ -238,7 +243,16 @@ public class KidsSetupActivity extends Activity {
         findViewById(id).setOnClickListener(v -> {
             Kids.Rules r = Kids.rules();
             // copy() reads -1 as "leave alone", so a day set to "not at all" needs its own setter.
-            Kids.chooseRules(weekday ? r.withWeekday(minutes) : r.withWeekend(minutes));
+            Kids.Rules next = weekday ? r.withWeekday(minutes) : r.withWeekend(minutes);
+            // A break longer than the day's minutes never comes, so a shorter day pulls the break in
+            // with it instead of leaving a setting that can do nothing.
+            if (!breakFits(next.breakEvery, next)) {
+                int to = breakInside(shortestLimit(next));
+                Toast.makeText(this, getString(R.string.kids_break_shrunk, breakLabel(to)),
+                        Toast.LENGTH_SHORT).show();
+                next = next.copy(-1, -1, -1, -1, to, -1);
+            }
+            Kids.chooseRules(next);
             KidsWatch.poke();
             refresh();
         });
@@ -247,7 +261,21 @@ public class KidsSetupActivity extends Activity {
     private void bindLatest(int id, int endMinute) {
         findViewById(id).setOnClickListener(v -> {
             Kids.Rules r = Kids.rules();
-            Kids.chooseRules(r.copy(-1, -1, -1, endMinute, -1, -1));
+            Kids.Rules next = r.copy(-1, -1, -1, endMinute, -1, -1);
+            // A shorter window can leave a day's minutes too long to ever be used up.
+            if (!limitFits(next.weekdayMinutes, next) || !limitFits(next.weekendMinutes, next)) {
+                Toast.makeText(this, R.string.kids_limit_shrunk, Toast.LENGTH_SHORT).show();
+                int wd = limitFits(next.weekdayMinutes, next) ? next.weekdayMinutes
+                        : insideWindow(next.weekdayMinutes, next);
+                int we = limitFits(next.weekendMinutes, next) ? next.weekendMinutes
+                        : insideWindow(next.weekendMinutes, next);
+                Kids.Rules fixed = next.withWeekday(wd).withWeekend(we);
+                if (!breakFits(fixed.breakEvery, fixed)) {
+                    fixed = fixed.copy(-1, -1, -1, -1, breakInside(shortestLimit(fixed)), -1);
+                }
+                next = fixed;
+            }
+            Kids.chooseRules(next);
             KidsWatch.poke();
             refresh();
         });
@@ -256,10 +284,83 @@ public class KidsSetupActivity extends Activity {
     private void bindBreak(int id, int every) {
         findViewById(id).setOnClickListener(v -> {
             Kids.Rules r = Kids.rules();
+            if (!breakFits(every, r)) {
+                // The chip is hidden when it cannot work; this is the belt for the braces.
+                Toast.makeText(this, getString(R.string.kids_break_shrunk,
+                        breakLabel(breakInside(shortestLimit(r)))), Toast.LENGTH_SHORT).show();
+                return;
+            }
             Kids.chooseRules(r.copy(-1, -1, -1, -1, every, -1));
             KidsWatch.poke();
             refresh();
         });
+    }
+
+    /** The smallest day limit that is a real number of minutes; 0 when neither day has one. */
+    private static int shortestLimit(Kids.Rules r) {
+        int best = 0;
+        if (r.weekdayMinutes > 0) best = r.weekdayMinutes;
+        if (r.weekendMinutes > 0 && (best == 0 || r.weekendMinutes < best)) best = r.weekendMinutes;
+        return best;
+    }
+
+    /** A break has to land inside the day's minutes; "no TV" and "unlimited" put no ceiling on it. */
+    private static boolean breakFits(int every, Kids.Rules r) {
+        if (every <= 0) return true;
+        int limit = shortestLimit(r);
+        return limit == 0 || every < limit;
+    }
+
+    /** The largest offered break that still lands inside a day of {@code limit} minutes. */
+    private static int breakInside(int limit) {
+        if (limit <= 0) return -1;
+        if (limit > 30) return -1;
+        if (limit > 10) return 10;
+        if (limit > 5) return 5;
+        return 0;
+    }
+
+    /** How long the day can run at most; 0 when "off by" is not set at all. */
+    private static int windowMinutes(Kids.Rules r) {
+        if (r.endMinute <= 0) return 0;
+        return Math.max(0, r.endMinute - r.startMinute);
+    }
+
+    private static boolean limitFits(int minutes, Kids.Rules r) {
+        if (minutes <= 0) return true;
+        int win = windowMinutes(r);
+        return win == 0 || minutes <= win;
+    }
+
+    /** The longest offered day length that still fits the window. */
+    private static int insideWindow(int minutes, Kids.Rules r) {
+        if (minutes <= 0) return minutes;
+        int win = windowMinutes(r);
+        if (win <= 0) return minutes;
+        if (minutes <= win) return minutes;
+        if (win > 60) return 60;
+        if (win > 30) return 30;
+        if (win > 10) return 10;
+        return -1;
+    }
+
+    private String breakLabel(int every) {
+        return every <= 0 ? getString(R.string.st_off) : every + " min";
+    }
+
+    /** Android 11 only lets a background app raise a window if it may draw over other apps. */
+    private void openOverlaySettings() {
+        if (Settings.canDrawOverlays(this)) {
+            Toast.makeText(this, R.string.kids_overlay_on, Toast.LENGTH_SHORT).show();
+            return;
+        }
+        try {
+            startActivity(new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
+                    Uri.parse("package:" + getPackageName())));
+        } catch (Exception e) {
+            // Some TV builds hide this screen; the system's own app list is the fallback.
+            startActivity(new Intent(Settings.ACTION_MANAGE_APPLICATIONS_SETTINGS));
+        }
     }
 
     /** Every quiz choice writes the plan at once; the tick after this picks the new rules up. */
@@ -337,10 +438,25 @@ public class KidsSetupActivity extends Activity {
         setSelected(R.id.blockOff, true);
 
         Kids.Rules rules = Kids.rules();
+        // A break left over from an older combination is pulled back in the moment the page opens.
+        if (!breakFits(rules.breakEvery, rules)) {
+            rules = rules.copy(-1, -1, -1, -1, breakInside(shortestLimit(rules)), -1);
+            Kids.chooseRules(rules);
+        }
         setWeekdaySelected(R.id.weekdayNone, R.id.weekday10, R.id.weekday30, R.id.weekday60, R.id.weekday90,
                 R.id.weekday120, rules.weekdayMinutes);
         setMinutesSelected(R.id.weekend0, R.id.weekend10, R.id.weekend30, R.id.weekend60, R.id.weekend90,
                 R.id.weekend120, rules.weekendMinutes);
+        keepFitting(R.id.weekday10, 10, rules);
+        keepFitting(R.id.weekday30, 30, rules);
+        keepFitting(R.id.weekday60, 60, rules);
+        keepFitting(R.id.weekday90, 90, rules);
+        keepFitting(R.id.weekday120, 120, rules);
+        keepFitting(R.id.weekend10, 10, rules);
+        keepFitting(R.id.weekend30, 30, rules);
+        keepFitting(R.id.weekend60, 60, rules);
+        keepFitting(R.id.weekend90, 90, rules);
+        keepFitting(R.id.weekend120, 120, rules);
         setSelected(R.id.latest0, rules.endMinute == 0);
         setSelected(R.id.latest20, rules.endMinute == 20 * 60);
         setSelected(R.id.latest21, rules.endMinute == 21 * 60);
@@ -355,6 +471,14 @@ public class KidsSetupActivity extends Activity {
         setSelected(R.id.break5, rules.breakEvery == 5);
         setSelected(R.id.break10, rules.breakEvery == 10);
         setSelected(R.id.break30, rules.breakEvery == 30);
+        keepBreak(R.id.break5, 5, rules);
+        keepBreak(R.id.break10, 10, rules);
+        keepBreak(R.id.break30, 30, rules);
+
+        TextView overlayButton = findViewById(R.id.overlayButton);
+        boolean overlay = Settings.canDrawOverlays(this);
+        overlayButton.setText(overlay ? R.string.kids_overlay_on : R.string.kids_overlay_off);
+        overlayButton.setSelected(overlay);
 
         boolean kids = kind == Kids.Kind.KIDS;
         startButton.setText(kids ? R.string.kids_start_kids : R.string.kids_start_elders);
@@ -428,6 +552,15 @@ public class KidsSetupActivity extends Activity {
 
     private void setSelected(int id, boolean on) {
         findViewById(id).setSelected(on);
+    }
+
+    /** A day length longer than the window, or one that swallows the break, is taken off the row. */
+    private void keepFitting(int id, int minutes, Kids.Rules rules) {
+        findViewById(id).setVisibility(limitFits(minutes, rules) ? View.VISIBLE : View.GONE);
+    }
+
+    private void keepBreak(int id, int every, Kids.Rules rules) {
+        findViewById(id).setVisibility(breakFits(every, rules) ? View.VISIBLE : View.GONE);
     }
 
     /** Every tile the mode can show; picking one puts it at the end of the mode's Home. */

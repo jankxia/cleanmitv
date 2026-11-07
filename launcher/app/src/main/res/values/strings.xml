@@ -170,6 +170,12 @@
     <string name="kids_no_limit">None</string>
     <string name="kids_never">No TV</string>
     <string name="kids_break">Break after</string>
+    <string name="kids_overlay_ask">Let the lock screen come over a video</string>
+    <string name="kids_overlay_on">Lock screen over video: on</string>
+    <string name="kids_overlay_off">Lock screen over video: off — tap to allow</string>
+    <string name="kids_break_shrunk">Break changed to %1$s: it has to fall inside the day\'s minutes.</string>
+    <string name="kids_limit_shrunk">Day time shortened: it no longer fits the hours the TV may be on.</string>
+    <string name="kids_overlay_need">Parent: allow this app to show over other apps on the TV, or the lock screen cannot cover a video that is playing.</string>
     <string name="st_off">Off</string>
     <string name="kids_start_kids">Start children\'s mode</string>
     <string name="kids_start_elders">Start older people\'s mode</string>
