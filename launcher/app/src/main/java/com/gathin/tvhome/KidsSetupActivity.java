@@ -354,9 +354,9 @@ public class KidsSetupActivity extends Activity {
         int win = windowMinutes(r);
         if (win < 0) return minutes;
         if (minutes <= win) return minutes;
-        if (win > 60) return 60;
-        if (win > 30) return 30;
-        if (win > 10) return 10;
+        if (win >= 60) return 60;
+        if (win >= 30) return 30;
+        if (win >= 10) return 10;
         return -1;
     }
 
