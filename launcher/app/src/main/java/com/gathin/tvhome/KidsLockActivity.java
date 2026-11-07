@@ -1,6 +1,7 @@
 package com.gathin.tvhome;
 
 import android.app.Activity;
+import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
@@ -21,6 +22,7 @@ public class KidsLockActivity extends Activity {
     private TextView title;
     private TextView subtitle;
     private TextView parentButton;
+    private TextView quizButton;
     private View grantRow;
     private TextView leaveButton;
     private boolean granting;
@@ -44,10 +46,12 @@ public class KidsLockActivity extends Activity {
         title = findViewById(R.id.title);
         subtitle = findViewById(R.id.subtitle);
         parentButton = findViewById(R.id.parentButton);
+        quizButton = findViewById(R.id.quizButton);
         grantRow = findViewById(R.id.grantRow);
         leaveButton = findViewById(R.id.leaveButton);
 
         parentButton.setOnClickListener(v -> askParent());
+        quizButton.setOnClickListener(v -> startQuiz());
         findViewById(R.id.grant15).setOnClickListener(v -> grant(15));
         findViewById(R.id.grant30).setOnClickListener(v -> grant(30));
         findViewById(R.id.grant60).setOnClickListener(v -> grant(60));
@@ -90,6 +94,12 @@ public class KidsLockActivity extends Activity {
             icon.setText("\uD83C\uDF19");
             title.setText(R.string.kids_lock_day);
             subtitle.setText(getString(R.string.kids_lock_day_sub, durationText(Kids.usage().usedMs)));
+        } else if (lock == Kids.Lock.QUIZ) {
+            // The day is used up, but questions still buy time: this is the way on, not a full stop.
+            icon.setText("\uD83D\uDCDA");
+            title.setText(R.string.kids_lock_quiz);
+            subtitle.setText(getString(R.string.kids_lock_quiz_sub,
+                    Kids.plan().sessionMinutes, Kids.plan().questionsPerRound));
         } else if (lock == Kids.Lock.NO_WATCH) {
             // The day's minutes are set to "not at all": no hour opens it, not even a break's end.
             icon.setText("\uD83C\uDF19");
@@ -106,6 +116,22 @@ public class KidsLockActivity extends Activity {
         leaveButton.setText(kids ? R.string.cc_kids_leave : R.string.cc_elders_leave);
         grantRow.setVisibility(granting ? View.VISIBLE : View.GONE);
         parentButton.setVisibility(granting ? View.GONE : View.VISIBLE);
+        boolean quiz = lock == Kids.Lock.QUIZ;
+        quizButton.setVisibility(quiz && !granting ? View.VISIBLE : View.GONE);
+        if (quiz && !granting) quizButton.requestFocus();
+    }
+
+    /** Off to the questions: the lock screen steps aside and the quiz takes over. */
+    private void startQuiz() {
+        if (Kids.lock != Kids.Lock.QUIZ) return;
+        // Hold the guard off across the hand-over: the lock is still set while the quiz opens.
+        KidsWatch.quizShowing = true;
+        try {
+            startActivity(new Intent(this, KidsQuizActivity.class));
+            finish();
+        } catch (Exception e) {
+            KidsWatch.quizShowing = false;
+        }
     }
 
     private void askParent() {

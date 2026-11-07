@@ -45,6 +45,9 @@ public final class KidsWatch {
     /** The full-screen Kids lock is showing: nothing may bring Home over it. */
     public static volatile boolean lockScreenShowing;
 
+    /** The quiz that buys time is showing: that is not watching, and it must not be interrupted. */
+    public static volatile boolean quizShowing;
+
     private static final Runnable loop = KidsWatch::tickAndPlan;
 
     private static final BroadcastReceiver screenOff = new BroadcastReceiver() {
@@ -103,7 +106,8 @@ public final class KidsWatch {
         lastTickAt = at;
         PowerManager pm = (PowerManager) ctx.getSystemService(Context.POWER_SERVICE);
         boolean interactive = pm == null || pm.isInteractive();
-        boolean watching = Kids.active() && interactive && !homeInFront && !lockScreenShowing;
+        boolean watching = Kids.active() && interactive && !homeInFront && !lockScreenShowing
+                && !quizShowing;
         if (watching) {
             idleMs = 0;
             // A gap longer than two ticks is the process held up (standby), not watching.
@@ -115,7 +119,7 @@ public final class KidsWatch {
 
         Kids.Lock lock = Kids.lockNow(now);
         Kids.lock = lock;
-        if (lock != null && interactive && !homeInFront && !lockScreenShowing) {
+        if (lock != null && interactive && !homeInFront && !lockScreenShowing && !quizShowing) {
             bringBack(ctx, "locked (" + lockName(lock) + ")");
         }
 
@@ -251,6 +255,7 @@ public final class KidsWatch {
             case DAY_USED: return "day used";
             case NO_WATCH: return "no watching";
             case LATE: return "late";
+            case QUIZ: return "quiz";
             default: return "unlocked";
         }
     }

@@ -75,4 +75,14 @@
         <item name="android:minWidth">150dp</item>
         <item name="android:background">@drawable/kids_button_bg</item>
     </style>
+
+    <!-- The schedule grid: one weekday label above each column of half-hour cells. -->
+    <style name="SchedDay">
+        <item name="android:layout_width">0dp</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_weight">1</item>
+        <item name="android:gravity">center</item>
+        <item name="android:textColor">#FFACB8C1</item>
+        <item name="android:textSize">14sp</item>
+    </style>
 </resources>

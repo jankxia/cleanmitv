@@ -54,7 +54,9 @@ public final class Kids {
         /** The day's minutes are set to "not at all": no watching whatever the hour. */
         NO_WATCH,
         /** Outside the hours the TV may be watched. */
-        LATE
+        LATE,
+        /** The day is used up, but a round of questions still buys time: the quiz is the way on. */
+        QUIZ
     }
 
     /**
@@ -267,6 +269,10 @@ public final class Kids {
     private static Usage usage = new Usage(0, 0, 0, 0);
     private static String usageDay = "";
 
+    /** The quiz-for-time plan and what it has bought so far; see {@link KidsPlan} and {@link KidsLedger}. */
+    private static KidsPlan plan = new KidsPlan();
+    private static KidsLedger ledger = new KidsLedger();
+
     /** Parental PIN, SHA-256 of "cleanmitv:" + pin; null when none is set. */
     private static String pinHash;
     private static boolean pinArrows;
@@ -324,6 +330,8 @@ public final class Kids {
                 p.getLong("allow_until", 0));
         pinHash = p.getString("pin_hash", null);
         pinArrows = p.getBoolean("pin_arrows", false);
+        plan = KidsPlan.load(app);
+        ledger = KidsLedger.load(app);
         rollDay(System.currentTimeMillis());
     }
 
@@ -416,6 +424,11 @@ public final class Kids {
         return Instant.ofEpochMilli(now).atZone(ZoneId.systemDefault()).toLocalDate().toString();
     }
 
+    /** Today, yyyy-MM-dd: the day the ledger and the bank count by. */
+    public static String day() {
+        return dayOf(System.currentTimeMillis());
+    }
+
     /** A new day starts with nothing watched; a break or an allowance from yesterday is over. */
     private static void rollDay(long now) {
         String day = dayOf(now);
@@ -423,6 +436,8 @@ public final class Kids {
         usageDay = day;
         long allowUntil = usage.allowUntil > now ? usage.allowUntil : 0;
         saveUsage(new Usage(0, 0, 0, allowUntil));
+        ledger.roll(day);
+        ledger.save(app);
     }
 
     private static void saveUsage(Usage u) {
@@ -440,6 +455,16 @@ public final class Kids {
     public static void count(long watchedMs, long idleMs, long now) {
         rollDay(now);
         Usage next = KidsTime.advance(rules, usage, watchedMs, idleMs, now);
+        // Time bought with questions is spent before the day's quota is: a round really does add
+        // watching. The break clock above still counts the whole stretch, as it should.
+        if (watchedMs > 0) {
+            long covered = ledger.spend(watchedMs);
+            if (covered > 0) {
+                ledger.save(app);
+                next = new Usage(Math.max(0, next.usedMs - covered), next.continuousMs,
+                        next.breakUntil, next.allowUntil);
+            }
+        }
         if (!sameUsage(next, usage)) saveUsage(next);
     }
 
@@ -464,20 +489,114 @@ public final class Kids {
         lock = null;
     }
 
+    /**
+     * The rules as today reads them: a holiday keeps the weekend's minutes whatever the weekday.
+     * The rest of the rule set is untouched.
+     */
+    private static Rules todayRules() {
+        return plan.holidayWeekend ? rules.withWeekday(rules.weekendMinutes) : rules;
+    }
+
     public static Lock lockNow(long now) {
         if (!active()) return null;
         rollDay(now);
-        return KidsTime.lock(rules, usage, now, ZoneId.systemDefault());
+        Lock lock = KidsTime.lock(todayRules(), usage, now, ZoneId.systemDefault());
+        // The schedule grid closes the hour whether or not the window in Rules does; a day set to
+        // "not at all" and a break being taken come first.
+        if (lock != Lock.NO_WATCH && lock != Lock.BREAK && slotClosed(now)) lock = Lock.LATE;
+        // Time already bought is spent before the quota is declared used up.
+        if (lock == Lock.DAY_USED && ledger.creditMs > 0) return null;
+        if (lock == Lock.DAY_USED && quizOffered(now)) return Lock.QUIZ;
+        return lock;
+    }
+
+    /** Whether the half-hour now sits in a closed slot; false when the grid is unused. */
+    private static boolean slotClosed(long now) {
+        if (!plan.slotControl || !KidsPlan.gridOk(plan.weekSlots)) return false;
+        LocalDateTime at = Instant.ofEpochMilli(now).atZone(ZoneId.systemDefault()).toLocalDateTime();
+        int day = at.getDayOfWeek().getValue() - 1;
+        int half = at.getHour() * 2 + (at.getMinute() >= 30 ? 1 : 0);
+        return !plan.slotOpen(day, half);
+    }
+
+    /** Whether a round of questions would still buy time now. */
+    private static boolean quizOffered(long now) {
+        if (!plan.quizGate) return false;
+        if (ledger.creditMs > 0) return false;
+        if (!ledger.roundsLeft(plan.roundsPerDay)) return false;
+        return canEarnMore(now);
+    }
+
+    /** Room left in the day's quota for the quiz to top up; a day with no limit needs none. */
+    private static boolean canEarnMore(long now) {
+        int limit = limitToday(now);
+        if (limit <= 0) return false;
+        long used = usage.usedMs;
+        return used + ledger.creditMs < limit * 60_000L;
+    }
+
+    /**
+     * A round was passed: minutes more of watching, capped at what is left of the day's quota and
+     * never more than asked. Returns what was actually granted - 0 when the day is already full.
+     * Counts the round either way, so a pass cannot be farmed after the last one.
+     */
+    public static int grantQuizTime(int minutes) {
+        if (!plan.quizGate) return 0;
+        long now = System.currentTimeMillis();
+        rollDay(now);
+        ledger.roundsToday++;
+        int grant = Math.max(0, minutes);
+        int limit = limitToday(now);
+        if (limit > 0) {
+            long roomMs = limit * 60_000L - usage.usedMs - ledger.creditMs;
+            grant = (int) Math.max(0, Math.min(grant * 60_000L, roomMs) / 60_000L);
+        }
+        if (grant > 0) ledger.grant(grant * 60_000L);
+        ledger.save(app);
+        lock = active() ? lockNow(now) : null;
+        return grant;
+    }
+
+    /** One answer, right or wrong: enough wrong ones top up the practice pool. */
+    public static void recordAnswer(boolean correct) {
+        if (!plan.extraEnabled) return;
+        if (correct) {
+            if (ledger.wrongSince > 0) {
+                ledger.wrongSince = 0;
+                ledger.save(app);
+            }
+            return;
+        }
+        ledger.wrongSince++;
+        if (ledger.wrongSince >= plan.wrongThreshold) {
+            ledger.extraPool += plan.extraQuestions;
+            ledger.wrongSince = 0;
+        }
+        ledger.save(app);
+    }
+
+    public static KidsPlan plan() {
+        return plan;
+    }
+
+    public static KidsLedger ledger() {
+        return ledger;
+    }
+
+    /** Choices made in setup hold from the next tick on. */
+    public static void savePlan() {
+        plan.save(app);
+        lock = active() ? lockNow(System.currentTimeMillis()) : null;
     }
 
     public static long untilLockMs(long now) {
-        return active() ? KidsTime.untilLockMs(rules, usage, now, ZoneId.systemDefault()) : Long.MAX_VALUE;
+        return active() ? KidsTime.untilLockMs(todayRules(), usage, now, ZoneId.systemDefault()) : Long.MAX_VALUE;
     }
 
-    /** The day's limit, in minutes; 0 for none. */
+    /** The day's limit, in minutes; 0 for none. A holiday counts as a weekend. */
     public static int limitToday(long now) {
         LocalDate day = Instant.ofEpochMilli(now).atZone(ZoneId.systemDefault()).toLocalDate();
-        return KidsTime.limitMinutes(rules, day);
+        return KidsTime.limitMinutes(todayRules(), day);
     }
 
     // ---- Parental PIN (ported from AerialSettings) ----

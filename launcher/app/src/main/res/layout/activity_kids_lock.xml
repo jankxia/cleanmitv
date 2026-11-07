@@ -44,6 +44,15 @@
             android:lineSpacingExtra="2dp" />
 
         <TextView
+            android:id="@+id/quizButton"
+            style="@style/KidsButton"
+            android:layout_width="wrap_content"
+            android:layout_height="56dp"
+            android:layout_marginTop="30dp"
+            android:visibility="gone"
+            android:text="@string/kids_lock_quiz_action" />
+
+        <TextView
             android:id="@+id/parentButton"
             style="@style/KidsButton"
             android:layout_width="wrap_content"

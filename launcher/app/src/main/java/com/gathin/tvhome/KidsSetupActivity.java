@@ -77,6 +77,7 @@ public class KidsSetupActivity extends Activity {
 
         loadApps();
         bindChips();
+        bindPlanChips();
         refresh();
     }
 
@@ -239,6 +240,71 @@ public class KidsSetupActivity extends Activity {
         });
     }
 
+    /** Every quiz choice writes the plan at once; the tick after this picks the new rules up. */
+    private void planChoice(int id, Runnable change) {
+        findViewById(id).setOnClickListener(v -> {
+            change.run();
+            Kids.savePlan();
+            KidsWatch.poke();
+            refresh();
+        });
+    }
+
+    /** The quiz-for-time choices: what a round buys, which questions it asks, and the day's grid. */
+    private void bindPlanChips() {
+        final KidsPlan plan = Kids.plan();
+        planChoice(R.id.quizOn, () -> plan.quizGate = true);
+        planChoice(R.id.quizOff, () -> plan.quizGate = false);
+
+        planChoice(R.id.stagePrimary, () -> plan.stage = KidsPlan.STAGE_PRIMARY);
+        // The other stages have no questions yet: the chips say so rather than pretend.
+        View.OnClickListener later = v -> Toast.makeText(this, R.string.kids_stage_later,
+                Toast.LENGTH_SHORT).show();
+        findViewById(R.id.stageMiddle).setOnClickListener(later);
+        findViewById(R.id.stageHigh).setOnClickListener(later);
+
+        planChoice(R.id.subjectChinese, () -> plan.subjectChinese = !plan.subjectChinese);
+        planChoice(R.id.subjectMath, () -> plan.subjectMath = !plan.subjectMath);
+        planChoice(R.id.subjectEnglish, () -> plan.subjectEnglish = !plan.subjectEnglish);
+
+        planChoice(R.id.quizMin5, () -> plan.sessionMinutes = 5);
+        planChoice(R.id.quizMin10, () -> plan.sessionMinutes = 10);
+        planChoice(R.id.quizMin15, () -> plan.sessionMinutes = 15);
+        planChoice(R.id.quizMin20, () -> plan.sessionMinutes = 20);
+
+        planChoice(R.id.quizQ3, () -> plan.questionsPerRound = 3);
+        planChoice(R.id.quizQ5, () -> plan.questionsPerRound = 5);
+        planChoice(R.id.quizQ8, () -> plan.questionsPerRound = 8);
+
+        planChoice(R.id.quizPass50, () -> plan.passRatio = 50);
+        planChoice(R.id.quizPass60, () -> plan.passRatio = 60);
+        planChoice(R.id.quizPass80, () -> plan.passRatio = 80);
+
+        planChoice(R.id.quizRounds1, () -> plan.roundsPerDay = 1);
+        planChoice(R.id.quizRounds2, () -> plan.roundsPerDay = 2);
+        planChoice(R.id.quizRounds3, () -> plan.roundsPerDay = 3);
+        planChoice(R.id.quizRounds5, () -> plan.roundsPerDay = 5);
+
+        planChoice(R.id.modeRound, () -> plan.playMode = KidsPlan.MODE_ROUND);
+        planChoice(R.id.modeStreak, () -> plan.playMode = KidsPlan.MODE_STREAK);
+        planChoice(R.id.modePractice, () -> plan.playMode = KidsPlan.MODE_PRACTICE);
+
+        planChoice(R.id.extraOn, () -> plan.extraEnabled = true);
+        planChoice(R.id.extraOff, () -> plan.extraEnabled = false);
+        planChoice(R.id.starOn, () -> plan.starReward = true);
+        planChoice(R.id.starOff, () -> plan.starReward = false);
+
+        planChoice(R.id.next0, () -> plan.autoNextSeconds = 0);
+        planChoice(R.id.next3, () -> plan.autoNextSeconds = 3);
+        planChoice(R.id.next5, () -> plan.autoNextSeconds = 5);
+
+        planChoice(R.id.holidayOn, () -> plan.holidayWeekend = true);
+        planChoice(R.id.holidayOff, () -> plan.holidayWeekend = false);
+
+        findViewById(R.id.scheduleButton).setOnClickListener(v ->
+                startActivity(new Intent(this, KidsScheduleActivity.class)));
+    }
+
     private void refresh() {
         Kids.Kind kind = Kids.kind();
         setSelected(R.id.kindKids, kind == Kids.Kind.KIDS);
@@ -271,6 +337,46 @@ public class KidsSetupActivity extends Activity {
                 : getString(R.string.kids_pin_set));
         appsTitle.setText(getString(R.string.kids_apps, Kids.allowed().size()));
         appsHint.setText(getString(kids ? R.string.kids_apps_hint : R.string.kids_elders_apps_hint));
+
+        // The quiz buys time against a limit, so it only means something for children.
+        KidsPlan plan = Kids.plan();
+        findViewById(R.id.quizSection).setVisibility(kids ? View.VISIBLE : View.GONE);
+        findViewById(R.id.quizBox).setVisibility(plan.quizGate ? View.VISIBLE : View.GONE);
+        setSelected(R.id.quizOn, plan.quizGate);
+        setSelected(R.id.quizOff, !plan.quizGate);
+        setSelected(R.id.stagePrimary, KidsPlan.STAGE_PRIMARY.equals(plan.stage));
+        setSelected(R.id.stageMiddle, false);
+        setSelected(R.id.stageHigh, false);
+        setSelected(R.id.subjectChinese, plan.subjectChinese);
+        setSelected(R.id.subjectMath, plan.subjectMath);
+        setSelected(R.id.subjectEnglish, plan.subjectEnglish);
+        setSelected(R.id.quizMin5, plan.sessionMinutes == 5);
+        setSelected(R.id.quizMin10, plan.sessionMinutes == 10);
+        setSelected(R.id.quizMin15, plan.sessionMinutes == 15);
+        setSelected(R.id.quizMin20, plan.sessionMinutes == 20);
+        setSelected(R.id.quizQ3, plan.questionsPerRound == 3);
+        setSelected(R.id.quizQ5, plan.questionsPerRound == 5);
+        setSelected(R.id.quizQ8, plan.questionsPerRound == 8);
+        setSelected(R.id.quizPass50, plan.passRatio == 50);
+        setSelected(R.id.quizPass60, plan.passRatio == 60);
+        setSelected(R.id.quizPass80, plan.passRatio == 80);
+        setSelected(R.id.quizRounds1, plan.roundsPerDay == 1);
+        setSelected(R.id.quizRounds2, plan.roundsPerDay == 2);
+        setSelected(R.id.quizRounds3, plan.roundsPerDay == 3);
+        setSelected(R.id.quizRounds5, plan.roundsPerDay == 5);
+        setSelected(R.id.modeRound, KidsPlan.MODE_ROUND.equals(plan.playMode));
+        setSelected(R.id.modeStreak, KidsPlan.MODE_STREAK.equals(plan.playMode));
+        setSelected(R.id.modePractice, KidsPlan.MODE_PRACTICE.equals(plan.playMode));
+        setSelected(R.id.extraOn, plan.extraEnabled);
+        setSelected(R.id.extraOff, !plan.extraEnabled);
+        setSelected(R.id.starOn, plan.starReward);
+        setSelected(R.id.starOff, !plan.starReward);
+        setSelected(R.id.next0, plan.autoNextSeconds == 0);
+        setSelected(R.id.next3, plan.autoNextSeconds == 3);
+        setSelected(R.id.next5, plan.autoNextSeconds == 5);
+        setSelected(R.id.holidayOn, plan.holidayWeekend);
+        setSelected(R.id.holidayOff, !plan.holidayWeekend);
+
         if (adapter != null) adapter.notifyDataSetChanged();
     }
 

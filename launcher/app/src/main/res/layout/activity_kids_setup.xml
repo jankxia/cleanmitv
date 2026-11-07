@@ -78,6 +78,291 @@
                     android:text="@string/kids_block_off" />
             </LinearLayout>
 
+            <LinearLayout
+                android:id="@+id/quizSection"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="18dp"
+                android:text="@string/kids_quiz"
+                android:textColor="#FFFFFFFF"
+                android:textSize="20sp" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:orientation="horizontal">
+
+                <TextView android:id="@+id/quizOn" style="@style/KidsChip" android:layout_marginEnd="10dp"
+                    android:text="@string/kids_quiz_on" />
+                <TextView android:id="@+id/quizOff" style="@style/KidsChip"
+                    android:text="@string/kids_quiz_off" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/quizBox"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:visibility="gone">
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="16dp"
+                    android:text="@string/kids_bank"
+                    android:textColor="#FFFFFFFF"
+                    android:textSize="20sp" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="10dp"
+                    android:orientation="horizontal">
+
+                    <TextView android:id="@+id/stagePrimary" style="@style/KidsChip" android:layout_marginEnd="10dp"
+                        android:text="@string/kids_stage_primary" />
+                    <TextView android:id="@+id/stageMiddle" style="@style/KidsChip" android:layout_marginEnd="10dp"
+                        android:text="@string/kids_stage_middle" />
+                    <TextView android:id="@+id/stageHigh" style="@style/KidsChip"
+                        android:text="@string/kids_stage_high" />
+                </LinearLayout>
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:text="@string/kids_stage_note"
+                    android:textColor="#FF7C8891"
+                    android:textSize="14sp" />
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="14dp"
+                    android:text="@string/kids_subjects"
+                    android:textColor="#FFFFFFFF"
+                    android:textSize="20sp" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="10dp"
+                    android:orientation="horizontal">
+
+                    <TextView android:id="@+id/subjectChinese" style="@style/KidsChip" android:layout_marginEnd="10dp"
+                        android:text="@string/kids_subject_chinese" />
+                    <TextView android:id="@+id/subjectMath" style="@style/KidsChip" android:layout_marginEnd="10dp"
+                        android:text="@string/kids_subject_math" />
+                    <TextView android:id="@+id/subjectEnglish" style="@style/KidsChip"
+                        android:text="@string/kids_subject_english" />
+                </LinearLayout>
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="14dp"
+                    android:text="@string/kids_quiz_session"
+                    android:textColor="#FFFFFFFF"
+                    android:textSize="20sp" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="10dp"
+                    android:orientation="horizontal">
+
+                    <TextView android:id="@+id/quizMin5" style="@style/KidsChip" android:layout_marginEnd="10dp"
+                        android:text="5" />
+                    <TextView android:id="@+id/quizMin10" style="@style/KidsChip" android:layout_marginEnd="10dp"
+                        android:text="10" />
+                    <TextView android:id="@+id/quizMin15" style="@style/KidsChip" android:layout_marginEnd="10dp"
+                        android:text="15" />
+                    <TextView android:id="@+id/quizMin20" style="@style/KidsChip"
+                        android:text="20" />
+                </LinearLayout>
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="14dp"
+                    android:text="@string/kids_quiz_questions"
+                    android:textColor="#FFFFFFFF"
+                    android:textSize="20sp" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="10dp"
+                    android:orientation="horizontal">
+
+                    <TextView android:id="@+id/quizQ3" style="@style/KidsChip" android:layout_marginEnd="10dp"
+                        android:text="3" />
+                    <TextView android:id="@+id/quizQ5" style="@style/KidsChip" android:layout_marginEnd="10dp"
+                        android:text="5" />
+                    <TextView android:id="@+id/quizQ8" style="@style/KidsChip"
+                        android:text="8" />
+                </LinearLayout>
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="14dp"
+                    android:text="@string/kids_quiz_pass"
+                    android:textColor="#FFFFFFFF"
+                    android:textSize="20sp" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="10dp"
+                    android:orientation="horizontal">
+
+                    <TextView android:id="@+id/quizPass50" style="@style/KidsChip" android:layout_marginEnd="10dp"
+                        android:text="50%" />
+                    <TextView android:id="@+id/quizPass60" style="@style/KidsChip" android:layout_marginEnd="10dp"
+                        android:text="60%" />
+                    <TextView android:id="@+id/quizPass80" style="@style/KidsChip"
+                        android:text="80%" />
+                </LinearLayout>
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="14dp"
+                    android:text="@string/kids_quiz_rounds"
+                    android:textColor="#FFFFFFFF"
+                    android:textSize="20sp" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="10dp"
+                    android:orientation="horizontal">
+
+                    <TextView android:id="@+id/quizRounds1" style="@style/KidsChip" android:layout_marginEnd="10dp"
+                        android:text="1" />
+                    <TextView android:id="@+id/quizRounds2" style="@style/KidsChip" android:layout_marginEnd="10dp"
+                        android:text="2" />
+                    <TextView android:id="@+id/quizRounds3" style="@style/KidsChip" android:layout_marginEnd="10dp"
+                        android:text="3" />
+                    <TextView android:id="@+id/quizRounds5" style="@style/KidsChip"
+                        android:text="5" />
+                </LinearLayout>
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="14dp"
+                    android:text="@string/kids_quiz_mode"
+                    android:textColor="#FFFFFFFF"
+                    android:textSize="20sp" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="10dp"
+                    android:orientation="horizontal">
+
+                    <TextView android:id="@+id/modeRound" style="@style/KidsChip" android:layout_marginEnd="10dp"
+                        android:text="@string/kids_mode_round" />
+                    <TextView android:id="@+id/modeStreak" style="@style/KidsChip" android:layout_marginEnd="10dp"
+                        android:text="@string/kids_mode_streak" />
+                    <TextView android:id="@+id/modePractice" style="@style/KidsChip"
+                        android:text="@string/kids_mode_practice" />
+                </LinearLayout>
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="14dp"
+                    android:text="@string/kids_quiz_extra"
+                    android:textColor="#FFFFFFFF"
+                    android:textSize="20sp" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="10dp"
+                    android:orientation="horizontal">
+
+                    <TextView android:id="@+id/extraOn" style="@style/KidsChip" android:layout_marginEnd="10dp"
+                        android:text="@string/st_on" />
+                    <TextView android:id="@+id/extraOff" style="@style/KidsChip"
+                        android:text="@string/st_off" />
+                </LinearLayout>
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="14dp"
+                    android:text="@string/kids_quiz_star"
+                    android:textColor="#FFFFFFFF"
+                    android:textSize="20sp" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="10dp"
+                    android:orientation="horizontal">
+
+                    <TextView android:id="@+id/starOn" style="@style/KidsChip" android:layout_marginEnd="10dp"
+                        android:text="@string/st_on" />
+                    <TextView android:id="@+id/starOff" style="@style/KidsChip"
+                        android:text="@string/st_off" />
+                </LinearLayout>
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="14dp"
+                    android:text="@string/kids_quiz_next"
+                    android:textColor="#FFFFFFFF"
+                    android:textSize="20sp" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="10dp"
+                    android:orientation="horizontal">
+
+                    <TextView android:id="@+id/next0" style="@style/KidsChip" android:layout_marginEnd="10dp"
+                        android:text="@string/st_off" />
+                    <TextView android:id="@+id/next3" style="@style/KidsChip" android:layout_marginEnd="10dp"
+                        android:text="3s" />
+                    <TextView android:id="@+id/next5" style="@style/KidsChip"
+                        android:text="5s" />
+                </LinearLayout>
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="14dp"
+                    android:text="@string/kids_quiz_schedule"
+                    android:textColor="#FFFFFFFF"
+                    android:textSize="20sp" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="10dp"
+                    android:orientation="horizontal">
+
+                    <TextView android:id="@+id/scheduleButton" style="@style/KidsChip" android:layout_marginEnd="10dp"
+                        android:text="@string/kids_quiz_schedule_edit" />
+                    <TextView android:id="@+id/holidayOn" style="@style/KidsChip" android:layout_marginEnd="10dp"
+                        android:text="@string/kids_quiz_holiday" />
+                    <TextView android:id="@+id/holidayOff" style="@style/KidsChip"
+                        android:text="@string/st_off" />
+                </LinearLayout>
+            </LinearLayout>
+            </LinearLayout>
+
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
