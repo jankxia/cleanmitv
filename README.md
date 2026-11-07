@@ -204,6 +204,31 @@ launcher/app/src/main/java/com/gathin/tvhome/
 
 **涉及文件**：`MainActivity.java`、`Kids.java`、`KidsSetupActivity.java`、`KidsLockActivity.java`、`KidsWatch.java`、`activity_kids_setup.xml`、`values/strings.xml`、`values-zh-rCN/strings.xml`、`app/build.gradle`（`versionCode` 13 → 14，`versionName` → `2.8.3-kids-mode-rules`）。
 
+## v2.8.4 修改记录（儿童模式：答题换时长）
+
+第 4 项改造：儿童 →「其他应用」下面的「打开答题限制」。打开后，当天时间用完不再只有「家长 PIN 加时」一条路，孩子自己答题就能换到下一段观看时间。
+
+**机制来源**：只吸收 [StudyOnTV](https://github.com/jankxia/StudyOnTV) 的「答题换时长」思路，代码全部用 Java 重写，没有搬运它的 `.kt`、网页、题库或任何资源 —— 那个项目的许可证是 Source Available / Personal Use Only，明文禁止再分发衍生作品，而本仓库是公开的并发布 Release。
+
+| # | 反馈 | 处置 |
+|---|---|---|
+| 4 | 儿童 →「其他应用」增加「打开答题限制」，启用后儿童模式下即生效 | 儿童设置页新增「答题限制」区块（关闭 / 打开答题限制 + 展开后的题库、加时、玩法、时段表），全部落在 `SharedPreferences`，没有任何网络入口；`Kids.lockNow()` 在当天额度用完时返回 `Lock.QUIZ`，锁屏页出现「开始答题」，答对够数就由 `Kids.grantQuizTime()` 写进账本 |
+
+**实现要点**
+
+- **题库（小学，立即出题）**：`assets/kids-quiz.json` 130 题 —— 语文 60（古诗接句、作者、常识）、数学 40（四则运算、应用题，脚本逐题验算过答案）、英语 30（字母、词汇、日常用语、英文数字）。每题 4 个选项，无网也能出题。学段 chip 里「小学」可选，「初中」「高中」目前点下去只提示以后再加 —— 题库先按用户拍板的范围只做小学。
+- **科目可选**：语文 / 数学 / 英语三个 chip 各自开关，出题只从勾选的科目里抽；抽题顺序是「今天没出过且从没答对」→「今天没出过但答对过」→「今天出过」，各段先打乱，避免连着几天重复同一批题。
+- **加时与账本**：`KidsPlan` 存配置（每组加时 5/10/15/20 分钟、每次 3/5/8 题、通过率 50/60/80%、每日 1/2/3/5 组、玩法、自动下一题 0/3/5 秒、星级、错题加练、节假日按周末、时段表），`KidsLedger` 存当天账（已攒的 credit、今天答了几组、错题池、错题累计、日期），跨天只清 credit 与组数、保留错题池。
+- **三种玩法**：答一组题（答对达通过率才加时）、连对闯关（连续答对 N 道才算）、只练不加时（不换时长，专门清错题池）。
+- **错题加练**：连续答错累计到阈值就往加练池里加题，下一组多出这些题。
+- **观看时段表**：7×48 的半小时格子（周一…周日 × 00:00…23:30），绿色可以看、灰色不能看，方向键选格子、OK 切换。关掉的格子与「最晚时间」叠加生效 —— 就算还没到最晚时间，落在灰格子里也锁屏。
+- **兜底**：题库读不出来时直接按配置加时并给出提示，不会把孩子永久锁在锁屏页。
+- **不影响计时**：答题页显示期间 `KidsWatch.quizShowing` 为真，这一页既不算观看时间，也不会被「回桌面」守卫打断。
+
+**体积**：APK 从 405,617 B 增到 433,900 B，多了 28,283 B（130 题题库压缩后约 5 KB，其余是 5 个新类和界面）。
+
+**涉及文件**（新增）：`KidsPlan.java`、`KidsLedger.java`、`KidsBank.java`、`KidsQuizActivity.java`、`KidsScheduleActivity.java`、`assets/kids-quiz.json`、`activity_kids_quiz.xml`、`item_quiz_option.xml`、`activity_kids_schedule.xml`、`quiz_option_bg.xml`、`quiz_option_right.xml`、`quiz_option_wrong.xml`、`slot_on.xml`、`slot_off.xml`；（修改）`Kids.java`、`KidsWatch.java`、`KidsSetupActivity.java`、`KidsLockActivity.java`、`AndroidManifest.xml`、`activity_kids_setup.xml`、`activity_kids_lock.xml`、`values/styles.xml`、`values/strings.xml`、`values-zh-rCN/strings.xml`、`app/build.gradle`（`versionCode` 14 → 15，`versionName` → `2.8.4-quiz-time`）。
+
 ## 实机截图
 
 下面 8 张全部在小米电视 **MiTV-ASTR0**（Android 11，1920×1080）上用 `adb shell screencap` 直接截取，没有修图，对应 `2.8.1-settings-weather`（v2.8.3 的界面截图待补）：
@@ -220,7 +245,7 @@ launcher/app/src/main/java/com/gathin/tvhome/
 
 ## 下载与安装
 
-**安装包：** 到本 fork 的 [Releases](https://github.com/jankxia/cleanmitv/releases) 下载最新的 `tvhome-v*-signed.apk`（当前为 `tvhome-v2.8.3-kids-mode-rules-signed.apk`）；原项目的 `CleanMiTV-2.7.5-local-MiTV-OS3.apk`（版本 2.7.5-local）仍在 [原仓库 release 目录](https://github.com/sqlsec/cleanmitv/tree/main/release)
+**安装包：** 到本 fork 的 [Releases](https://github.com/jankxia/cleanmitv/releases) 下载最新的 `tvhome-v*-signed.apk`（当前为 `tvhome-v2.8.4-quiz-time-signed.apk`）；原项目的 `CleanMiTV-2.7.5-local-MiTV-OS3.apk`（版本 2.7.5-local）仍在 [原仓库 release 目录](https://github.com/sqlsec/cleanmitv/tree/main/release)
 
 > ⚠️ 这个包针对小米 OS3 国行固件构建。该固件只允许白名单内的包名成为第三方 Home，所以用 `-PlauncherApplicationId=com.ts.launcher` 编译。Java 代码的命名空间仍然是 `com.gathin.tvhome`，没有修改系统、固件或签名权限。如果你的电视已经装了同包名的其他应用，会出现签名冲突。
 
@@ -228,7 +253,7 @@ launcher/app/src/main/java/com/gathin/tvhome/
 
 ```bash
 adb uninstall com.ts.launcher        # 只会删这一份 launcher 的数据，卸载后马上装新的
-adb install tvhome-v2.8.3-kids-mode-rules-signed.apk
+adb install tvhome-v2.8.4-quiz-time-signed.apk
 ```
 
 之后再换版本就只需要 `adb install -r`。其他机型请按下方步骤从源码编译默认包名版本。
