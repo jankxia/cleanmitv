@@ -385,28 +385,34 @@ public class KidsSetupActivity extends Activity {
         chipsStage = plan.stage;
 
         LinearLayout gradeRow = findViewById(R.id.gradeRow);
+        LinearLayout gradeRow2 = findViewById(R.id.gradeRow2);
         LinearLayout subjectRow1 = findViewById(R.id.subjectRow1);
         LinearLayout subjectRow2 = findViewById(R.id.subjectRow2);
         gradeRow.removeAllViews();
+        gradeRow2.removeAllViews();
         subjectRow1.removeAllViews();
         subjectRow2.removeAllViews();
         gradeChips.clear();
         subjectChips.clear();
 
         LayoutInflater inflater = getLayoutInflater();
-        for (int grade : KidsPlan.grades(plan.stage)) {
-            TextView chip = (TextView) inflater.inflate(R.layout.kids_chip, gradeRow, false);
-            chip.setText(gradeLabel(grade));
-            chip.setTag(grade);
+        int[] grades = KidsPlan.grades(plan.stage);
+        for (int i = 0; i < grades.length; i++) {
+            LinearLayout row = i < 3 ? gradeRow : gradeRow2;
+            TextView chip = (TextView) inflater.inflate(R.layout.kids_chip, row, false);
+            chip.setText(gradeLabel(grades[i]));
+            chip.setTag(grades[i]);
             chip.setOnClickListener(v -> {
                 plan.grade = (Integer) v.getTag();
                 Kids.savePlan();
                 KidsWatch.poke();
                 refresh();
             });
-            gradeRow.addView(chip);
+            row.addView(chip);
             gradeChips.add(chip);
         }
+        // Six years do not fit one line in the left column.
+        gradeRow2.setVisibility(grades.length > 3 ? View.VISIBLE : View.GONE);
 
         String[] keys = KidsPlan.stageSubjects(plan.stage);
         for (int i = 0; i < keys.length; i++) {
