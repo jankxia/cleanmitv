@@ -168,6 +168,7 @@
     <string name="kids_weekend">Weekend time</string>
     <string name="kids_latest">TV off by</string>
     <string name="kids_no_limit">None</string>
+    <string name="kids_never">No TV</string>
     <string name="kids_break">Break after</string>
     <string name="st_off">Off</string>
     <string name="kids_start_kids">Start children\'s mode</string>
@@ -206,6 +207,8 @@
     <string name="kids_lock_day_sub">%1$s watched. More tomorrow.</string>
     <string name="kids_lock_late">Time for bed</string>
     <string name="kids_lock_late_sub">The TV is off from %1$s until %2$s.</string>
+    <string name="kids_lock_none">No TV today</string>
+    <string name="kids_lock_none_sub">A parent turned the TV off for today. Back tomorrow.</string>
     <string name="kids_grant">%1$d min</string>
     <string name="kids_grant_day">All day</string>
     <string name="cc_kids_leave">Leave children\'s mode</string>

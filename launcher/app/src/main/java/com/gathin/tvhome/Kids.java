@@ -51,11 +51,16 @@ public final class Kids {
         BREAK,
         /** The day's minutes are used up. */
         DAY_USED,
+        /** The day's minutes are set to "not at all": no watching whatever the hour. */
+        NO_WATCH,
         /** Outside the hours the TV may be watched. */
         LATE
     }
 
-    /** The limits chosen; 0 is "none" for the day's minutes, endMinute and breakEvery. */
+    /**
+     * The limits chosen; 0 is "none" for the day's minutes, endMinute and breakEvery, and -1 minutes
+     * is "not at all": the whole day is locked, before any hour or break comes into it.
+     */
     public static final class Rules {
         public final int weekdayMinutes;
         public final int weekendMinutes;
@@ -88,7 +93,16 @@ public final class Kids {
         }
 
         boolean any() {
-            return weekdayMinutes > 0 || weekendMinutes > 0 || endMinute > 0 || breakEvery > 0;
+            return weekdayMinutes != 0 || weekendMinutes != 0 || endMinute > 0 || breakEvery > 0;
+        }
+
+        /** The day's minutes set outright; -1 is "not at all", which {@link #copy} cannot carry. */
+        Rules withWeekday(int minutes) {
+            return new Rules(minutes, weekendMinutes, startMinute, endMinute, breakEvery, breakMinutes);
+        }
+
+        Rules withWeekend(int minutes) {
+            return new Rules(weekdayMinutes, minutes, startMinute, endMinute, breakEvery, breakMinutes);
         }
 
         @Override
@@ -114,7 +128,7 @@ public final class Kids {
 
         /** Within what the TV can keep: a day at most, a window that ends after it starts. */
         boolean valid() {
-            return weekdayMinutes >= 0 && weekdayMinutes <= KidsTime.DAY
+            return weekdayMinutes >= -1 && weekdayMinutes <= KidsTime.DAY
                     && weekendMinutes >= 0 && weekendMinutes <= KidsTime.DAY
                     && startMinute >= 0 && startMinute < KidsTime.DAY
                     && (endMinute == 0 || (endMinute > startMinute && endMinute < KidsTime.DAY))
@@ -177,8 +191,10 @@ public final class Kids {
         /** The lock the rules give at now, ignoring a parent's allowance. */
         static Lock ruleLock(Rules rules, Usage usage, long now, ZoneId zone) {
             LocalDateTime at = Instant.ofEpochMilli(now).atZone(zone).toLocalDateTime();
-            if (late(rules, at)) return Lock.LATE;
             int limit = limitMinutes(rules, at.toLocalDate());
+            // "Not at all" comes before the hours and the breaks: no part of the day opens.
+            if (limit < 0) return Lock.NO_WATCH;
+            if (late(rules, at)) return Lock.LATE;
             if (limit > 0 && usage.usedMs >= limit * 60_000L) return Lock.DAY_USED;
             if (usage.breakUntil > now) return Lock.BREAK;
             return null;

@@ -163,6 +163,7 @@
     <string name="kids_weekend">周末时长</string>
     <string name="kids_latest">最晚看到</string>
     <string name="kids_no_limit">不限</string>
+    <string name="kids_never">不允许</string>
     <string name="kids_break">休息间隔</string>
     <string name="st_off">关</string>
     <string name="kids_start_kids">启动儿童模式</string>
@@ -201,6 +202,8 @@
     <string name="kids_lock_day_sub">今天已看 %1$s，明天再继续。</string>
     <string name="kids_lock_late">该睡觉了</string>
     <string name="kids_lock_late_sub">%1$s 到 %2$s 之间不能看电视。</string>
+    <string name="kids_lock_none">今天不能看电视</string>
+    <string name="kids_lock_none_sub">家长把今天设成了不可观看，明天再继续。</string>
     <string name="kids_grant">%1$d 分钟</string>
     <string name="kids_grant_day">今天不限</string>
     <string name="cc_kids_leave">退出儿童模式</string>

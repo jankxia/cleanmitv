@@ -249,6 +249,7 @@ public final class KidsWatch {
         switch (lock) {
             case BREAK: return "break";
             case DAY_USED: return "day used";
+            case NO_WATCH: return "no watching";
             case LATE: return "late";
             default: return "unlocked";
         }

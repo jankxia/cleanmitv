@@ -100,15 +100,12 @@ public class KidsSetupActivity extends Activity {
     private void bindChips() {
         bindKind(R.id.kindKids, Kids.Kind.KIDS);
         bindKind(R.id.kindElders, Kids.Kind.ELDERS);
-        findViewById(R.id.blockOn).setOnClickListener(v -> {
-            Kids.chooseBlockOthers(true);
-            refresh();
-        });
+        // Other apps are always let through: the row keeps the one choice it has.
         findViewById(R.id.blockOff).setOnClickListener(v -> {
             Kids.chooseBlockOthers(false);
             refresh();
         });
-        bindMinutes(R.id.weekday0, 0, true);
+        bindMinutes(R.id.weekdayNone, -1, true);
         bindMinutes(R.id.weekday30, 30, true);
         bindMinutes(R.id.weekday60, 60, true);
         bindMinutes(R.id.weekday90, 90, true);
@@ -208,9 +205,8 @@ public class KidsSetupActivity extends Activity {
     private void bindKind(int id, Kids.Kind kind) {
         findViewById(id).setOnClickListener(v -> {
             Kids.chooseKind(kind);
-            // Children keep other apps away by default, older people are let through.
-            if (kind == Kids.Kind.KIDS) Kids.chooseBlockOthers(true);
-            else Kids.chooseBlockOthers(false);
+            // Other apps stay open in both modes: that is the only choice the row offers.
+            Kids.chooseBlockOthers(false);
             refresh();
         });
     }
@@ -218,7 +214,8 @@ public class KidsSetupActivity extends Activity {
     private void bindMinutes(int id, int minutes, boolean weekday) {
         findViewById(id).setOnClickListener(v -> {
             Kids.Rules r = Kids.rules();
-            Kids.chooseRules(r.copy(weekday ? minutes : -1, weekday ? -1 : minutes, -1, -1, -1, -1));
+            // copy() reads -1 as "leave alone", so a day set to "not at all" needs its own setter.
+            Kids.chooseRules(weekday ? r.withWeekday(minutes) : r.withWeekend(minutes));
             KidsWatch.poke();
             refresh();
         });
@@ -247,11 +244,10 @@ public class KidsSetupActivity extends Activity {
         setSelected(R.id.kindKids, kind == Kids.Kind.KIDS);
         setSelected(R.id.kindElders, kind == Kids.Kind.ELDERS);
         boolean block = Kids.blockOthers();
-        setSelected(R.id.blockOn, block);
         setSelected(R.id.blockOff, !block);
 
         Kids.Rules rules = Kids.rules();
-        setMinutesSelected(R.id.weekday0, R.id.weekday30, R.id.weekday60, R.id.weekday90, R.id.weekday120,
+        setWeekdaySelected(R.id.weekdayNone, R.id.weekday30, R.id.weekday60, R.id.weekday90, R.id.weekday120,
                 rules.weekdayMinutes);
         setMinutesSelected(R.id.weekend0, R.id.weekend30, R.id.weekend60, R.id.weekend90, R.id.weekend120,
                 rules.weekendMinutes);
@@ -274,6 +270,14 @@ public class KidsSetupActivity extends Activity {
         appsTitle.setText(getString(R.string.kids_apps, Kids.allowed().size()));
         appsHint.setText(getString(kids ? R.string.kids_apps_hint : R.string.kids_elders_apps_hint));
         if (adapter != null) adapter.notifyDataSetChanged();
+    }
+
+    private void setWeekdaySelected(int noneId, int id30, int id60, int id90, int id120, int minutes) {
+        setSelected(noneId, minutes < 0);
+        setSelected(id30, minutes == 30);
+        setSelected(id60, minutes == 60);
+        setSelected(id90, minutes == 90);
+        setSelected(id120, minutes == 120);
     }
 
     private void setMinutesSelected(int id0, int id30, int id60, int id90, int id120, int minutes) {

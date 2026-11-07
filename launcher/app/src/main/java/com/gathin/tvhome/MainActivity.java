@@ -3340,6 +3340,17 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         View panel = getLayoutInflater().inflate(R.layout.popup_inputs, root, false);
         LinearLayout rows = panel.findViewById(R.id.rows);
         PopupWindow popup = glassPopup(panel, (int) (240 * density));
+        // In a mode the gear is the one way out and nothing else: no inputs, no Wi-Fi, no launcher
+        // or system settings, only the PIN exit. A child has no business in any of those.
+        if (Kids.active()) {
+            addInputRow(rows, popup, R.drawable.ic_kids_mode, getString(R.string.mode_leave), -1,
+                    this::leaveKidsMode);
+            panel.measure(View.MeasureSpec.UNSPECIFIED, View.MeasureSpec.UNSPECIFIED);
+            popup.setWidth(Math.max((int) (240 * density), Math.min(panel.getMeasuredWidth(), (int) (380 * density))));
+            dropIn(popup, panel, anchor, getResources().getBoolean(R.bool.rtl_menu_bar) ? Gravity.START : Gravity.END);
+            rows.getChildAt(0).requestFocus();
+            return;
+        }
         // Inputs opens its own list once this one has closed.
         if (showInputsMenuRow) addInputRow(rows, popup, R.drawable.ic_input, getString(R.string.inputs), -1,
                 () -> root.post(this::showInputs));

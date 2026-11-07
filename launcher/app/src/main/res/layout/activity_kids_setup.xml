@@ -74,8 +74,6 @@
                 android:layout_marginTop="10dp"
                 android:orientation="horizontal">
 
-                <TextView android:id="@+id/blockOn" style="@style/KidsChip" android:layout_marginEnd="10dp"
-                    android:text="@string/kids_block_on" />
                 <TextView android:id="@+id/blockOff" style="@style/KidsChip"
                     android:text="@string/kids_block_off" />
             </LinearLayout>
@@ -94,8 +92,8 @@
                 android:layout_marginTop="10dp"
                 android:orientation="horizontal">
 
-                <TextView android:id="@+id/weekday0" style="@style/KidsChip" android:layout_marginEnd="10dp"
-                    android:text="@string/kids_no_limit" />
+                <TextView android:id="@+id/weekdayNone" style="@style/KidsChip" android:layout_marginEnd="10dp"
+                    android:text="@string/kids_never" />
                 <TextView android:id="@+id/weekday30" style="@style/KidsChip" android:layout_marginEnd="10dp"
                     android:text="30" />
                 <TextView android:id="@+id/weekday60" style="@style/KidsChip" android:layout_marginEnd="10dp"

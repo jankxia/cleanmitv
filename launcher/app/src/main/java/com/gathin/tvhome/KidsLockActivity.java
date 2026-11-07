@@ -90,6 +90,11 @@ public class KidsLockActivity extends Activity {
             icon.setText("\uD83C\uDF19");
             title.setText(R.string.kids_lock_day);
             subtitle.setText(getString(R.string.kids_lock_day_sub, durationText(Kids.usage().usedMs)));
+        } else if (lock == Kids.Lock.NO_WATCH) {
+            // The day's minutes are set to "not at all": no hour opens it, not even a break's end.
+            icon.setText("\uD83C\uDF19");
+            title.setText(R.string.kids_lock_none);
+            subtitle.setText(R.string.kids_lock_none_sub);
         } else {
             icon.setText("\uD83C\uDF19");
             title.setText(R.string.kids_lock_late);
