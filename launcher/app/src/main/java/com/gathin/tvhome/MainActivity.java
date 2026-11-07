@@ -833,9 +833,6 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         // A single row never shows the names under its tiles (the title above the row names the app), so the
         // 7dp gap and 22dp label item_app.xml keeps for them would only lift the row: sit it that much lower.
         if (singleRow && !cfg.alwaysShowNames) want += (int) (29 * density);
-        android.util.Log.i("DockFit", "w=" + width + " h=" + height + " dockRow=" + dockRow + " single=" + singleRow
-                + " rows=" + rowsBelowDock + " title=" + cfg.dockTitle + " tileW=" + tileW + " itemH=" + itemH
-                + " want=" + want + " padTop=" + grid.getPaddingTop() + " n=" + (adapter == null ? -1 : adapter.appCount()));
         if (grid.getPaddingTop() == want) return;
         grid.setPadding(grid.getPaddingLeft(), want, grid.getPaddingRight(), grid.getPaddingBottom());
         // A vertical grid parks the dock on the new padding line by scrolling (onTileFocused); a sideways
@@ -1192,6 +1189,9 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
             startPendingSettingsReorder();
             showCardPrompt();
         }
+        // The tiles just changed; the dock's line depends on how many rows they take, so settle it now
+        // instead of waiting for a layout pass that a mode change may not schedule.
+        refitDockAfterReload();
     }
 
     /** True when PackageManager reports apps changed since the last rebuild (one binder call). */
@@ -1334,6 +1334,10 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
     public void onWindowFocusChanged(boolean hasFocus) {
         super.onWindowFocusChanged(hasFocus);
         if (hasFocus) {
+            // Every way back into Home — a mode change, the settings screen, a resume after the TV woke —
+            // ends up here: put the dock on its line for the grid's real size, in case the last word on
+            // the padding came from a pass that measured it as nothing.
+            refitDockAfterReload();
             startPendingSettingsReorder();
             if (libraryFocusPending && appLibrary == null) focusLibrary();
             showCardPrompt();
