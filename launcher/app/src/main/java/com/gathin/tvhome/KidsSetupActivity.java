@@ -107,11 +107,13 @@ public class KidsSetupActivity extends Activity {
             refresh();
         });
         bindMinutes(R.id.weekdayNone, -1, true);
+        bindMinutes(R.id.weekday10, 10, true);
         bindMinutes(R.id.weekday30, 30, true);
         bindMinutes(R.id.weekday60, 60, true);
         bindMinutes(R.id.weekday90, 90, true);
         bindMinutes(R.id.weekday120, 120, true);
         bindMinutes(R.id.weekend0, 0, false);
+        bindMinutes(R.id.weekend10, 10, false);
         bindMinutes(R.id.weekend30, 30, false);
         bindMinutes(R.id.weekend60, 60, false);
         bindMinutes(R.id.weekend90, 90, false);
@@ -315,10 +317,10 @@ public class KidsSetupActivity extends Activity {
         setSelected(R.id.blockOff, true);
 
         Kids.Rules rules = Kids.rules();
-        setWeekdaySelected(R.id.weekdayNone, R.id.weekday30, R.id.weekday60, R.id.weekday90, R.id.weekday120,
-                rules.weekdayMinutes);
-        setMinutesSelected(R.id.weekend0, R.id.weekend30, R.id.weekend60, R.id.weekend90, R.id.weekend120,
-                rules.weekendMinutes);
+        setWeekdaySelected(R.id.weekdayNone, R.id.weekday10, R.id.weekday30, R.id.weekday60, R.id.weekday90,
+                R.id.weekday120, rules.weekdayMinutes);
+        setMinutesSelected(R.id.weekend0, R.id.weekend10, R.id.weekend30, R.id.weekend60, R.id.weekend90,
+                R.id.weekend120, rules.weekendMinutes);
         setSelected(R.id.latest0, rules.endMinute == 0);
         setSelected(R.id.latest20, rules.endMinute == 20 * 60);
         setSelected(R.id.latest21, rules.endMinute == 21 * 60);
@@ -380,16 +382,18 @@ public class KidsSetupActivity extends Activity {
         if (adapter != null) adapter.notifyDataSetChanged();
     }
 
-    private void setWeekdaySelected(int noneId, int id30, int id60, int id90, int id120, int minutes) {
+    private void setWeekdaySelected(int noneId, int id10, int id30, int id60, int id90, int id120, int minutes) {
         setSelected(noneId, minutes < 0);
+        setSelected(id10, minutes == 10);
         setSelected(id30, minutes == 30);
         setSelected(id60, minutes == 60);
         setSelected(id90, minutes == 90);
         setSelected(id120, minutes == 120);
     }
 
-    private void setMinutesSelected(int id0, int id30, int id60, int id90, int id120, int minutes) {
+    private void setMinutesSelected(int id0, int id10, int id30, int id60, int id90, int id120, int minutes) {
         setSelected(id0, minutes == 0);
+        setSelected(id10, minutes == 10);
         setSelected(id30, minutes == 30);
         setSelected(id60, minutes == 60);
         setSelected(id90, minutes == 90);

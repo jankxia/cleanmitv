@@ -29,8 +29,8 @@ android {
         applicationId providers.gradleProperty('launcherApplicationId').getOrElse('com.gathin.tvhome')
         minSdk 26
         targetSdk 34
-        versionCode 15
-        versionName '2.8.4-quiz-time'
+        versionCode 16
+        versionName '2.8.5-ten-minutes'
         resConfigs 'en', 'zh-rCN'
     }
 

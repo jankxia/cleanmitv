@@ -379,6 +379,8 @@
 
                 <TextView android:id="@+id/weekdayNone" style="@style/KidsChip" android:layout_marginEnd="10dp"
                     android:text="@string/kids_never" />
+                <TextView android:id="@+id/weekday10" style="@style/KidsChip" android:layout_marginEnd="10dp"
+                    android:text="10" />
                 <TextView android:id="@+id/weekday30" style="@style/KidsChip" android:layout_marginEnd="10dp"
                     android:text="30" />
                 <TextView android:id="@+id/weekday60" style="@style/KidsChip" android:layout_marginEnd="10dp"
@@ -405,6 +407,8 @@
 
                 <TextView android:id="@+id/weekend0" style="@style/KidsChip" android:layout_marginEnd="10dp"
                     android:text="@string/kids_no_limit" />
+                <TextView android:id="@+id/weekend10" style="@style/KidsChip" android:layout_marginEnd="10dp"
+                    android:text="10" />
                 <TextView android:id="@+id/weekend30" style="@style/KidsChip" android:layout_marginEnd="10dp"
                     android:text="30" />
                 <TextView android:id="@+id/weekend60" style="@style/KidsChip" android:layout_marginEnd="10dp"
