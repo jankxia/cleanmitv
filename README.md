@@ -1,6 +1,6 @@
 # CleanMiTV · 小米电视的干净桌面
 
-> 基于 [Gathin23/cleanyourtv](https://github.com/Gathin23/cleanyourtv) 二次开发，本项目fork至感谢[sqlsec/cleanmitv](https://github.com/sqlsec/cleanmitv) 针对**国行小米电视**（实测 MiTV S65 Mini LED / MiTV-MFTR0，Android 14，小米 OS3）做了本地化和视觉体验改造。
+> 基于 [Gathin23/cleanyourtv](https://github.com/Gathin23/cleanyourtv) 二次开发，针对**国行小米电视**（实测 MiTV S65 Mini LED / MiTV-MFTR0，Android 14，小米 OS3）做了本地化和视觉体验改造。
 
 ![CleanMiTV 主页演示](docs/tvhome/home-demo.gif)
 
@@ -40,12 +40,12 @@ CleanMiTV 的底子来自 **[CleanYourTV](https://github.com/Gathin23/cleanyourt
 **功能**
 
 - **儿童模式 / 老人模式**：桌面只显示你选择的应用，按选择顺序排列，没有你没选的任何东西。**一个应用都不选也可以进入**——那是「隐藏所有程序」的用法：主页只剩一张「儿童模式」卡片。
-- **时间限制（仅儿童）**：工作日 / 周末每日时长（不限 / 30 / 60 / 90 / 120 分钟）；最晚看到（不限 / 20:00 / 21:00 / 22:00）；休息间隔（关 / 30 / 45 / 60 分钟，看满间隔休息 5 分钟）。
+- **时间限制（仅儿童）**：工作日每日时长（**不允许** / 30 / 60 / 90 / 120 分钟——选「不允许」＝当天整日锁定，任何时间、任何时段都打不开电视，只有家长 PIN 能临时放行）；周末每日时长（不限 / 30 / 60 / 90 / 120 分钟）；最晚看到（不限 / 20:00 / 21:00 / 22:00）；休息间隔（关 / 30 / 45 / 60 分钟，看满间隔休息 5 分钟）。
 - **家长 PIN**：4 位 PIN（SHA-256 存储），可选两种输入方式：「4 位数字」（屏幕数字键盘或遥控数字键）、「4 个方向键」（遥控上按 ↑ ↓ ← → 组合；屏幕上只把 4 个圆点逐格填满，**不回显按了哪个方向**，防止旁边的人照着屏幕记下 PIN）。退出模式、锁屏后给更多时间（15 / 30 / 60 分钟 / 今天不限）都需 PIN。
 - **全屏锁定**：今日时长用完 / 超过最晚时间 / 休息中都会全屏锁定，按返回键无效；锁定期间点任何应用都会直接弹出锁定界面（而不是看起来「点了没反应」）。
-- **家长退出入口**：右上角按钮在三种模式下**保持原样**（同样的按钮、同样的位置、同样的文字，不会变成「家长」按钮）。顶栏那颗胶囊现在叫「设置」（点开后页内大标题仍是「隐藏设置」），下拉菜单行序为：输入源 / 网络 / 隐藏设置 / 系统设置 / **儿童/老人模式** / 调整应用顺序；「儿童/老人模式」是一行按钮，点开二级列表再选「进入儿童模式」「进入老人模式」，模式开着时多一项「退出当前模式」。退出同样要输 PIN；主页里的「儿童模式」卡片、遥控器的设置键 / 菜单键也都是同一个 PIN 退出。
+- **家长退出入口**：右上角按钮在三种模式下**保持原样**（同样的按钮、同样的位置、同样的文字，不会变成「家长」按钮）。正常桌面下，顶栏那颗胶囊叫「设置」（点开后页内大标题仍是「隐藏设置」），下拉菜单行序为：输入源 / 网络 / 隐藏设置 / 系统设置 / **儿童/老人模式** / 调整应用顺序；「儿童/老人模式」是一行按钮，点开二级列表再选「进入儿童模式」「进入老人模式」，模式开着时多一项「退出当前模式」。**一旦处在儿童/老人模式里，这个下拉只剩一行「退出当前模式」**：输入源、网络、两套设置、调整应用顺序全部收起，孩子点不到任何设置项。退出要输 PIN；主页里的「儿童模式」卡片、遥控器的设置键 / 菜单键也都是同一个 PIN 退出。
 - **防绕过**：家长用 PIN 退出后，电视熄屏或屏保出现时自动恢复模式。
-- **阻止其他应用（仅儿童，默认开启）**：锁定时任何应用都进不去；未锁定且「阻止」开启时，非允许应用也会被拉回桌面（无障碍服务为主，UsageStats 兜底）。
+- **其他应用（两个模式共用一行，只有「允许打开」一个选项）**：设置页里「其他应用」下不再有「阻止打开」/「允许打开」两态可切，固定为「允许打开」。锁定时任何应用都进不去；未锁定时按「允许打开」放行其他应用，但非白名单应用仍会被拉回桌面（无障碍服务为主，UsageStats 兜底）。
 
 **开启方法**
 
@@ -194,9 +194,19 @@ launcher/app/src/main/java/com/gathin/tvhome/
 - **城市**：`Weather.CITIES` 内置 45 个城市（成都、北京、上海、广州、深圳、重庆、杭州、南京、武汉、西安、天津、苏州、郑州、长沙、东莞、沈阳、青岛、合肥、佛山、福州、厦门、昆明、哈尔滨、济南、南昌、贵阳、南宁、石家庄、太原、长春、大连、无锡、宁波、温州、珠海、三亚、海口、兰州、西宁、银川、乌鲁木齐、呼和浩特、拉萨、香港、澳门、台北），默认成都。
 - **农历**：`Lunar` 纯算法（无 ICU）算出当天农历，中文用「农历九月廿八 丙午年」（月名正月…腊月，日名初一…三十），闰月显示「闰四月」；排在公历日期上面一行。UTC 偏移默认 +8，可在主题 `config.json` 的 `lunar_utc_offset` 覆盖。
 
+## v2.8.3 修改记录（儿童/老人模式：菜单收紧、其他应用放行、工作日「不允许」）
+
+| # | 反馈 | 处置 |
+|---|---|---|
+| 1 | 儿童/老人模式下，主页「设置」按钮里只显示「退出该模式」 | `showGearMenu()` 在 `Kids.active()` 时只加一行「退出当前模式」（仍走 PIN 校验）；输入源、网络、隐藏设置、系统设置、儿童/老人模式、调整应用顺序都不进菜单。长按 OK 的 `showSettingsMenu()` 同样只剩这一行，所以在模式里摸不到「隐藏设置」「系统设置」「重排」 |
+| 2 | 设置页「其他应用」下只显示「允许打开」 | `activity_kids_setup.xml` 删掉 `blockOn`（阻止打开）chip，只保留 `blockOff`（允许打开）；`bindKind` 不再在切到儿童时把阻止状态打开；`Kids.blockOthers` 默认改为 `false`，老版本留下的 `true` 在设置页打开时（`refresh()`）自动纠正 |
+| 3 | 工作日时长删「不限」、加「不允许」 | 工作日档位改为 不允许 / 30 / 60 / 90 / 120 分钟。`weekdayMinutes = -1` 表示「不允许」，`Kids.Lock.NO_WATCH` 在时段、休息之前返回，锁屏显示「今天不能看电视」；家长 PIN 仍可临时放行。`Rules.withWeekday()/withWeekend()` 直接赋值——`copy()` 里的 `-1` 一直是「不改」，承载不了这个值 |
+
+**涉及文件**：`MainActivity.java`、`Kids.java`、`KidsSetupActivity.java`、`KidsLockActivity.java`、`KidsWatch.java`、`activity_kids_setup.xml`、`values/strings.xml`、`values-zh-rCN/strings.xml`、`app/build.gradle`（`versionCode` 13 → 14，`versionName` → `2.8.3-kids-mode-rules`）。
+
 ## 实机截图
 
-下面 8 张全部在小米电视 **MiTV-ASTR0**（Android 11，1920×1080）上用 `adb shell screencap` 直接截取，没有修图，对应 `2.8.1-settings-weather`：
+下面 8 张全部在小米电视 **MiTV-ASTR0**（Android 11，1920×1080）上用 `adb shell screencap` 直接截取，没有修图，对应 `2.8.1-settings-weather`（v2.8.3 的界面截图待补）：
 
 | 主页：农历在日期上一行、天气在下一行 | 设置下拉：输入源 / 网络 / 隐藏设置 / 系统设置 / 儿童/老人模式 / 调整应用顺序 |
 |---|---|
@@ -210,7 +220,7 @@ launcher/app/src/main/java/com/gathin/tvhome/
 
 ## 下载与安装
 
-**安装包：** 到本 fork 的 [Releases](https://github.com/jankxia/cleanmitv/releases) 下载最新的 `tvhome-v*-signed.apk`（当前为 `tvhome-v2.8.1-settings-weather-signed.apk`）；原项目的 `CleanMiTV-2.7.5-local-MiTV-OS3.apk`（版本 2.7.5-local）仍在 [原仓库 release 目录](https://github.com/sqlsec/cleanmitv/tree/main/release)
+**安装包：** 到本 fork 的 [Releases](https://github.com/jankxia/cleanmitv/releases) 下载最新的 `tvhome-v*-signed.apk`（当前为 `tvhome-v2.8.3-kids-mode-rules-signed.apk`）；原项目的 `CleanMiTV-2.7.5-local-MiTV-OS3.apk`（版本 2.7.5-local）仍在 [原仓库 release 目录](https://github.com/sqlsec/cleanmitv/tree/main/release)
 
 > ⚠️ 这个包针对小米 OS3 国行固件构建。该固件只允许白名单内的包名成为第三方 Home，所以用 `-PlauncherApplicationId=com.ts.launcher` 编译。Java 代码的命名空间仍然是 `com.gathin.tvhome`，没有修改系统、固件或签名权限。如果你的电视已经装了同包名的其他应用，会出现签名冲突。
 
@@ -218,7 +228,7 @@ launcher/app/src/main/java/com/gathin/tvhome/
 
 ```bash
 adb uninstall com.ts.launcher        # 只会删这一份 launcher 的数据，卸载后马上装新的
-adb install tvhome-v2.8.1-settings-weather-signed.apk
+adb install tvhome-v2.8.3-kids-mode-rules-signed.apk
 ```
 
 之后再换版本就只需要 `adb install -r`。其他机型请按下方步骤从源码编译默认包名版本。
