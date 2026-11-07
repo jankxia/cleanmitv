@@ -321,23 +321,38 @@ public class KidsSetupActivity extends Activity {
         return 0;
     }
 
-    /** How long the day can run at most; 0 when "off by" is not set at all. */
+    /** The minute of the day it is now: the two times below are steady settings, so the length is measured against it. */
+    private static int minutesNow() {
+        java.util.Calendar c = java.util.Calendar.getInstance();
+        return c.get(java.util.Calendar.HOUR_OF_DAY) * 60 + c.get(java.util.Calendar.MINUTE);
+    }
+
+    /**
+     * How long a day may still run: from now to the same day's "off by" while the TV is inside its hours,
+     * otherwise the whole window (a setting written in the evening is for tomorrow as well). -1 when "off by"
+     * is not set, so nothing caps the length.
+     */
     private static int windowMinutes(Kids.Rules r) {
-        if (r.endMinute <= 0) return 0;
-        return Math.max(0, r.endMinute - r.startMinute);
+        if (r.endMinute <= 0) return -1;
+        int start = r.startMinute, end = r.endMinute;
+        int day = end - start;
+        if (day <= 0) day += 24 * 60;
+        int now = minutesNow();
+        if (now < start || now >= end) return day;
+        return Math.min(day, end - now);
     }
 
     private static boolean limitFits(int minutes, Kids.Rules r) {
         if (minutes <= 0) return true;
         int win = windowMinutes(r);
-        return win == 0 || minutes <= win;
+        return win < 0 || minutes <= win;
     }
 
-    /** The longest offered day length that still fits the window. */
+    /** The longest offered day length that still fits the window; -1 ("not at all") when none does. */
     private static int insideWindow(int minutes, Kids.Rules r) {
         if (minutes <= 0) return minutes;
         int win = windowMinutes(r);
-        if (win <= 0) return minutes;
+        if (win < 0) return minutes;
         if (minutes <= win) return minutes;
         if (win > 60) return 60;
         if (win > 30) return 30;
@@ -531,6 +546,17 @@ public class KidsSetupActivity extends Activity {
         setSelected(R.id.blockOff, true);
 
         Kids.Rules rules = Kids.rules();
+        // The three times hold each other up: a day length that no longer ends before "off by" comes down
+        // to the longest one that does, and the break then follows the new shortest day in.
+        if (!limitFits(rules.weekdayMinutes, rules) || !limitFits(rules.weekendMinutes, rules)) {
+            int wd = limitFits(rules.weekdayMinutes, rules) ? rules.weekdayMinutes
+                    : insideWindow(rules.weekdayMinutes, rules);
+            int we = limitFits(rules.weekendMinutes, rules) ? rules.weekendMinutes
+                    : insideWindow(rules.weekendMinutes, rules);
+            if (we < 0) we = 10;
+            rules = rules.withWeekday(wd).withWeekend(we);
+            Kids.chooseRules(rules);
+        }
         // A break left over from an older combination is pulled back in the moment the page opens.
         if (!breakFits(rules.breakEvery, rules)) {
             rules = rules.copy(-1, -1, -1, -1, breakInside(shortestLimit(rules)), -1);
