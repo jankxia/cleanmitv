@@ -290,9 +290,19 @@ v2.8.4 的补丁。原来时长档位最小是 30 分钟，想验证「答完一
 | **儿童模式：底部没有「应用库」胶囊** | **家长 PIN：圆点只填实，不回显按过的方向** |
 | ![](docs/tvhome/07-kids-mode.jpg) | ![](docs/tvhome/08-parent-pin.jpg) |
 
+上面这一组是 v2.8.1 的界面，v2.8.3 之后的设置菜单与儿童模式没有变化。下面 6 张是 **v2.8.6** 在电视上重新实拍的，覆盖本轮改到的每一处：
+
+| 主页 | 儿童模式：只剩允许的应用 |
+|---|---|
+| ![](docs/tvhome/14-home.jpg) | ![](docs/tvhome/09-kids-home.jpg) |
+| **儿童设置：休息间隔只剩 关 / 5 / 10 / 30** | **家长 PIN：四个方向键，错了只提示「PIN 错误。」** |
+| ![](docs/tvhome/10-kids-setup.jpg) | ![](docs/tvhome/11-parent-pin.jpg) |
+| **时长用完后点「家长」验 PIN 才出现的加时面板** | **休息间隔到点弹出的休息锁屏（倒计时）** |
+| ![](docs/tvhome/12-kids-used-up.jpg) | ![](docs/tvhome/13-kids-break.jpg) |
+
 ## 下载与安装
 
-**安装包：** 到本 fork 的 [Releases](https://github.com/jankxia/cleanmitv/releases) 下载最新的 `tvhome-v*-signed.apk`（当前为 `tvhome-v2.8.4-quiz-time-signed.apk`）；原项目的 `CleanMiTV-2.7.5-local-MiTV-OS3.apk`（版本 2.7.5-local）仍在 [原仓库 release 目录](https://github.com/sqlsec/cleanmitv/tree/main/release)
+**安装包：** 到本 fork 的 [Releases](https://github.com/jankxia/cleanmitv/releases) 下载最新的 `tvhome-v*-signed.apk`（当前为 `tvhome-v2.8.6-short-breaks-signed.apk`）；原项目的 `CleanMiTV-2.7.5-local-MiTV-OS3.apk`（版本 2.7.5-local）仍在 [原仓库 release 目录](https://github.com/sqlsec/cleanmitv/tree/main/release)
 
 > ⚠️ 这个包针对小米 OS3 国行固件构建。该固件只允许白名单内的包名成为第三方 Home，所以用 `-PlauncherApplicationId=com.ts.launcher` 编译。Java 代码的命名空间仍然是 `com.gathin.tvhome`，没有修改系统、固件或签名权限。如果你的电视已经装了同包名的其他应用，会出现签名冲突。
 
