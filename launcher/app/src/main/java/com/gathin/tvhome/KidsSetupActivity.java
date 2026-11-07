@@ -243,8 +243,10 @@ public class KidsSetupActivity extends Activity {
         Kids.Kind kind = Kids.kind();
         setSelected(R.id.kindKids, kind == Kids.Kind.KIDS);
         setSelected(R.id.kindElders, kind == Kids.Kind.ELDERS);
-        boolean block = Kids.blockOthers();
-        setSelected(R.id.blockOff, !block);
+        // The row offers one choice: other apps are let through. A setting left at "kept away" from
+        // an older build is put back in step the moment this page opens.
+        if (Kids.blockOthers()) Kids.chooseBlockOthers(false);
+        setSelected(R.id.blockOff, true);
 
         Kids.Rules rules = Kids.rules();
         setWeekdaySelected(R.id.weekdayNone, R.id.weekday30, R.id.weekday60, R.id.weekday90, R.id.weekday120,

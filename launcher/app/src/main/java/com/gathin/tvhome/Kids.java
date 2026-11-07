@@ -260,7 +260,7 @@ public final class Kids {
     private static Set<String> allowedPackages = Collections.emptySet();
     /** Packages that play the TV's inputs: kept away like apps, unless an input is allowed. */
     private static Set<String> sourcePlayers = Collections.emptySet();
-    private static boolean blockOthers = true;
+    private static boolean blockOthers = false;
     private static Rules rules = new Rules(0, 0, KidsTime.DEFAULT_START, 0, 0, KidsTime.BREAK_MINUTES);
     /** A parent left the mode with the PIN; it comes back by itself (see {@link #rearm()}). */
     private static boolean suspended;
@@ -307,7 +307,7 @@ public final class Kids {
         if (allowedPackages == null) allowedPackages = Collections.emptySet();
         sourcePlayers = p.getStringSet("source_players", null);
         if (sourcePlayers == null) sourcePlayers = Collections.emptySet();
-        blockOthers = p.getBoolean("block_others", true);
+        blockOthers = p.getBoolean("block_others", false);
         Rules loaded = new Rules(
                 p.getInt("weekday_minutes", 0),
                 p.getInt("weekend_minutes", 0),

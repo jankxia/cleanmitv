@@ -3419,6 +3419,16 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         View panel = getLayoutInflater().inflate(R.layout.popup_inputs, root, false);
         LinearLayout rows = panel.findViewById(R.id.rows);
         PopupWindow popup = glassPopup(panel, (int) (200 * density));
+        // Hold OK in a mode: the same one row, nothing else to reach.
+        if (Kids.active()) {
+            addSettingsMenuRow(rows, popup, R.string.mode_leave, this::leaveKidsMode);
+            panel.measure(View.MeasureSpec.UNSPECIFIED, View.MeasureSpec.UNSPECIFIED);
+            popup.setWidth(Math.max((int) (200 * density), panel.getMeasuredWidth()));
+            dropIn(popup, panel, anchor, getResources().getBoolean(R.bool.rtl_menu_bar)
+                    ? Gravity.START : Gravity.END);
+            rows.getChildAt(0).requestFocus();
+            return;
+        }
         if (!launcherSettingsButton) addSettingsMenuRow(rows, popup, R.string.launcher_settings, () -> startActivityForResult(
                 new Intent(this, LauncherSettingsActivity.class), LAUNCHER_SETTINGS_REQUEST));
         // Firmware that ships its own settings app next to the AOSP one (Xiaomi China is one): the
