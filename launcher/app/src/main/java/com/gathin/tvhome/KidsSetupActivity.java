@@ -126,8 +126,6 @@ public class KidsSetupActivity extends Activity {
         bindBreak(R.id.break5, 5);
         bindBreak(R.id.break10, 10);
         bindBreak(R.id.break30, 30);
-        bindBreak(R.id.break45, 45);
-        bindBreak(R.id.break60, 60);
 
         startButton.setOnClickListener(v -> {
             // No PIN means no way out again: the mode can only be left with one, so ask for it here
@@ -347,12 +345,16 @@ public class KidsSetupActivity extends Activity {
         setSelected(R.id.latest20, rules.endMinute == 20 * 60);
         setSelected(R.id.latest21, rules.endMinute == 21 * 60);
         setSelected(R.id.latest22, rules.endMinute == 22 * 60);
+        // 45 and 60 are gone: a leftover setting from an older build reads as "off" here and is
+        // written back as off, so the page never shows a row with nothing selected.
+        if (rules.breakEvery == 45 || rules.breakEvery == 60) {
+            rules = rules.copy(-1, -1, -1, -1, 0, -1);
+            Kids.chooseRules(rules);
+        }
         setSelected(R.id.break0, rules.breakEvery == 0);
         setSelected(R.id.break5, rules.breakEvery == 5);
         setSelected(R.id.break10, rules.breakEvery == 10);
         setSelected(R.id.break30, rules.breakEvery == 30);
-        setSelected(R.id.break45, rules.breakEvery == 45);
-        setSelected(R.id.break60, rules.breakEvery == 60);
 
         boolean kids = kind == Kids.Kind.KIDS;
         startButton.setText(kids ? R.string.kids_start_kids : R.string.kids_start_elders);
