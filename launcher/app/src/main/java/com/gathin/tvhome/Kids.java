@@ -529,10 +529,20 @@ public final class Kids {
 
     /** Room left in the day's quota for the quiz to top up; a day with no limit needs none. */
     private static boolean canEarnMore(long now) {
+        long cap = dailyCapMs(now);
+        if (cap <= 0) return false;
+        return usage.usedMs + ledger.creditMs < cap;
+    }
+
+    /**
+     * The day's ceiling: the set limit plus everything the quiz can add. The quiz exists exactly
+     * for the moment the plain limit runs out, so it has to sit above it, not inside it.
+     */
+    private static long dailyCapMs(long now) {
         int limit = limitToday(now);
-        if (limit <= 0) return false;
-        long used = usage.usedMs;
-        return used + ledger.creditMs < limit * 60_000L;
+        if (limit <= 0) return 0;
+        long extra = (long) Math.max(0, plan.roundsPerDay) * Math.max(0, plan.sessionMinutes);
+        return (limit + extra) * 60_000L;
     }
 
     /**
@@ -546,9 +556,9 @@ public final class Kids {
         rollDay(now);
         ledger.roundsToday++;
         int grant = Math.max(0, minutes);
-        int limit = limitToday(now);
-        if (limit > 0) {
-            long roomMs = limit * 60_000L - usage.usedMs - ledger.creditMs;
+        long cap = dailyCapMs(now);
+        if (cap > 0) {
+            long roomMs = cap - usage.usedMs - ledger.creditMs;
             grant = (int) Math.max(0, Math.min(grant * 60_000L, roomMs) / 60_000L);
         }
         if (grant > 0) ledger.grant(grant * 60_000L);
