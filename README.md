@@ -295,6 +295,47 @@ v2.8.4 的补丁。原来时长档位最小是 30 分钟，想验证「答完一
 
 **涉及文件**：`activity_main.xml`、`layout-iw/activity_main.xml`、`KidsLockActivity.java`、`KidsWatch.java`、`app/build.gradle`（`versionCode` 17 → 18，`versionName` → `2.8.7-pin-every-choice`）。
 
+## v2.8.8 修改记录（时间设置互锁，锁屏能盖住播放中的视频）
+
+### 一、三个时间不再互相打架
+
+以前工作日时长、周末时长、休息间隔各选各的，能设出「休息 30 分钟，但一天只看 10 分钟」这种永远不会触发的组合。现在按一条物理事实把它们串起来：**休息点必须落在当天的分钟数之内**。
+
+| 你做的动作 | 页面随之发生什么 |
+|---|---|
+| 周末从 60 改到 **10** | 休息行从 关 / 5 / 10 / 30 变成只剩 **关 / 5**；10 和 30 直接收起 |
+| 休息还是 **30** 时把周末改成 10 | 休息**自动降成 5**，弹出「Break changed to 5 min: it has to fall inside the day's minutes」 |
+| 把「最晚看到」设得比某档时长还短 | 该时长档自动收起（窗口装不下它） |
+| 打开页面时存在历史遗留矛盾值 | 进页面即自愈，写回时顺手改掉，不会出现「整行没有一个选中」 |
+
+「不限」和「不允许」不设上限，所以休息档位在那两种情况下全开。规则集中在 `KidsSetupActivity` 的 `breakFits / breakInside / shortestLimit / limitFits` 四个纯函数里，绑定时和刷新时用同一套判断，不会出现「拦得住点击却拦不住旧值」。
+
+### 二、锁屏压不住播放器：补一个权限就够
+
+根因是 Android 11 的后台启动限制：应用没有「显示在其他应用上层」权限时，`startActivity` 从后台拉起界面会被静默拒绝。所以以前在飞牛 TV 里正播着视频，锁屏只能等按一次 HOME 才出现。
+
+| 改动 | 位置 |
+|---|---|
+| 声明 `SYSTEM_ALERT_WINDOW` | `AndroidManifest.xml` |
+| 设置页加「Lock screen over video」按钮，显示 `on / off`，点一下走系统授权页 | `activity_kids_setup.xml`、`KidsSetupActivity.openOverlaySettings()` |
+| 授权后守卫的启动不再被拦；**没授权时**每 3 个 tick 记一次失败，最多 10 分钟提示家长一次，不再默默失败 | `KidsWatch.tick()` |
+
+这是最省事的一条路：一次性授权，之后不改代码、不加前台服务、不碰无障碍。
+
+**实机验证**（MiTV-ASTR0，`com.trim.tv` 播放器在前台）：
+
+```
+appops get com.ts.launcher SYSTEM_ALERT_WINDOW  →  SYSTEM_ALERT_WINDOW: allow
+mResumedActivity（等待前）  →  com.trim.tv/.modules.media.player.PlayerActivity
+mResumedActivity（5 分钟后）→  com.ts.launcher/com.gathin.tvhome.KidsLockActivity
+```
+
+屏幕上出现「休息时间 / 4:01 后恢复。」，**全程没有按 HOME**，播放器被锁屏直接盖住。同一轮还验证了联动：周末 60 → 改 10，休息 30 自动变 5 并提示。
+
+**体积**：APK 434,980 B → 436,708 B，多了 1,728 B。
+
+**涉及文件**：`AndroidManifest.xml`、`activity_kids_setup.xml`、`strings.xml`、`KidsSetupActivity.java`、`KidsWatch.java`、`app/build.gradle`（`versionCode` 18 → 19，`versionName` → `2.8.8-linked-limits`）。
+
 ## 实机截图
 
 下面 8 张全部在小米电视 **MiTV-ASTR0**（Android 11，1920×1080）上用 `adb shell screencap` 直接截取，没有修图，对应 `2.8.1-settings-weather`（v2.8.3 的界面截图待补）：
@@ -327,9 +368,17 @@ v2.8.4 的补丁。原来时长档位最小是 30 分钟，想验证「答完一
 | **答题入口：答对 3 道题可以再看 15 分钟** | **结算：通过啦，答对 2 / 3，加了 12 分钟** |
 | ![](docs/tvhome/17-kids-quiz.jpg) | ![](docs/tvhome/18-kids-quiz-pass.jpg) |
 
+下面 3 张是 **v2.8.8** 的：
+
+| 周末改 10 分钟后，休息行只剩 关 / 5，并提示休息已降为 5 | 设置页新增「锁屏盖住视频」开关，已授权时显示 on |
+|---|---|
+| ![](docs/tvhome/19-kids-linked-rows.jpg) | ![](docs/tvhome/20-kids-overlay.jpg) |
+| **休息锁屏直接压在正在播放的飞牛TV 上，没有按 HOME** | |
+| ![](docs/tvhome/21-kids-break-over-player.jpg) | |
+
 ## 下载与安装
 
-**安装包：** 到本 fork 的 [Releases](https://github.com/jankxia/cleanmitv/releases) 下载最新的 `tvhome-v*-signed.apk`（当前为 `tvhome-v2.8.7-pin-every-choice-signed.apk`）；原项目的 `CleanMiTV-2.7.5-local-MiTV-OS3.apk`（版本 2.7.5-local）仍在 [原仓库 release 目录](https://github.com/sqlsec/cleanmitv/tree/main/release)
+**安装包：** 到本 fork 的 [Releases](https://github.com/jankxia/cleanmitv/releases) 下载最新的 `tvhome-v*-signed.apk`（当前为 `tvhome-v2.8.8-linked-limits-signed.apk`）；原项目的 `CleanMiTV-2.7.5-local-MiTV-OS3.apk`（版本 2.7.5-local）仍在 [原仓库 release 目录](https://github.com/sqlsec/cleanmitv/tree/main/release)
 
 > ⚠️ 这个包针对小米 OS3 国行固件构建。该固件只允许白名单内的包名成为第三方 Home，所以用 `-PlauncherApplicationId=com.ts.launcher` 编译。Java 代码的命名空间仍然是 `com.gathin.tvhome`，没有修改系统、固件或签名权限。如果你的电视已经装了同包名的其他应用，会出现签名冲突。
 
