@@ -12,6 +12,7 @@ import android.os.Looper;
 import android.os.PowerManager;
 import android.os.SystemClock;
 import android.provider.Settings;
+import android.util.Log;
 import android.widget.Toast;
 
 /**
@@ -38,6 +39,8 @@ public final class KidsWatch {
     /** The last warning's step (5 or 1 minutes), so each is said once; 0 when none is due. */
     private static int warnedStep;
     private static long broughtBackAt = Long.MIN_VALUE / 2;
+    /** Ticks since the last log line: one line a minute is enough to read the counter back. */
+    private static int silentTicks;
 
     /** Home (or the clock) is resumed: time there is not counted. */
     private static boolean homeInFront;
@@ -126,6 +129,17 @@ public final class KidsWatch {
         if (watching && lock == null) warnIfDue(ctx, now);
         else if (lock != null) warnedStep = 0;
         if (watching && watchesUsage()) keepAwayByUsage(ctx);
+
+        // One line a minute: watching, the day's counter and why it is or is not counting, so a
+        // counter that stops moving (a frozen process, a wrong flag) can be read back from logcat.
+        if (++silentTicks >= 6) {
+            silentTicks = 0;
+            Kids.Usage u = Kids.usage();
+            Log.d("KidsWatch", "watch=" + watching + " home=" + homeInFront
+                    + " lockScreen=" + lockScreenShowing + " quiz=" + quizShowing
+                    + " interactive=" + interactive + " used=" + (u.usedMs / 1000) + "s"
+                    + " cont=" + (u.continuousMs / 1000) + "s lock=" + lock);
+        }
     }
 
     private static void warnIfDue(Context ctx, long now) {

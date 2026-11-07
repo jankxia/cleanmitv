@@ -52,10 +52,11 @@ public class KidsLockActivity extends Activity {
 
         parentButton.setOnClickListener(v -> askParent());
         quizButton.setOnClickListener(v -> startQuiz());
-        findViewById(R.id.grant15).setOnClickListener(v -> grant(15));
-        findViewById(R.id.grant30).setOnClickListener(v -> grant(30));
-        findViewById(R.id.grant60).setOnClickListener(v -> grant(60));
-        findViewById(R.id.grantDay).setOnClickListener(v -> grant(null));
+        // Each choice asks for the PIN again: the panel being open is not the permission.
+        findViewById(R.id.grant15).setOnClickListener(v -> grantBehindPin(15));
+        findViewById(R.id.grant30).setOnClickListener(v -> grantBehindPin(30));
+        findViewById(R.id.grant60).setOnClickListener(v -> grantBehindPin(60));
+        findViewById(R.id.grantDay).setOnClickListener(v -> grantBehindPin(null));
         leaveButton.setOnClickListener(v -> leave());
 
         ((TextView) findViewById(R.id.grant15)).setText(getString(R.string.kids_grant, 15));
@@ -125,6 +126,10 @@ public class KidsLockActivity extends Activity {
         leaveButton.setVisibility(granting ? View.VISIBLE : View.GONE);
         leaveButton.setText(kids ? R.string.cc_kids_leave : R.string.cc_elders_leave);
         grantRow.setVisibility(granting ? View.VISIBLE : View.GONE);
+        // "The rest of today" would only ever hand the day back to a child, so it is not offered
+        // once the day is spent — the parent still has 15 / 30 / 60.
+        findViewById(R.id.grantDay).setVisibility(
+                lock == Kids.Lock.DAY_USED ? View.GONE : View.VISIBLE);
         parentButton.setVisibility(granting ? View.GONE : View.VISIBLE);
         boolean quiz = lock == Kids.Lock.QUIZ;
         quizButton.setVisibility(quiz && !granting ? View.VISIBLE : View.GONE);
@@ -161,6 +166,29 @@ public class KidsLockActivity extends Activity {
                 } else {
                     Toast.makeText(KidsLockActivity.this, R.string.pin_wrong, Toast.LENGTH_LONG).show();
                 }
+            }
+
+            @Override public void onCancel() {
+                pinOpen = false;
+            }
+        });
+        verify.show();
+    }
+
+    /** A break / extra time takes the PIN too: the buttons are behind it, one by one. */
+    private void grantBehindPin(Integer minutes) {
+        if (!granting || pinOpen) return;
+        if (!Kids.pinSet()) {
+            Toast.makeText(this, R.string.kids_pin_first, Toast.LENGTH_LONG).show();
+            return;
+        }
+        pinOpen = true;
+        PinDialog verify = new PinDialog(this, PinDialog.VERIFY, Kids.pinArrows(),
+                new PinDialog.PinListener() {
+            @Override public void onPin(String pin) {
+                pinOpen = false;
+                if (Kids.pinMatches(pin)) grant(minutes);
+                else Toast.makeText(KidsLockActivity.this, R.string.pin_wrong, Toast.LENGTH_LONG).show();
             }
 
             @Override public void onCancel() {
