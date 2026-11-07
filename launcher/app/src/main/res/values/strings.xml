@@ -262,7 +262,7 @@
     <string name="quiz_progress">Question %1$d of %2$d</string>
     <string name="quiz_score">Right %1$d</string>
     <string name="quiz_pick">Pick an answer</string>
-    <string name="quiz_right">That's right!</string>
+    <string name="quiz_right">That\'s right!</string>
     <string name="quiz_wrong">The answer is %1$s</string>
     <string name="quiz_next">Press OK for the next one</string>
     <string name="quiz_pass_title">Passed</string>
