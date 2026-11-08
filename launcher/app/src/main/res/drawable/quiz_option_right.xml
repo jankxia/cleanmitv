@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- The right answer, after the pick: a fresh green card. -->
 <shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
-    <solid android:color="#FF1E3A2A" />
-    <corners android:radius="14dp" />
-    <stroke android:width="2dp" android:color="#FF4DAE6D" />
+    <solid android:color="#FFDDF7E6" />
+    <corners android:radius="20dp" />
+    <stroke android:width="3dp" android:color="#FF37B26B" />
 </shape>

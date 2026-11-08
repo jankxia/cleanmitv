@@ -63,7 +63,7 @@ public class AppAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
     }
 
     static final class Entry {
-        static final int APP = 0, HOME_SETTINGS = 1, CARD = 2, EMPTY = 3, KIDS_PARENT = 4;
+        static final int APP = 0, HOME_SETTINGS = 1, CARD = 2, EMPTY = 3, KIDS_PARENT = 4, KIDS_QUIZ = 5;
 
         final int kind;
         final String label;
@@ -361,12 +361,18 @@ public class AppAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                     null, null, null, 0));
         }
         // Kids/Elders mode: its own card comes first, so the parent's PIN is reachable even when no
-        // app was picked for the mode at all ("hide everything").
+        // app was picked for the mode at all ("hide everything"). The children's mode also carries
+        // "Answer now" in the dock, which opens the questions with no limit asked.
         if (kidsAllowed != null) {
             int label = Kids.kind() == Kids.Kind.ELDERS ? R.string.elders_mode_card : R.string.kids_mode_card;
             fresh.add(0, new Entry(Entry.KIDS_PARENT, ctx.getString(label),
                     new ComponentName(ctx, MainActivity.class), null,
                     ctx.getDrawable(R.drawable.ic_kids_mode), null, 0));
+            if (Kids.kind() == Kids.Kind.KIDS) {
+                fresh.add(1, new Entry(Entry.KIDS_QUIZ, ctx.getString(R.string.kids_quiz_now),
+                        new ComponentName(ctx, KidsQuizActivity.class), null,
+                        ctx.getDrawable(R.drawable.ic_kids_quiz), null, 0));
+            }
         }
         items.clear();
         items.addAll(fresh);
@@ -516,8 +522,8 @@ public class AppAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         }
         h.card.setOnClickListener(v -> launch(e));
         h.card.setOnLongClickListener(v -> {
-            // The mode's card has no tile menu: it is the parent's way out, nothing to move or remove.
-            if (e.kind == Entry.KIDS_PARENT) return true;
+            // The mode's card and "Answer now" have no tile menu either.
+            if (e.kind == Entry.KIDS_PARENT || e.kind == Entry.KIDS_QUIZ) return true;
             if (tileMenu) {
                 int pos = h.getBindingAdapterPosition();
                 if (pos != RecyclerView.NO_POSITION) listener.onTileLongPress(pos, v);
@@ -539,6 +545,13 @@ public class AppAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
             // The mode's own card: same as the parent button in the top bar, a PIN to leave.
             MainActivity main = ctx instanceof MainActivity ? (MainActivity) ctx : MainActivity.instance;
             if (main != null && !main.isDestroyed()) main.kidsParentPressed();
+            return;
+        }
+        if (e.kind == Entry.KIDS_QUIZ) {
+            // "Answer now": practice, no minute asked for and none given; it leaves for this Home.
+            ctx.startActivity(new Intent(ctx, KidsQuizActivity.class)
+                    .putExtra(KidsQuizActivity.EXTRA_PRACTICE, true)
+                    .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK));
             return;
         }
         if (e.kind == Entry.HOME_SETTINGS) {
@@ -685,13 +698,19 @@ public class AppAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
     /** Every package currently shown, in tile order; Kids/Elders mode's guard knows these. */
     List<String> packages() {
         List<String> out = new ArrayList<>(items.size());
-        for (Entry e : items) if (e.kind != Entry.KIDS_PARENT) out.add(e.pkg);
+        for (Entry e : items) if (e.kind != Entry.KIDS_PARENT && e.kind != Entry.KIDS_QUIZ) out.add(e.pkg);
         return out;
     }
 
     /** True when the mode's own card is on this Home. */
     boolean hasKidsParentTile() {
         for (Entry e : items) if (e.kind == Entry.KIDS_PARENT) return true;
+        return false;
+    }
+
+    /** True when "Answer now" is on this Home; Kids mode adds it right after the mode's card. */
+    boolean hasKidsQuizTile() {
+        for (Entry e : items) if (e.kind == Entry.KIDS_QUIZ) return true;
         return false;
     }
 

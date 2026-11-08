@@ -936,7 +936,8 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
     private boolean tilesMatchKidsMode() {
         if (!Kids.active()) return true;
         List<String> wanted = Kids.allowed();
-        int offset = adapter.hasKidsParentTile() ? 1 : 0;
+        // The mode's own tiles come first: its card, and in the children's mode "Answer now".
+        int offset = (adapter.hasKidsParentTile() ? 1 : 0) + (adapter.hasKidsQuizTile() ? 1 : 0);
         if (adapter.appCount() - offset != wanted.size()) return false;
         for (int i = 0; i < wanted.size(); i++) {
             String pkg = adapter.packageAt(i + offset);

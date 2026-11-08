@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The back pill in the corner: it only leaves the questions, never the mode. -->
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:state_focused="true">
+        <shape android:shape="rectangle">
+            <solid android:color="#FFFFF1CF" />
+            <corners android:radius="24dp" />
+            <stroke android:width="3dp" android:color="#FFFFA726" />
+        </shape>
+    </item>
+    <item>
+        <shape android:shape="rectangle">
+            <solid android:color="#FFFFFDF7" />
+            <corners android:radius="24dp" />
+            <stroke android:width="2dp" android:color="#FFE0B877" />
+        </shape>
+    </item>
+</selector>

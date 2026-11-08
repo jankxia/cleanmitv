@@ -1,17 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- A tappable answer: white with a soft outline, warm yellow under the focus. -->
 <selector xmlns:android="http://schemas.android.com/apk/res/android">
     <item android:state_focused="true">
         <shape android:shape="rectangle">
-            <solid android:color="#FF2E3B4A" />
-            <corners android:radius="14dp" />
-            <stroke android:width="2dp" android:color="#FFB9E7C7" />
+            <solid android:color="#FFFFF1CF" />
+            <corners android:radius="20dp" />
+            <stroke android:width="3dp" android:color="#FFFFA726" />
         </shape>
     </item>
     <item>
         <shape android:shape="rectangle">
-            <solid android:color="#FF1B2129" />
-            <corners android:radius="14dp" />
-            <stroke android:width="1dp" android:color="#FF2C353F" />
+            <solid android:color="#FFFFFFFF" />
+            <corners android:radius="20dp" />
+            <stroke android:width="2dp" android:color="#FFE6C88E" />
         </shape>
     </item>
 </selector>

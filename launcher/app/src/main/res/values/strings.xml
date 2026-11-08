@@ -238,6 +238,10 @@
     <string name="kids_quiz">Quiz for time</string>
     <string name="kids_quiz_on">Quiz on</string>
     <string name="kids_quiz_off">Off</string>
+    <string name="kids_quiz_gate_on">Answering is on</string>
+    <string name="kids_quiz_gate_off">Answering is off</string>
+    <string name="kids_quiz_now">Answer now</string>
+    <string name="kids_quiz_now_hint">Practice any time: right answers earn stars, never minutes</string>
     <string name="kids_bank">Questions</string>
     <string name="kids_stage_primary">Primary</string>
     <string name="kids_stage_middle">Middle</string>
@@ -301,6 +305,11 @@
     <string name="quiz_practice_sub">%1$d of %2$d right, the practice pool is clear</string>
     <string name="quiz_again">One more round</string>
     <string name="quiz_close">Back to Home</string>
+    <string name="quiz_back">Back</string>
+    <string name="quiz_stars">⭐ %1$d</string>
+    <string name="quiz_cheer">Keep going!</string>
+    <string name="quiz_star_total">%1$d stars collected</string>
+    <string name="quiz_star_earned">This round earned %1$d stars</string>
     <string name="quiz_empty">The questions did not load; time was added anyway</string>
     <string name="sched_title">Watching hours</string>
     <string name="sched_hint">Green may be watched, grey may not. Move with the D-pad, toggle with OK. A grey half hour stays locked even before the latest hour.</string>

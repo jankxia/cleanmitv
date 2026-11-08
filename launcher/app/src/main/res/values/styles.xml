@@ -85,4 +85,36 @@
         <item name="android:textColor">#FFACB8C1</item>
         <item name="android:textSize">14sp</item>
     </style>
+
+    <!-- Kids mode: a small chip, for the three settings that share three tight rows. -->
+    <style name="KidsChipSmall" parent="KidsChip">
+        <item name="android:layout_height">36dp</item>
+        <item name="android:minWidth">48dp</item>
+        <item name="android:paddingStart">12dp</item>
+        <item name="android:paddingEnd">12dp</item>
+        <item name="android:textSize">15sp</item>
+    </style>
+
+    <!-- Kids mode: a label on the left and its chips on the right, on one row. -->
+    <style name="KidsFieldRow">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_marginTop">12dp</item>
+        <item name="android:orientation">horizontal</item>
+        <item name="android:gravity">center_vertical</item>
+    </style>
+
+    <style name="KidsFieldLabel">
+        <item name="android:layout_width">104dp</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:textColor">#FFCBD5DC</item>
+        <item name="android:textSize">17sp</item>
+    </style>
+
+    <!-- The quiz's own light surface: a cream button on the warm background. -->
+    <style name="KidsButtonCartoon" parent="KidsButton">
+        <item name="android:background">@drawable/quiz_back_bg</item>
+        <item name="android:textColor">#FF4B3620</item>
+        <item name="android:minWidth">170dp</item>
+    </style>
 </resources>

@@ -227,6 +227,10 @@
     <string name="kids_quiz">答题限制</string>
     <string name="kids_quiz_on">打开答题限制</string>
     <string name="kids_quiz_off">关闭</string>
+    <string name="kids_quiz_gate_on">已打开答题限制</string>
+    <string name="kids_quiz_gate_off">未打开答题限制</string>
+    <string name="kids_quiz_now">立即答题</string>
+    <string name="kids_quiz_now_hint">随时练一练：答对得星星，不换时间</string>
     <string name="kids_bank">题库</string>
     <string name="kids_stage_primary">小学</string>
     <string name="kids_stage_middle">初中</string>
@@ -294,6 +298,11 @@
     <string name="quiz_practice_sub">答对 %1$d / %2$d，错题池清空了</string>
     <string name="quiz_again">再来一组</string>
     <string name="quiz_close">回到桌面</string>
+    <string name="quiz_back">返回</string>
+    <string name="quiz_stars">⭐ %1$d</string>
+    <string name="quiz_cheer">继续加油哦！</string>
+    <string name="quiz_star_total">已经收集 %1$d 颗星</string>
+    <string name="quiz_star_earned">这一组得到 %1$d 颗星</string>
     <string name="quiz_empty">题库没加载成功，这次直接加时</string>
     <string name="sched_title">观看时段表</string>
     <string name="sched_hint">绿色 = 可以看，灰色 = 不能看。方向键选格子，按 OK 开关。这里关掉的时间段，就算没到最晚时间也不能看。</string>

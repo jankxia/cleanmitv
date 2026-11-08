@@ -489,8 +489,18 @@ public class KidsSetupActivity extends Activity {
     /** The quiz-for-time choices: what a round buys, which questions it asks, and the day's grid. */
     private void bindPlanChips() {
         final KidsPlan plan = Kids.plan();
-        planChoice(R.id.quizOn, () -> plan.quizGate = true);
-        planChoice(R.id.quizOff, () -> plan.quizGate = false);
+        // One chip that states where it stands: already on, or not on yet.
+        findViewById(R.id.quizToggle).setOnClickListener(v -> {
+            plan.quizGate = !plan.quizGate;
+            Kids.savePlan();
+            KidsWatch.poke();
+            refresh();
+        });
+
+        // Practice, asked for by the parent or the child: it plays a round and adds nothing.
+        findViewById(R.id.quizNowButton).setOnClickListener(v ->
+                startActivity(new Intent(this, KidsQuizActivity.class)
+                        .putExtra(KidsQuizActivity.EXTRA_PRACTICE, true)));
 
         // Stage, grade and subject: the grade and subject rows are rebuilt for each stage, because
         // primary asks three subjects and high school asks nine.
@@ -546,9 +556,11 @@ public class KidsSetupActivity extends Activity {
         setSelected(R.id.blockOff, true);
 
         Kids.Rules rules = Kids.rules();
+        // The elders mode keeps no minutes: its stale values are left alone instead of being pulled down.
+        boolean kidsNow = kind == Kids.Kind.KIDS;
         // The three times hold each other up: a day length that no longer ends before "off by" comes down
         // to the longest one that does, and the break then follows the new shortest day in.
-        if (!limitFits(rules.weekdayMinutes, rules) || !limitFits(rules.weekendMinutes, rules)) {
+        if (kidsNow && (!limitFits(rules.weekdayMinutes, rules) || !limitFits(rules.weekendMinutes, rules))) {
             int wd = limitFits(rules.weekdayMinutes, rules) ? rules.weekdayMinutes
                     : insideWindow(rules.weekdayMinutes, rules);
             int we = limitFits(rules.weekendMinutes, rules) ? rules.weekendMinutes
@@ -558,7 +570,7 @@ public class KidsSetupActivity extends Activity {
             Kids.chooseRules(rules);
         }
         // A break left over from an older combination is pulled back in the moment the page opens.
-        if (!breakFits(rules.breakEvery, rules)) {
+        if (kidsNow && !breakFits(rules.breakEvery, rules)) {
             rules = rules.copy(-1, -1, -1, -1, breakInside(shortestLimit(rules)), -1);
             Kids.chooseRules(rules);
         }
@@ -613,8 +625,15 @@ public class KidsSetupActivity extends Activity {
         KidsPlan plan = Kids.plan();
         findViewById(R.id.quizSection).setVisibility(kids ? View.VISIBLE : View.GONE);
         findViewById(R.id.quizBox).setVisibility(plan.quizGate ? View.VISIBLE : View.GONE);
-        setSelected(R.id.quizOn, plan.quizGate);
-        setSelected(R.id.quizOff, !plan.quizGate);
+        TextView quizToggle = findViewById(R.id.quizToggle);
+        quizToggle.setText(plan.quizGate ? R.string.kids_quiz_gate_on : R.string.kids_quiz_gate_off);
+        quizToggle.setSelected(plan.quizGate);
+        // The elders mode has no watching limits: its three rows are not on the page at all, and
+        // Kids.todayRules() ignores whatever they last held.
+        int limits = kids ? View.VISIBLE : View.GONE;
+        findViewById(R.id.weekdaySection).setVisibility(limits);
+        findViewById(R.id.weekendSection).setVisibility(limits);
+        findViewById(R.id.breakSection).setVisibility(limits);
         setSelected(R.id.stagePrimary, KidsPlan.STAGE_PRIMARY.equals(plan.stage));
         setSelected(R.id.stageMiddle, KidsPlan.STAGE_MIDDLE.equals(plan.stage));
         setSelected(R.id.stageHigh, KidsPlan.STAGE_HIGH.equals(plan.stage));

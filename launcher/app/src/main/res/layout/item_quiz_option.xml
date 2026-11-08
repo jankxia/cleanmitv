@@ -1,14 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- An answer card: 56dp tall so four of them, the question and the cheer line fit a 1080p TV. -->
 <TextView xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/option"
     android:layout_width="match_parent"
-    android:layout_height="78dp"
-    android:layout_marginBottom="12dp"
+    android:layout_height="56dp"
+    android:layout_marginBottom="8dp"
     android:background="@drawable/quiz_option_bg"
     android:focusable="true"
     android:focusableInTouchMode="true"
     android:gravity="center_vertical"
-    android:paddingStart="26dp"
-    android:paddingEnd="26dp"
-    android:textColor="#FFFFFFFF"
-    android:textSize="25sp" />
+    android:paddingStart="24dp"
+    android:paddingEnd="24dp"
+    android:singleLine="true"
+    android:ellipsize="end"
+    android:textColor="#FF4B3620"
+    android:textSize="23sp" />

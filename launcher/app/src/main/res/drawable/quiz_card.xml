@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The question sits on a white card with a warm outline, like a flash card. -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
+    <solid android:color="#FFFFFFFF" />
+    <corners android:radius="26dp" />
+    <stroke android:width="3dp" android:color="#FFFFC978" />
+</shape>

@@ -276,8 +276,13 @@ public final class Kids {
     /** Parental PIN, SHA-256 of "cleanmitv:" + pin; null when none is set. */
     private static String pinHash;
     private static boolean pinArrows;
+    /** The elders mode's own PIN: the children's PIN never opens it, nor the other way round. */
+    private static String eldersPinHash;
+    private static boolean eldersPinArrows;
     /** Elapsed-realtime up to which the PIN lets settings through without asking again. */
     private static long unlockedUntil;
+    /** Stars collected by answering; a tally for the child only, never a minute of watching. */
+    private static int stars;
 
     private Kids() {}
 
@@ -330,6 +335,9 @@ public final class Kids {
                 p.getLong("allow_until", 0));
         pinHash = p.getString("pin_hash", null);
         pinArrows = p.getBoolean("pin_arrows", false);
+        eldersPinHash = p.getString("pin_hash_elders", null);
+        eldersPinArrows = p.getBoolean("pin_arrows_elders", false);
+        stars = p.getInt("stars", 0);
         plan = KidsPlan.load(app);
         ledger = KidsLedger.load(app);
         rollDay(System.currentTimeMillis());
@@ -494,6 +502,8 @@ public final class Kids {
      * The rest of the rule set is untouched.
      */
     private static Rules todayRules() {
+        // The elders mode has no daily minutes and no breaks: only the latest hour it may watch counts.
+        if (kind == Kind.ELDERS) return new Rules(0, 0, rules.startMinute, rules.endMinute, 0, rules.breakMinutes);
         return plan.holidayWeekend ? rules.withWeekday(rules.weekendMinutes) : rules;
     }
 
@@ -611,17 +621,27 @@ public final class Kids {
 
     // ---- Parental PIN (ported from AerialSettings) ----
 
+    /** The PIN that guards the mode now; the elders mode keeps a separate one. */
+    private static String pinHashNow() {
+        return kind == Kind.ELDERS ? eldersPinHash : pinHash;
+    }
+
+    private static boolean pinArrowsNow() {
+        return kind == Kind.ELDERS ? eldersPinArrows : pinArrows;
+    }
+
     public static boolean pinSet() {
-        return pinHash != null;
+        return pinHashNow() != null;
     }
 
     public static boolean pinArrows() {
-        return pinArrows;
+        return pinArrowsNow();
     }
 
     /** Whether pin is the PIN, without unlocking anything: for leaving Kids mode and its limits. */
     public static boolean pinMatches(String pin) {
-        return pinHash != null && hash(pin).equals(pinHash);
+        String h = pinHashNow();
+        return h != null && hash(pin).equals(h);
     }
 
     /** Verify and unlock settings for a while. */
@@ -636,11 +656,36 @@ public final class Kids {
         return pinSet() && android.os.SystemClock.elapsedRealtime() <= unlockedUntil;
     }
 
+    /** Sets the PIN of the mode in front of the parent; the other mode's PIN is left untouched. */
     public static void choosePin(String pin, boolean arrows) {
-        pinHash = pin == null ? null : hash(pin);
-        pinArrows = pin != null && arrows;
+        String h = pin == null ? null : hash(pin);
+        boolean ar = pin != null && arrows;
+        boolean elders = kind == Kind.ELDERS;
+        if (elders) {
+            eldersPinHash = h;
+            eldersPinArrows = ar;
+        } else {
+            pinHash = h;
+            pinArrows = ar;
+        }
         unlockedUntil = 0;
-        prefs().edit().putString("pin_hash", pinHash).putBoolean("pin_arrows", pinArrows).apply();
+        prefs().edit()
+                .putString(elders ? "pin_hash_elders" : "pin_hash", h)
+                .putBoolean(elders ? "pin_arrows_elders" : "pin_arrows", ar)
+                .apply();
+    }
+
+    // ---- Stars: what answering questions collects, kept away from the watching limits ----
+
+    public static int stars() {
+        return stars;
+    }
+
+    /** Adds the stars a round earned. They buy no time: the limits are computed elsewhere. */
+    public static void addStars(int n) {
+        if (n <= 0) return;
+        stars += n;
+        prefs().edit().putInt("stars", stars).apply();
     }
 
     private static String hash(String pin) {

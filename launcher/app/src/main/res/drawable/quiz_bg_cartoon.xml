@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- A warm, paper-like sky for the quiz: the screen has to look like a playroom, not a lock. -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
+    <gradient
+        android:angle="270"
+        android:startColor="#FFFFFDF6"
+        android:centerColor="#FFFFF3D9"
+        android:endColor="#FFFFE2B0"
+        android:type="linear" />
+</shape>

@@ -15,11 +15,13 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * The questions that buy more watching time: one at a time, four answers, a star per right one.
+ * The questions: one at a time, four answers, a star per right one.
  *
- * <p>Three ways to play, chosen in the setup page: a round of n questions where {@code passRatio}
- * of them has to be right; a streak, where n in a row has to be right; or practice, which pays no
- * time and only clears the practice pool.
+ * <p>Two ways in. The lockscreen opens it when the day is spent, and then it buys minutes: a round
+ * of n questions where {@code passRatio} of them has to be right, a streak where n in a row has to
+ * be right, or practice, which pays no time and only clears the practice pool. The setup page and
+ * the dock's own tile open it as free practice ({@link #EXTRA_PRACTICE}): stars, no minutes, no
+ * rounds-per-day limit, and Back is always a way out to the mode it came from.
  *
  * <p>Nothing here unlocks on its own: time is granted only by {@link Kids#grantQuizTime}, which
  * caps what one round can buy at what is left of the day's quota. A broken or missing question
@@ -27,29 +29,43 @@ import java.util.List;
  */
 public class KidsQuizActivity extends Activity {
 
+    /** Opens the questions for practice: they ask no limit for a minute and never buy any. */
+    static final String EXTRA_PRACTICE = "kids_quiz_practice";
+
+    /** A right answer is worth this many stars; a round with every answer right gets one more. */
+    private static final int STAR_PER_RIGHT = 1;
+    private static final int STAR_PERFECT_BONUS = 1;
+
     private final Handler handler = new Handler(Looper.getMainLooper());
     private final List<KidsBank.Q> round = new ArrayList<>();
     private final List<TextView> optionViews = new ArrayList<>();
     private KidsPlan plan;
     private KidsLedger ledger;
     private boolean practice;
+    /** Came from "Answer now": practice that also escapes the rounds-per-day limit. */
+    private boolean freePractice;
     private int index;
     private int correct;
     private int streak;
+    /** Stars this round has earned so far, shown when the round ends. */
+    private int earned;
     private boolean answered;
     private boolean waitingNext;
     private boolean closing;
 
     private TextView progress;
     private TextView score;
+    private TextView starsView;
     private TextView question;
     private TextView feedback;
+    private TextView starPop;
     private LinearLayout options;
     private LinearLayout resultPanel;
     private TextView resultIcon;
     private TextView resultTitle;
     private TextView resultSub;
     private View againButton;
+    private TextView closeButton;
 
     @Override
     protected void onCreate(Bundle state) {
@@ -58,12 +74,13 @@ public class KidsQuizActivity extends Activity {
         KidsWatch.quizShowing = true;
         plan = Kids.plan();
         ledger = Kids.ledger();
-        practice = KidsPlan.MODE_PRACTICE.equals(plan.playMode);
+        freePractice = getIntent().getBooleanExtra(EXTRA_PRACTICE, false);
+        practice = freePractice || KidsPlan.MODE_PRACTICE.equals(plan.playMode);
 
         if (KidsBank.all(this).isEmpty()) {
-            // No bank, no questions: the round pays out rather than leaving the TV locked forever.
+            // No bank, no questions: a locked round pays out rather than leaving the TV locked forever.
             Toast.makeText(this, R.string.quiz_empty, Toast.LENGTH_LONG).show();
-            Kids.grantQuizTime(plan.sessionMinutes);
+            if (!freePractice) Kids.grantQuizTime(plan.sessionMinutes);
             close();
             return;
         }
@@ -71,6 +88,7 @@ public class KidsQuizActivity extends Activity {
         setContentView(R.layout.activity_kids_quiz);
         progress = findViewById(R.id.progress);
         score = findViewById(R.id.score);
+        starsView = findViewById(R.id.stars);
         question = findViewById(R.id.question);
         feedback = findViewById(R.id.feedback);
         options = findViewById(R.id.options);
@@ -79,11 +97,26 @@ public class KidsQuizActivity extends Activity {
         resultTitle = findViewById(R.id.resultTitle);
         resultSub = findViewById(R.id.resultSub);
         againButton = findViewById(R.id.againButton);
+        closeButton = findViewById(R.id.closeButton);
+        starPop = findViewById(R.id.starPop);
 
         againButton.setOnClickListener(v -> restart());
-        findViewById(R.id.closeButton).setOnClickListener(v -> close());
+        closeButton.setOnClickListener(v -> close());
+
+        // Practice is only ever left for the mode it came from, and the corner says so.
+        View back = findViewById(R.id.backButton);
+        if (freePractice) {
+            back.setVisibility(View.VISIBLE);
+            back.setOnClickListener(v -> close());
+            closeButton.setText(R.string.quiz_back);
+        }
 
         startRound();
+    }
+
+    /** Stars show in free practice whatever the setup says: they are the whole reward there. */
+    private boolean starsOn() {
+        return plan.starReward || freePractice;
     }
 
     private void startRound() {
@@ -91,14 +124,15 @@ public class KidsQuizActivity extends Activity {
         index = 0;
         correct = 0;
         streak = 0;
+        earned = 0;
         answered = false;
         waitingNext = false;
         resultPanel.setVisibility(View.GONE);
-        int n = Math.max(1, practice ? Math.max(2, plan.extraQuestions) : plan.questionsPerRound);
+        int n = Math.max(1, plan.questionsPerRound);
         round.addAll(KidsBank.pickWithPractice(this, n, practice ? 0 : ledger.extraPool,
                 plan.stage, plan.grade(), plan.subjects()));
         if (round.isEmpty()) {
-            Kids.grantQuizTime(plan.sessionMinutes);
+            if (!freePractice) Kids.grantQuizTime(plan.sessionMinutes);
             close();
             return;
         }
@@ -113,8 +147,10 @@ public class KidsQuizActivity extends Activity {
         KidsBank.Q q = round.get(index);
         progress.setText(getString(R.string.quiz_progress, index + 1, round.size()));
         score.setText(getString(R.string.quiz_score, correct));
+        showStars();
         question.setText(q.text);
         feedback.setText(R.string.quiz_pick);
+        feedback.setTextColor(0xFF9A6A28);
         answered = false;
         waitingNext = false;
 
@@ -130,6 +166,11 @@ public class KidsQuizActivity extends Activity {
             optionViews.add(view);
         }
         if (!optionViews.isEmpty()) optionViews.get(0).requestFocus();
+    }
+
+    private void showStars() {
+        starsView.setVisibility(starsOn() ? View.VISIBLE : View.GONE);
+        if (starsOn()) starsView.setText(getString(R.string.quiz_stars, Kids.stars()));
     }
 
     private String optionLabel(int i) {
@@ -149,6 +190,13 @@ public class KidsQuizActivity extends Activity {
             streak++;
             optionViews.get(choice).setBackgroundResource(R.drawable.quiz_option_right);
             feedback.setText(R.string.quiz_right);
+            feedback.setTextColor(0xFF2E8B57);
+            if (starsOn()) {
+                earned += STAR_PER_RIGHT;
+                Kids.addStars(STAR_PER_RIGHT);
+                showStars();
+                popStar();
+            }
         } else {
             streak = 0;
             // The wrong pick keeps its red frame and the right one goes green; the line below spells
@@ -157,7 +205,9 @@ public class KidsQuizActivity extends Activity {
             if (q.answer < optionViews.size()) {
                 optionViews.get(q.answer).setBackgroundResource(R.drawable.quiz_option_right);
             }
-            feedback.setText(getString(R.string.quiz_wrong_pick, q.options[choice], q.options[q.answer]));
+            feedback.setText(getString(R.string.quiz_wrong_pick, q.options[choice], q.options[q.answer])
+                    + "\n✊ " + getString(R.string.quiz_cheer));
+            feedback.setTextColor(0xFFC0432F);
         }
         score.setText(getString(R.string.quiz_score, correct));
 
@@ -167,7 +217,28 @@ public class KidsQuizActivity extends Activity {
         } else {
             waitingNext = true;
             feedback.setText(getString(R.string.quiz_next));
+            feedback.setTextColor(0xFF9A6A28);
         }
+    }
+
+    /** A star flies in from below, bounces, then drifts off: one per right answer. */
+    private void popStar() {
+        if (starPop == null) return;
+        starPop.animate().cancel();
+        starPop.setVisibility(View.VISIBLE);
+        starPop.setAlpha(0f);
+        starPop.setScaleX(0.4f);
+        starPop.setScaleY(0.4f);
+        starPop.setTranslationY(140f);
+        starPop.animate().alpha(1f).scaleX(1.25f).scaleY(1.25f).translationY(0f)
+                .setDuration(320)
+                .withEndAction(() -> starPop.animate().scaleX(1f).scaleY(1f).setDuration(150)
+                        .withEndAction(() -> starPop.animate().alpha(0f).translationY(-110f)
+                                .setDuration(420)
+                                .withEndAction(() -> starPop.setVisibility(View.INVISIBLE))
+                                .start())
+                        .start())
+                .start();
     }
 
     private final Runnable nextQuestion = new Runnable() {
@@ -194,11 +265,19 @@ public class KidsQuizActivity extends Activity {
 
         if (pass) {
             if (practice) {
-                ledger.extraPool = 0;
-                ledger.save(this);
+                // "Practice only" clears the pool; the free practice leaves it for the next locked round.
+                if (!freePractice) {
+                    ledger.extraPool = 0;
+                    ledger.save(this);
+                }
             } else {
                 rewarded = Kids.grantQuizTime(plan.sessionMinutes);
             }
+        }
+        // A round with every answer right is worth one more star.
+        if (starsOn() && correct == n && n > 0) {
+            earned += STAR_PERFECT_BONUS;
+            Kids.addStars(STAR_PERFECT_BONUS);
         }
         showResult(pass, rewarded, n);
     }
@@ -206,10 +285,15 @@ public class KidsQuizActivity extends Activity {
     private void showResult(boolean pass, int rewarded, int n) {
         resultPanel.setVisibility(View.VISIBLE);
         if (practice) {
-            resultIcon.setText("\uD83C\uDF1F");
+            resultIcon.setText(starsOn() ? "\u2B50" : "\uD83C\uDF1F");
             resultTitle.setText(R.string.quiz_practice_title);
-            resultSub.setText(getString(R.string.quiz_practice_sub, correct, n));
-            againButton.setVisibility(View.GONE);
+            String sub = getString(R.string.quiz_practice_sub, correct, n);
+            if (starsOn()) {
+                sub = getString(R.string.quiz_star_earned, earned) + "\n"
+                        + getString(R.string.quiz_star_total, Kids.stars()) + "\n" + sub;
+            }
+            resultSub.setText(sub);
+            againButton.setVisibility(View.VISIBLE);
         } else if (pass) {
             resultIcon.setText("\uD83C\uDF89");
             resultTitle.setText(R.string.quiz_pass_title);
@@ -228,13 +312,13 @@ public class KidsQuizActivity extends Activity {
             againButton.setVisibility(
                     ledger.roundsLeft(plan.roundsPerDay) ? View.VISIBLE : View.GONE);
         }
-        findViewById(R.id.closeButton).requestFocus();
+        closeButton.requestFocus();
         if (againButton.getVisibility() == View.VISIBLE) againButton.requestFocus();
     }
 
     private void restart() {
         if (closing) return;
-        if (!ledger.roundsLeft(plan.roundsPerDay)) return;
+        if (!freePractice && !ledger.roundsLeft(plan.roundsPerDay)) return;
         startRound();
     }
 
@@ -246,7 +330,14 @@ public class KidsQuizActivity extends Activity {
 
     @Override
     public boolean onKeyDown(int keyCode, KeyEvent event) {
-        if (keyCode == KeyEvent.KEYCODE_BACK) return true;
+        if (keyCode == KeyEvent.KEYCODE_BACK) {
+            // Free practice only ever goes back to the mode it came from; a locked round cannot be escaped.
+            if (freePractice) {
+                close();
+                return true;
+            }
+            return true;
+        }
         if (waitingNext && keyCode == KeyEvent.KEYCODE_DPAD_CENTER) {
             waitingNext = false;
             handler.removeCallbacks(nextQuestion);
@@ -259,13 +350,15 @@ public class KidsQuizActivity extends Activity {
 
     @Override
     public void onBackPressed() {
-        // Nothing behind this screen is reachable while the TV is locked.
+        // Free practice leaves for the mode it came from; nothing behind a locked round is reachable.
+        if (freePractice) close();
     }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
         handler.removeCallbacks(nextQuestion);
+        if (starPop != null) starPop.animate().cancel();
         KidsWatch.quizShowing = false;
         KidsWatch.poke();
     }
