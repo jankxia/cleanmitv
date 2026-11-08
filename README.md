@@ -459,6 +459,46 @@ kids_overlay_need = 家长：请允许本应用「显示在其他应用的上层
 1. 自由练习结算页原来误写「错题池清空了」，但立即答题路径并不清 `extraPool`（见本节一.6），已把 `quiz_practice_sub` 改为「答对 X / Y，继续加油！」，英文同步；
 2. 「每组加时（分钟）」在 104dp 的标签列里折成两行，已把 `KidsFieldLabel` 加宽到 144dp、加 `maxLines=1` 锁定单行，英文标签同步缩短（`Round minutes / Questions / Rounds/day`）。
 
+## v2.9.0 之后的 Home 布局微调（不改版本号，仍为 versionCode 21 / 2.9.0-answer-now）
+
+### 一、普通 Home 第二行不再从屏幕底缘冒头
+
+1. 实机 `uiautomator dump` 测得修复前第一行卡片 top 757/765、第二行卡片 top **1036**（屏幕高 1080，冒头 44px），设备物理密度 320dpi（density=2.0）。
+2. `AppAdapter` 新增常量 `HIDE_NEXT_ROW_DP = 26`；`MainActivity.fitDockPadding()` 在 `dockRow && !singleRow && rowsBelowDock == 0` 时把顶部 padding 再加 `HIDE_NEXT_ROW_DP * density`（整行下移 52px），第二行顶部被压到屏外，按 Down 仍能正常滚出。
+
+### 二、程序坞任何模式、任意 APP 数量都水平居中
+
+1. GridLayoutManager 按列定位，单设 left 偏移只会压缩不会平移，因此用「正 left + 负 right」的负偏移在保持列宽不变的前提下整体平移（grid 已 `clipChildren=false`）。
+2. `AppAdapter` 新增 `dockVisibleCount()`（数第一行 `kind != EMPTY` 的 tile）；`DockDecoration` 新增 `adapter` 字段与 setter，对非 singleRow 的第一行每个 tile 计算 `shift = round((dockSize - visible) / 2f * column)`，设 `outRect.left = shift`、`outRect.right = -shift`。
+3. 实机验证：儿童模式 3 tile 中间卡片中心 959.5 ≈ 屏幕中心 960；普通 Home 满 5 tile 时 shift 为 0、保持原样不偏移。
+
+### 三、日期 / 天气文字颜色对齐农历，并给天气加图标
+
+1. `activity_main.xml` 把日期（TextClock）与天气行的文字颜色由 `#A6FFFFFF` 改为与农历一致的 `#CCFFFFFF`（字号不变），天气行加 `gravity=center_vertical`、`drawablePadding=6dp`。
+2. 新增 7 个自绘 vector 图标（晴 / 多云 / 阴 / 雾 / 雨 / 雪 / 雷暴，24dp，主色 `#CCFFFFFF`，雷暴闪电用 `#FFE066`）；`Weather` 新增 `lastCode()`（读 prefs 里的 WMO code）与 `iconRes(code)`（把 WMO code 分组到 7 个图标）。
+3. `MainActivity` 新增 `applyWeatherIcon()`，用 `setCompoundDrawablesRelativeWithIntrinsicBounds` 把对应图标放在天气文字前面，初始缓存与 `updateWeather` 回调两处都调用；无 code 时传 null。
+
+### 四、所有模式取消程序坞上方的大名称
+
+1. 代码本就有 `dock_title` 开关（false 时 `hero` 容器 GONE、只保留聚焦 glow，并经 `tileWidthPx` / `TITLE_ROOM` 让 tile 更大）。
+2. 把 `config.xml` 的 `dock_title` 由 true 改为 **false**，所有模式下聚焦程序坞 APP 时上方都不再显示大标题，glow 聚焦效果照旧。
+
+### 五、答题音效：答对、答错、星星弹出都有声音
+
+1. 新增 `QuizSounds.java`，运行时用 `AudioTrack`（USAGE_MEDIA，44.1kHz 单声道 PCM）合成短音符，不引入任何音频文件：
+   - 答对：明亮的上行两音（C5 → E5）；
+   - 答错：柔和的下行两音（A3 → G3），音量偏低、不惊吓孩子；
+   - 星星弹出：高音铃铛「叮」（E6），带快速衰减。
+2. 每个音符都有 attack / release 包络，避免爆音；在独立子线程播放、播完即 release，不阻塞答题界面。
+
+### 六、立即答题（自由练习）真正不限制答题量
+
+1. 原来一轮固定取 `questionsPerRound`（默认 3）题，做完就到结算页。
+2. `showQuestion()` 在自由练习（`freePractice`）走到列表末尾时，调用新增的 `extendRound()` 再抓一批题追加进当前 round（自动剔除已在本轮出现的题），继续作答而不弹结算；小朋友想停就按左上角「返回」。
+3. 实机连续作答验证：进度 1/3 → 2/3 → 3/3 → **4/8**，分母随追加自动变大，全程不出现结算面板。
+
+**涉及文件**：`AppAdapter.java`、`MainActivity.java`、`DockDecoration.java`、`Weather.java`、`KidsQuizActivity.java`、`QuizSounds.java`（新增）、`res/layout/activity_main.xml`、`res/values/config.xml`、`res/drawable/w_sunny.xml`、`w_partly.xml`、`w_cloud.xml`、`w_fog.xml`、`w_rain.xml`、`w_snow.xml`、`w_storm.xml`（均新增）。提交链：`6a11c5c5`（藏第二行）→ `50480ba0`（程序坞居中）→ `89a0095e`（天气颜色 + 图标）→ `298a464d`（图标 intrinsic 修复）→ `0943e770`（dock_title 关闭）→ `b516d634`（答题音效 + 自由练习不限量）。
+
 ## 实机截图
 
 下面 8 张全部在小米电视 **MiTV-ASTR0**（Android 11，1920×1080）上用 `adb shell screencap` 直接截取，没有修图，对应 `2.8.1-settings-weather`（v2.8.3 的界面截图待补）：
