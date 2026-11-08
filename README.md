@@ -30,6 +30,8 @@ CleanMiTV 的底子来自 **[CleanYourTV](https://github.com/Gathin23/cleanyourt
 | 👧 **儿童与老人模式** | 移植 [aerial-tv](https://github.com/pengchujin/aerial-tv) 的 Kids Mode：儿童/老人模式、4 位 PIN 锁、时长/作息/休息限制、应用白名单、全屏锁定，详见下方 [儿童与老人模式](#儿童与老人模式kids--elders-mode) |
 | 🏞️ **必应滚动壁纸** | 「壁纸 · 使用已选图片」的选择弹窗里，「跟随主题」「无壁纸」旁边多一格「壁纸 · 必应滚动壁纸」：一次拉取 [bing.wdbyte.com/zh-cn/](https://bing.wdbyte.com/zh-cn/) 图集里最近 7 天的 4K 图（Bing 官方接口兜底），保留最近 7 天、最新在前，选完立刻能看到保留的图片，固定 30 分钟换一张并跟随网站每日自动更新，详见下方 [必应滚动壁纸](#必应滚动壁纸bing-rolling-wallpaper) |
 
+| 📱 **扫码设置（局域网远程配置）** | 隐藏设置页右侧显示二维码，手机 / 电脑连同一 Wi-Fi 扫码或浏览器打开，即可远程修改**全部隐藏设置及下级菜单**（外观、布局、天气城市、壁纸上传、开机包名）。纯手写 ServerSocket + 自绘二维码 + 原生网页，**零第三方依赖**，APK 仅增加约 11 KB，详见下方 [扫码设置](#扫码设置scan-to-config) |
+
 同时保留了小爱同学、投屏、HDMI / CEC、幻彩随影、米家和系统更新等原厂功能，只停用了统计和诊断组件。
 
 ## 儿童与老人模式（Kids & Elders Mode）
@@ -108,6 +110,60 @@ launcher/app/src/main/java/com/gathin/tvhome/
 ```
 
 **涉及修改**：`AndroidManifest.xml` 新增 `INTERNET` 权限；`WallpaperPicker.java` 新增第三格与「必应图集」视图；`LauncherSettingsActivity.java` 背景风格单选新增第三项、选中后立即展示保留图；`Config.java` 在该模式下把 `files/bing/` 的 7 天图作为壁纸集并固定 30 分钟轮换；`MainActivity.java` 每次回前台检查日期并热重建壁纸播放器；`WallpaperPlayer.java` 关闭时摘下图片视图以支持原地刷新。
+
+## 扫码设置（Scan to Config）
+
+不想拿遥控器一层层翻隐藏设置？在「隐藏设置」页右侧放了一张二维码卡片。手机或电脑和电视连**同一个 Wi-Fi（同一局域网）**，用相机 / 浏览器扫码，或者直接在浏览器打开卡片上的地址（如 `http://192.168.1.107:8765`），就能在一个网页里改完本页所有隐藏设置，保存后电视立刻生效。
+
+**使用方法**
+
+1. 桌面「设置」→ 下拉菜单点「隐藏设置」，页面右侧即出现二维码卡片。
+2. 手机 / 电脑连同一 Wi-Fi，扫码或浏览器打开卡片上的地址。
+3. 在网页里改设置，点底部「保存设置」；电视端 `settings_revision` 自增，回到桌面自动重建，无需重启。
+4. 想换壁纸：在网页「壁纸」区直接选图片上传，或在下拉里选已上传的壁纸。
+
+**网页里能改的内容（与电视端隐藏设置一一对应）**
+
+- **外观**：主题模式（夜间 / 白天 / 跟随系统）、背景来源（主题 / 壁纸 / 必应每日）、动画开关、环境背景动态；
+- **布局**：每行应用数（4–7）、程序坞下方行数（0–3）、程序坞透明度（100 / 70 / 50 / 30%）；
+- **天气城市**：46 个内置城市单选，默认成都；
+- **壁纸**：当前壁纸下拉选择 + 本地图片上传（JPG / PNG / WEBP，单张 ≤ 10 MB，最多 100 张）；
+- **高级**：开机自动打开的应用包名（留空关闭）。
+
+**零第三方依赖怎么做到的**
+
+- **HTTP 服务**：基于 JDK 原生 `ServerSocket`，后台守护线程 accept、线程池处理，只在隐藏设置页打开期间运行（进页面启动、退出页面即停），不常驻、不额外耗电。
+- **二维码**：自写 `QrCode`（字节模式、纠错级 M、版本 1–10、8 种掩码全评估，GF(256) 本原多项式 0x11D + Reed-Solomon 纠错），用 Python 移植版对照成熟库逐字节验证 48 项全部通过；`QrCodeView` 用原生 Canvas 把矩阵画成黑白方块。
+- **网页**：单个原生 HTML / CSS / JS 文件，无任何框架，蓝灰系、移动端友好，`fetch` 走相对路径。
+- **体积**：R8 压缩 + 手写代码精简，APK 从 551,276 B 增到 **562,651 B，仅多约 11 KB**；照片、视频是运行时传输，不打包进 APK。
+
+**路由与安全**
+
+| 路由 | 方法 | 作用 |
+|---|---|---|
+| `/` | GET | 返回配置网页 |
+| `/api/state` | GET | 当前值 + 可选值（城市、壁纸等） |
+| `/api/state` | POST | 白名单键回写，自增 `settings_revision` |
+| `/api/upload` | POST | raw body 上传壁纸，文件名由 `X-Filename` 头给出 |
+
+- 所有回写键都在**服务端白名单**内校验（数值范围、字符串枚举、城市必须在 46 城列表内），非法值直接拒绝。
+- 上传文件名做路径清洗（剥离 `/`、`\`，只留字母数字点下划线，非图片扩展名自动补 `.jpg`），实测 `../../evil.png` 会被清洗成目录内的 `evil.png`，**无法路径穿越**；单张限 10 MB。
+- 服务只监听局域网、不经过公网；当前**无访问口令**，同一网段内设备均可访问。如需口令可后续再加。
+
+**新增文件**
+
+```
+launcher/app/src/main/java/com/gathin/tvhome/
+  QrCode.java          二维码编码：字节模式 / 纠错 M / 版本 1-10 / 8 掩码 / Reed-Solomon
+  QrCodeView.java      自定义 View：Canvas 绘制黑白矩阵，含 4 模块留白
+  RemoteConfigServer.java  纯 ServerSocket 的局域网 HTTP 服务与路由
+launcher/app/src/main/assets/remote/
+  index.html           原生单页配置网页（无框架）
+launcher/app/src/main/res/drawable/
+  bg_qr_card.xml       白色圆角卡片背景
+```
+
+**涉及修改**：`LauncherSettingsActivity.java`（启动 / 停止服务、取首个非回环 IPv4、构造 URL）、`activity_launcher_settings.xml`（水平布局，左侧设置、右侧固定二维码卡片，前面文本框自然向左缩进）、`PersonalAppearance.java`（夜间着色跳过白色卡片，保留其黑色文字）、两份 `strings.xml`（二维码标题 / 说明 / 不可用提示）。提交链：`8d9dc4ee`（扫码功能 + 主页 GIF）→ `cb1f13a1`（编译修复）→ `121f9b1f`（卡片文字对比度）→ `6d10e062`（二维码缩到三行等高、文字黑色）。
 
 <details>
 <summary>📜 历史版本更新记录（v2.7.7 – v2.9.0，点击展开）</summary>
@@ -513,13 +569,15 @@ kids_overlay_need = 家长：请允许本应用「显示在其他应用的上层
 
 ## 实机截图
 
-下面 4 张全部在小米电视 **MiTV-ASTR0**（Android 11，1920×1080）上用 `adb shell screencap` 直接截取，没有修图，对应当前版本 **2.9.0-answer-now（versionCode 21，含 Home 布局微调与超级管理员）**：
+下面截图全部在小米电视 **MiTV-ASTR0**（Android 11，1920×1080）上用 `adb shell screencap` 直接截取（网页图为电脑浏览器实拍），没有修图，对应当前版本 **2.9.1-scan-config（versionCode 22，含 Home 布局微调、超级管理员与扫码设置）**：
 
 | 普通 Home：5 个应用水平居中、贴底，第二行不冒头，天气带图标 | 儿童模式 Home：3 个 tile 水平居中，无程序坞大名称 |
 |---|---|
 | ![](docs/tvhome/latest-home.jpg) | ![](docs/tvhome/latest-kids-home.jpg) |
 | **管理员密码框：标题「管理员密码」，没有「忘记密码」** | **密码管理菜单：重置儿童 / 重置老人 / 修改管理员** |
 | ![](docs/tvhome/latest-admin-pin.jpg) | ![](docs/tvhome/latest-admin-menu.jpg) |
+| **隐藏设置页：右侧二维码卡片，二维码与左侧三行等高、文字黑色** | **扫码 / 浏览器打开后，网页可远程修改全部隐藏设置** |
+| ![](docs/tvhome/latest-scan-card.jpg) | <img src="docs/tvhome/latest-scan-web.jpg" width="300" /> |
 
 <details>
 <summary>📜 历史版本实机截图（v2.8.1 – v2.8.9，点击展开）</summary>
@@ -574,7 +632,7 @@ kids_overlay_need = 家长：请允许本应用「显示在其他应用的上层
 
 ## 下载与安装
 
-**安装包：** 到本 fork 的 [Releases](https://github.com/jankxia/cleanmitv/releases) 下载最新的 `tvhome-v*-signed.apk`（当前为 `tvhome-v2.9.0-answer-now-signed.apk`）；原项目的 `CleanMiTV-2.7.5-local-MiTV-OS3.apk`（版本 2.7.5-local）仍在 [原仓库 release 目录](https://github.com/sqlsec/cleanmitv/tree/main/release)
+**安装包：** 到本 fork 的 [Releases](https://github.com/jankxia/cleanmitv/releases) 下载最新的 `tvhome-v*-signed.apk`（当前为 `tvhome-v2.9.1-scan-config-signed.apk`）；原项目的 `CleanMiTV-2.7.5-local-MiTV-OS3.apk`（版本 2.7.5-local）仍在 [原仓库 release 目录](https://github.com/sqlsec/cleanmitv/tree/main/release)
 
 > ⚠️ 这个包针对小米 OS3 国行固件构建。该固件只允许白名单内的包名成为第三方 Home，所以用 `-PlauncherApplicationId=com.ts.launcher` 编译。Java 代码的命名空间仍然是 `com.gathin.tvhome`，没有修改系统、固件或签名权限。如果你的电视已经装了同包名的其他应用，会出现签名冲突。
 
@@ -605,9 +663,10 @@ cd launcher
 
 ## 验证情况
 
-- 255 项单元测试通过，`lintRelease` 通过，APK 低于原项目 512 KiB 的上限。
+- 255 项单元测试通过，`lintRelease` 通过；当前 release APK 为 562,651 B（约 549 KiB，R8 压缩 + 零依赖手写实现；扫码功能仅比上一版多约 11 KB，已略超原项目 512 KiB 的参考线）。
 - 已在 MiTV-MFTR0 上实机验证：Home 接管、重启后仍保持、日夜模式、16 张壁纸、APP 主色切换、文件管理和小米设置入口，以及 HDMI 输入切换。
 - 本 fork 另在 MiTV-ASTR0（Android 11，包名 `com.ts.launcher`）上用 adb 实测：三颗顶栏胶囊（第三颗现为「设置」）、设置下拉菜单（输入源 / 网络 / 隐藏设置 / 系统设置 / 儿童/老人模式 / 调整应用顺序）、壁纸弹窗三格（跟随主题 / 无壁纸 / 必应滚动壁纸）、必应图集标题「保留 N 张，最新在前」与日期标签、桌面换成当日必应 4K 图。
+- 扫码功能在同一局域网实测：电脑浏览器打开 `http://192.168.1.107:8765`，`GET /api/state` 返回当前值与 46 城列表；`POST /api/state` 回写天气城市并自增 `settings_revision`；`POST /api/upload` 上传壁纸成功，`../../evil.png` 被清洗为目录内文件名、无法路径穿越；二维码卡片实拍渲染正确、文字黑色、与左侧三行等高。
 - 这台电视的应用显示模式只有 1080p 60 Hz，所以本项目不宣称桌面能跑到 120 / 144 Hz。CPU 数据来自电视 `top` 的短时采样，只用于同一台机器、同一场景下的前后对比。
 
 ## 许可证
