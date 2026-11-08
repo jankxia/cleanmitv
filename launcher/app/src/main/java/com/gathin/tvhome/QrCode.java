@@ -291,7 +291,7 @@ final class QrCode {
                     int c = col - which;
                     if (reserved[row][c]) continue;
                     if (bit < bits.length) {
-                        m[row][c] = bits.bitAt(bit);
+                        m[row][c] = bits.bitAt(bit) == 1;
                         bit++;
                     }
                 }

@@ -119,7 +119,7 @@ final class RemoteConfigServer {
     }
 
     private void route(Socket socket, String method, String path, byte[] body, String xFilename)
-            throws IOException {
+            throws Exception {
         String base = path.contains("?") ? path.substring(0, path.indexOf('?')) : path;
         if ("GET".equals(method) && ("/".equals(base) || "/index.html".equals(base))) {
             byte[] page = readAsset("remote/index.html");
