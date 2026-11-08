@@ -81,6 +81,8 @@ final class PersonalAppearance {
     }
 
     private static void tintTree(View view, boolean day) {
+        // The scan-to-config card is white with its own dark text; never retint it.
+        if (view.getId() == R.id.qrCard) return;
         if (view instanceof TextView) {
             TextView text = (TextView) view;
             if (view.isFocusable()) button(text, day);
