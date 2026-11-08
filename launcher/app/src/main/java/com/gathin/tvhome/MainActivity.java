@@ -833,6 +833,9 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         // A single row never shows the names under its tiles (the title above the row names the app), so the
         // 7dp gap and 22dp label item_app.xml keeps for them would only lift the row: sit it that much lower.
         if (singleRow && !cfg.alwaysShowNames) want += (int) (29 * density);
+        // rows_below_dock 0: the next grid row otherwise peeks a few dozen pixels above the screen edge. Park
+        // the dock a little lower so that row starts off-screen (pressing Down still scrolls it into view).
+        if (dockRow && !singleRow && rowsBelowDock == 0) want += (int) (AppAdapter.HIDE_NEXT_ROW_DP * density);
         if (grid.getPaddingTop() == want) return;
         grid.setPadding(grid.getPaddingLeft(), want, grid.getPaddingRight(), grid.getPaddingBottom());
         // A vertical grid parks the dock on the new padding line by scrolling (onTileFocused); a sideways
