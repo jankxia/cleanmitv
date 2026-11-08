@@ -512,6 +512,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
             weatherLine.setText(cachedWeather.isEmpty()
                     ? getString(R.string.weather_loading, Weather.city(this)) : cachedWeather);
             weatherLine.setVisibility(View.VISIBLE);
+            applyWeatherIcon();
         }
         greetingName = cfg.greetingName;
         if (cfg.dateBelowClock) moveDateBelowClock();
@@ -2673,6 +2674,14 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         if (lunar) lunarDate.setText(Lunar.today(getResources(), lunarOffset));
     }
 
+    /** Put the icon matching the stored weather code at the start of the weather line. */
+    private void applyWeatherIcon() {
+        if (weatherLine == null) return;
+        int code = Weather.lastCode(this);
+        Drawable icon = code < 0 ? null : getDrawable(Weather.iconRes(code));
+        weatherLine.setCompoundDrawablesRelative(icon, null, null, null);
+    }
+
     /**
      * The weather under the date line. Weather asks Open-Meteo at most once per half hour, so the
      * ordinary resume costs nothing; the cached numbers stay up when a fetch fails.
@@ -2683,6 +2692,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
             if (isDestroyed() || weatherLine == null) return;
             if (!line.isEmpty()) weatherLine.setText(line);
             weatherLine.setVisibility(View.VISIBLE);
+            applyWeatherIcon();
         });
     }
 

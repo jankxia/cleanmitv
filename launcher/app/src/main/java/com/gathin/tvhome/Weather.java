@@ -126,6 +126,54 @@ final class Weather {
                 prefs(ctx).getFloat(KEY_TEMP, Float.NaN), prefs(ctx).getInt(KEY_CODE, -1));
     }
 
+    /** WMO code stored by the last fetch, or -1 when there never was one; drives the weather icon. */
+    static int lastCode(Context ctx) {
+        return prefs(ctx).getInt(KEY_CODE, -1);
+    }
+
+    /** Drawable that pictures a WMO code, grouped into the seven bundled sky icons. */
+    static int iconRes(int code) {
+        switch (code) {
+            case 0:
+            case 1:
+                return R.drawable.w_sunny;
+            case 2:
+                return R.drawable.w_partly;
+            case 3:
+                return R.drawable.w_cloud;
+            case 45:
+            case 48:
+                return R.drawable.w_fog;
+            case 51:
+            case 53:
+            case 55:
+            case 56:
+            case 57:
+            case 61:
+            case 63:
+            case 65:
+            case 66:
+            case 67:
+            case 80:
+            case 81:
+            case 82:
+                return R.drawable.w_rain;
+            case 71:
+            case 73:
+            case 75:
+            case 77:
+            case 85:
+            case 86:
+                return R.drawable.w_snow;
+            case 95:
+            case 96:
+            case 99:
+                return R.drawable.w_storm;
+            default:
+                return R.drawable.w_cloud;
+        }
+    }
+
     /** The line for the given city and readings; "" while either is missing. */
     private static String line(Context ctx, String city, float temp, int code) {
         if (city == null || Float.isNaN(temp) || code < 0) return "";
