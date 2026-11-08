@@ -175,6 +175,13 @@
             android:noHistory="true"
             android:screenOrientation="landscape"
             android:theme="@android:style/Theme.Black.NoTitleBar.Fullscreen" />
+        <!-- The top-level password manager: resets the children's and elders PINs behind the admin PIN. -->
+        <activity
+            android:name=".AdminActivity"
+            android:exported="false"
+            android:excludeFromRecents="true"
+            android:screenOrientation="landscape"
+            android:theme="@style/Theme.TvHome" />
         <!-- Watching hours, half an hour at a time; opened from the Kids setup page. -->
         <activity
             android:name=".KidsScheduleActivity"

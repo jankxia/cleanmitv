@@ -234,6 +234,17 @@
     <string name="pin_mismatch">They did not match.</string>
     <string name="pin_saved">PIN saved.</string>
     <string name="pin_wrong">Wrong PIN.</string>
+    <string name="pin_forgot">Forgot PIN?</string>
+    <string name="pin_admin_enter">Administrator PIN</string>
+    <string name="pin_admin_create">Create an administrator PIN</string>
+    <string name="admin_title">Password manager</string>
+    <string name="admin_reset_kids">Reset children password</string>
+    <string name="admin_reset_elders">Reset elders password</string>
+    <string name="admin_change_admin">Change administrator password</string>
+    <string name="admin_reset_done">New password saved.</string>
+    <string name="admin_needed">Set an administrator PIN first.</string>
+    <string name="admin_pin_wrong">Wrong administrator PIN.</string>
+    <string name="admin_entry">Password manager</string>
     <string name="st_on">On</string>
     <string name="kids_quiz">Quiz for time</string>
     <string name="kids_quiz_on">Quiz on</string>

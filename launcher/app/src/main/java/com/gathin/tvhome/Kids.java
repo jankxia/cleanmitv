@@ -279,6 +279,9 @@ public final class Kids {
     /** The elders mode's own PIN: the children's PIN never opens it, nor the other way round. */
     private static String eldersPinHash;
     private static boolean eldersPinArrows;
+    /** The top-level administrator PIN: it resets the children's and elders PINs without the old one. */
+    private static String adminPinHash;
+    private static boolean adminPinArrows;
     /** Elapsed-realtime up to which the PIN lets settings through without asking again. */
     private static long unlockedUntil;
     /** Stars collected by answering; a tally for the child only, never a minute of watching. */
@@ -337,6 +340,8 @@ public final class Kids {
         pinArrows = p.getBoolean("pin_arrows", false);
         eldersPinHash = p.getString("pin_hash_elders", null);
         eldersPinArrows = p.getBoolean("pin_arrows_elders", false);
+        adminPinHash = p.getString("admin_pin_hash", null);
+        adminPinArrows = p.getBoolean("admin_pin_arrows", false);
         stars = p.getInt("stars", 0);
         plan = KidsPlan.load(app);
         ledger = KidsLedger.load(app);
@@ -672,6 +677,46 @@ public final class Kids {
         prefs().edit()
                 .putString(elders ? "pin_hash_elders" : "pin_hash", h)
                 .putBoolean(elders ? "pin_arrows_elders" : "pin_arrows", ar)
+                .apply();
+    }
+
+    // ---- Top-level administrator PIN (resets the children's and elders PINs) ----
+
+    public static boolean adminPinSet() {
+        return adminPinHash != null;
+    }
+
+    public static boolean adminPinArrows() {
+        return adminPinArrows;
+    }
+
+    public static boolean adminPinMatches(String pin) {
+        return adminPinHash != null && hash(pin).equals(adminPinHash);
+    }
+
+    /** Sets or replaces the administrator PIN itself. */
+    public static void chooseAdminPin(String pin, boolean arrows) {
+        adminPinHash = pin == null ? null : hash(pin);
+        adminPinArrows = pin != null && arrows;
+        prefs().edit()
+                .putString("admin_pin_hash", adminPinHash)
+                .putBoolean("admin_pin_arrows", adminPinArrows)
+                .apply();
+    }
+
+    /** Overwrite one mode's PIN directly; the administrator uses this when the old PIN is forgotten. */
+    public static void resetPin(Kind target, String pin, boolean arrows) {
+        String h = hash(pin);
+        if (target == Kind.ELDERS) {
+            eldersPinHash = h;
+            eldersPinArrows = arrows;
+        } else {
+            pinHash = h;
+            pinArrows = arrows;
+        }
+        prefs().edit()
+                .putString(target == Kind.ELDERS ? "pin_hash_elders" : "pin_hash", h)
+                .putBoolean(target == Kind.ELDERS ? "pin_arrows_elders" : "pin_arrows", arrows)
                 .apply();
     }
 

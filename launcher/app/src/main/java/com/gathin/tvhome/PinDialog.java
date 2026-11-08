@@ -40,6 +40,10 @@ public final class PinDialog extends Dialog {
         void onPin(String pin);
 
         void onCancel();
+
+        /** Verify mode only: the parent picked "forgot PIN" and wants the administrator to reset it. */
+        default void onForgot() {
+        }
     }
 
     public PinDialog(Context context, int mode, PinListener listener) {
@@ -111,6 +115,27 @@ public final class PinDialog extends Dialog {
                 ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
         padLp.topMargin = (int) (22 * density);
         panel.addView(keypad, padLp);
+
+        if (mode == VERIFY) {
+            // "Forgot PIN": the administrator can reset this mode's PIN without the old one.
+            TextView forgot = new TextView(getContext());
+            forgot.setText(R.string.pin_forgot);
+            forgot.setTextColor(Color.parseColor("#FF8FB3E0"));
+            forgot.setTextSize(15);
+            forgot.setGravity(Gravity.CENTER);
+            forgot.setFocusable(true);
+            forgot.setClickable(true);
+            forgot.setPadding((int) (24 * density), (int) (10 * density),
+                    (int) (24 * density), (int) (10 * density));
+            LinearLayout.LayoutParams forgotLp = new LinearLayout.LayoutParams(
+                    ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+            forgotLp.topMargin = (int) (20 * density);
+            forgot.setOnClickListener(v -> {
+                listener.onForgot();
+                dismiss();
+            });
+            panel.addView(forgot, forgotLp);
+        }
 
         root.addView(panel);
         return root;

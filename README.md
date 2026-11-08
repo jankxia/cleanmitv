@@ -109,6 +109,9 @@ launcher/app/src/main/java/com/gathin/tvhome/
 
 **涉及修改**：`AndroidManifest.xml` 新增 `INTERNET` 权限；`WallpaperPicker.java` 新增第三格与「必应图集」视图；`LauncherSettingsActivity.java` 背景风格单选新增第三项、选中后立即展示保留图；`Config.java` 在该模式下把 `files/bing/` 的 7 天图作为壁纸集并固定 30 分钟轮换；`MainActivity.java` 每次回前台检查日期并热重建壁纸播放器；`WallpaperPlayer.java` 关闭时摘下图片视图以支持原地刷新。
 
+<details>
+<summary>📜 历史版本更新记录（v2.7.7 – v2.9.0，点击展开）</summary>
+
 ## v2.7.7 修复记录（实机反馈）
 
 小米电视（MiTV-ASTR0，包名 `com.ts.launcher`）上装机后反馈的 5 个问题：
@@ -459,6 +462,8 @@ kids_overlay_need = 家长：请允许本应用「显示在其他应用的上层
 1. 自由练习结算页原来误写「错题池清空了」，但立即答题路径并不清 `extraPool`（见本节一.6），已把 `quiz_practice_sub` 改为「答对 X / Y，继续加油！」，英文同步；
 2. 「每组加时（分钟）」在 104dp 的标签列里折成两行，已把 `KidsFieldLabel` 加宽到 144dp、加 `maxLines=1` 锁定单行，英文标签同步缩短（`Round minutes / Questions / Rounds/day`）。
 
+</details>
+
 ## v2.9.0 之后的 Home 布局微调（不改版本号，仍为 versionCode 21 / 2.9.0-answer-now）
 
 ### 一、普通 Home 第二行不再从屏幕底缘冒头
@@ -497,7 +502,14 @@ kids_overlay_need = 家长：请允许本应用「显示在其他应用的上层
 2. `showQuestion()` 在自由练习（`freePractice`）走到列表末尾时，调用新增的 `extendRound()` 再抓一批题追加进当前 round（自动剔除已在本轮出现的题），继续作答而不弹结算；小朋友想停就按左上角「返回」。
 3. 实机连续作答验证：进度 1/3 → 2/3 → 3/3 → **4/8**，分母随追加自动变大，全程不出现结算面板。
 
-**涉及文件**：`AppAdapter.java`、`MainActivity.java`、`DockDecoration.java`、`Weather.java`、`KidsQuizActivity.java`、`QuizSounds.java`（新增）、`res/layout/activity_main.xml`、`res/values/config.xml`、`res/drawable/w_sunny.xml`、`w_partly.xml`、`w_cloud.xml`、`w_fog.xml`、`w_rain.xml`、`w_snow.xml`、`w_storm.xml`（均新增）。提交链：`6a11c5c5`（藏第二行）→ `50480ba0`（程序坞居中）→ `89a0095e`（天气颜色 + 图标）→ `298a464d`（图标 intrinsic 修复）→ `0943e770`（dock_title 关闭）→ `b516d634`（答题音效 + 自由练习不限量）。
+### 七、超级管理员密码：忘记儿童 / 老人密码也能重置
+
+1. 新增一套独立的**管理员 PIN**（prefs 键 `admin_pin_hash` / `admin_pin_arrows`，SHA-256 存储），与儿童、老人 PIN 都不通用，是最高一级的密码。
+2. 普通 Home 齿轮菜单新增「**密码管理**」入口（模式中不显示，孩子看不到）：首次进入先创建管理员 PIN，之后需验证管理员 PIN，通过后可做三件事——重置儿童模式密码、重置老人模式密码、修改管理员密码。重置时**不需要旧密码**，直接设新的。
+3. 忘记模式密码时的兜底：退出模式的验证对话框下方多了「**忘记密码？**」，点一下先验证管理员 PIN（没设过就先设），通过后直接给当前模式设一个新 PIN，不会被锁在模式里出不来。
+4. 所有 PIN 统一用 4 个方向键（↑ ↓ ← →）输入，遥控器没有数字键也能操作；屏幕圆点不回显具体方向，防止旁人偷看。
+
+**涉及文件**：`AppAdapter.java`、`MainActivity.java`、`DockDecoration.java`、`Weather.java`、`KidsQuizActivity.java`、`QuizSounds.java`（新增）、`AdminActivity.java`（新增）、`Kids.java`、`PinDialog.java`、`AndroidManifest.xml`、`res/layout/activity_main.xml`、`res/values/config.xml`、`res/values/strings.xml`、`res/values-zh-rCN/strings.xml`、`res/drawable/w_sunny.xml`、`w_partly.xml`、`w_cloud.xml`、`w_fog.xml`、`w_rain.xml`、`w_snow.xml`、`w_storm.xml`（均新增）。提交链：`6a11c5c5`（藏第二行）→ `50480ba0`（程序坞居中）→ `89a0095e`（天气颜色 + 图标）→ `298a464d`（图标 intrinsic 修复）→ `0943e770`（dock_title 关闭）→ `b516d634`（答题音效 + 自由练习不限量）。
 
 ## 实机截图
 

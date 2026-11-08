@@ -938,8 +938,62 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
             @Override public void onCancel() {
                 pinOpen = false;
             }
+
+            @Override public void onForgot() {
+                pinOpen = false;
+                forgotModePin(Kids.kind());
+            }
         });
         verify.show();
+    }
+
+    /**
+     * The "forgot PIN" path inside a mode: verify the administrator PIN (create it first if never
+     * set), then let the parent choose a brand-new PIN for the locked mode without the old one.
+     */
+    private void forgotModePin(final Kids.Kind target) {
+        if (Kids.adminPinSet()) {
+            PinDialog admin = new PinDialog(this, PinDialog.VERIFY, Kids.adminPinArrows(),
+                    new PinDialog.PinListener() {
+                @Override public void onPin(String pin) {
+                    if (Kids.adminPinMatches(pin)) {
+                        createReplacementPin(target);
+                    } else {
+                        Toast.makeText(MainActivity.this, R.string.admin_pin_wrong, Toast.LENGTH_LONG).show();
+                        forgotModePin(target);
+                    }
+                }
+
+                @Override public void onCancel() {
+                }
+            });
+            admin.show();
+        } else {
+            PinDialog setup = new PinDialog(this, PinDialog.CREATE, true, new PinDialog.PinListener() {
+                @Override public void onPin(String pin) {
+                    Kids.chooseAdminPin(pin, true);
+                    createReplacementPin(target);
+                }
+
+                @Override public void onCancel() {
+                }
+            });
+            setup.show();
+        }
+    }
+
+    /** Pick and save a new PIN for the mode whose password was forgotten. */
+    private void createReplacementPin(final Kids.Kind target) {
+        PinDialog replace = new PinDialog(this, PinDialog.CREATE, true, new PinDialog.PinListener() {
+            @Override public void onPin(String pin) {
+                Kids.resetPin(target, pin, true);
+                Toast.makeText(MainActivity.this, R.string.admin_reset_done, Toast.LENGTH_LONG).show();
+            }
+
+            @Override public void onCancel() {
+            }
+        });
+        replace.show();
     }
 
     /** Whether the tiles shown are already the mode's; avoids rebuilding on every resume. */
@@ -3422,6 +3476,9 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         addInputRow(rows, popup, R.drawable.ic_kids_mode,
                 getString(R.string.kids_elders_mode), -1, this::showModePicker);
         addInputRow(rows, popup, R.drawable.ic_swap_vert, getString(R.string.reorder), -1, this::toggleReorder);
+        // Top-level password manager: the administrator PIN resets the children's and elders passwords.
+        addInputRow(rows, popup, R.drawable.ic_controls, getString(R.string.admin_entry), -1,
+                () -> startActivity(new Intent(this, AdminActivity.class)));
         panel.measure(View.MeasureSpec.UNSPECIFIED, View.MeasureSpec.UNSPECIFIED);
         popup.setWidth(Math.max((int) (240 * density), Math.min(panel.getMeasuredWidth(), (int) (380 * density))));
         dropIn(popup, panel, anchor, getResources().getBoolean(R.bool.rtl_menu_bar) ? Gravity.START : Gravity.END);
