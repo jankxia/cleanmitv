@@ -36,6 +36,8 @@ public final class PinDialog extends Dialog {
     private int errorRes;
     /** When true, the titles name the administrator PIN instead of a mode's parent PIN. */
     private boolean adminTitle;
+    /** The verify-mode "forgot PIN" button; hidden on administrator dialogs (no higher level can reset admin). */
+    private TextView forgotButton;
 
     public interface PinListener {
         /** The PIN was entered (verified or created), exactly four digits. */
@@ -120,23 +122,23 @@ public final class PinDialog extends Dialog {
 
         if (mode == VERIFY) {
             // "Forgot PIN": the administrator can reset this mode's PIN without the old one.
-            TextView forgot = new TextView(getContext());
-            forgot.setText(R.string.pin_forgot);
-            forgot.setTextColor(Color.parseColor("#FF8FB3E0"));
-            forgot.setTextSize(15);
-            forgot.setGravity(Gravity.CENTER);
-            forgot.setFocusable(true);
-            forgot.setClickable(true);
-            forgot.setPadding((int) (24 * density), (int) (10 * density),
+            forgotButton = new TextView(getContext());
+            forgotButton.setText(R.string.pin_forgot);
+            forgotButton.setTextColor(Color.parseColor("#FF8FB3E0"));
+            forgotButton.setTextSize(15);
+            forgotButton.setGravity(Gravity.CENTER);
+            forgotButton.setFocusable(true);
+            forgotButton.setClickable(true);
+            forgotButton.setPadding((int) (24 * density), (int) (10 * density),
                     (int) (24 * density), (int) (10 * density));
             LinearLayout.LayoutParams forgotLp = new LinearLayout.LayoutParams(
                     ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
             forgotLp.topMargin = (int) (20 * density);
-            forgot.setOnClickListener(v -> {
+            forgotButton.setOnClickListener(v -> {
                 listener.onForgot();
                 dismiss();
             });
-            panel.addView(forgot, forgotLp);
+            panel.addView(forgotButton, forgotLp);
         }
 
         root.addView(panel);
@@ -354,6 +356,7 @@ public final class PinDialog extends Dialog {
     /** Mark this dialog as the administrator PIN so its titles read "administrator" rather than "parent". */
     public PinDialog asAdmin() {
         this.adminTitle = true;
+        if (forgotButton != null) forgotButton.setVisibility(View.GONE);
         refresh();
         return this;
     }
