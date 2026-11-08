@@ -684,6 +684,15 @@ public class AppAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         return emptySlots > 0 ? docked : dockSize;
     }
 
+    /** Real (non empty-slot) tiles in the first row, used to centre the dock when it is not full. */
+    int dockVisibleCount() {
+        int count = 0;
+        for (int i = 0; i < Math.min(dockSize, items.size()); i++) {
+            if (items.get(i).kind != Entry.EMPTY) count++;
+        }
+        return count;
+    }
+
     /** A position focus can land on: an empty dock slot gives the last dock app. */
     int focusablePosition(int position) {
         return DockSlots.focusable(position, docked, emptySlots);

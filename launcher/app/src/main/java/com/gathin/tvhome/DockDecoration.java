@@ -34,6 +34,8 @@ public class DockDecoration extends RecyclerView.ItemDecoration {
     private final boolean singleRow;
     /** dock_band_all: in a single row, the band runs behind every app instead of the dock apps only. */
     private final boolean bandAll;
+    /** Adapter, queried for the first row's real tile count so a non-full dock can be centred. */
+    private AppAdapter adapter;
 
     /**
      * @param translucent the cinematic shelf's band: the artwork and the glow show through it.
@@ -61,6 +63,10 @@ public class DockDecoration extends RecyclerView.ItemDecoration {
         edge.setColor(lightGlass ? 0x38FFFFFF : translucent ? 0x26FFFFFF : 0x1FFFFFFF);
     }
 
+    void setAdapter(AppAdapter adapter) {
+        this.adapter = adapter;
+    }
+
     /** Concentric corners: the band's radius is the tiles' radius plus the band's padding around them. */
     static float radiusPx(float tileRadiusPx, float paddingPx) {
         return tileRadiusPx + paddingPx;
@@ -82,6 +88,18 @@ public class DockDecoration extends RecyclerView.ItemDecoration {
         if (pos >= 0 && (singleRow || pos < dockSize)) {
             outRect.top = (int) (6 * density);
             outRect.bottom = (int) (12 * density);
+        }
+        // Centre a non-full dock row. Every first-row tile gets the same shift via a positive left and a
+        // negative right, so the tile keeps its width and the whole row slides right (clipChildren is off).
+        if (!singleRow && pos >= 0 && pos < dockSize && adapter != null) {
+            int visible = adapter.dockVisibleCount();
+            if (visible > 0 && visible < dockSize) {
+                int inner = parent.getWidth() - parent.getPaddingLeft() - parent.getPaddingRight();
+                float column = inner / (float) dockSize;
+                int shift = Math.round((dockSize - visible) / 2f * column);
+                outRect.left = shift;
+                outRect.right = -shift;
+            }
         }
     }
 
