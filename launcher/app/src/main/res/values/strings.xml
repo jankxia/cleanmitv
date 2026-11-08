@@ -272,10 +272,10 @@
     <string name="kids_subject_geography">Geography</string>
     <string name="kids_subject_politics">Politics</string>
     <string name="kids_subject_need">Keep at least one subject on</string>
-    <string name="kids_quiz_session">Minutes a round buys</string>
-    <string name="kids_quiz_questions">Questions a round</string>
+    <string name="kids_quiz_session">Round minutes</string>
+    <string name="kids_quiz_questions">Questions</string>
     <string name="kids_quiz_pass">Pass mark</string>
-    <string name="kids_quiz_rounds">Rounds a day</string>
+    <string name="kids_quiz_rounds">Rounds/day</string>
     <string name="kids_quiz_mode">How it plays</string>
     <string name="kids_mode_round">A round of questions</string>
     <string name="kids_mode_streak">Right in a row</string>
@@ -302,7 +302,7 @@
     <string name="quiz_fail_title">Almost</string>
     <string name="quiz_fail_sub">%1$d right, %2$d needed. Try again</string>
     <string name="quiz_practice_title">Practice done</string>
-    <string name="quiz_practice_sub">%1$d of %2$d right, the practice pool is clear</string>
+    <string name="quiz_practice_sub">%1$d of %2$d right, keep it up!</string>
     <string name="quiz_again">One more round</string>
     <string name="quiz_close">Back to Home</string>
     <string name="quiz_back">Back</string>

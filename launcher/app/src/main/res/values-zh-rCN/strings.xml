@@ -295,7 +295,7 @@
     <string name="quiz_fail_title">差一点点</string>
     <string name="quiz_fail_sub">答对 %1$d 道，要 %2$d 道才对。再来一次吧</string>
     <string name="quiz_practice_title">练习完成</string>
-    <string name="quiz_practice_sub">答对 %1$d / %2$d，错题池清空了</string>
+    <string name="quiz_practice_sub">答对 %1$d / %2$d，继续加油！</string>
     <string name="quiz_again">再来一组</string>
     <string name="quiz_close">回到桌面</string>
     <string name="quiz_back">返回</string>
