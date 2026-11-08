@@ -37,6 +37,7 @@ public final class LauncherSettingsActivity extends Activity {
     private int dockOpacity;
     private boolean animations;
     private boolean ambientMotion;
+    private RemoteConfigServer remoteServer;
 
     @Override
     protected void onCreate(Bundle state) {
@@ -192,6 +193,53 @@ public final class LauncherSettingsActivity extends Activity {
         PersonalAppearance.settings(this);
         if (config.launcherSettingsButton) reorderChoice.requestFocus();
         else columnChoices[Math.max(0, Math.min(columns - 4, 3))].requestFocus();
+        setupRemote();
+    }
+
+    /** Start the LAN server and render the QR code/URL a phone or computer can open on the same Wi-Fi. */
+    private void setupRemote() {
+        QrCodeView qrView = findViewById(R.id.qrCode);
+        TextView qrUrl = findViewById(R.id.qrUrl);
+        try {
+            remoteServer = new RemoteConfigServer(this);
+            remoteServer.start();
+            String ip = lanIpAddress();
+            if (ip == null) throw new java.io.IOException("no LAN address");
+            String url = "http://" + ip + ":" + RemoteConfigServer.PORT;
+            qrView.setModules(QrCode.encode(url));
+            qrUrl.setText(url);
+        } catch (java.io.IOException e) {
+            qrView.setVisibility(View.GONE);
+            qrUrl.setText(R.string.qr_unavailable);
+        }
+    }
+
+    /** First non-loopback IPv4 address, which on a TV is the Wi-Fi address other devices on the LAN reach. */
+    private static String lanIpAddress() throws java.io.IOException {
+        java.util.Enumeration<java.net.NetworkInterface> interfaces =
+                java.net.NetworkInterface.getNetworkInterfaces();
+        while (interfaces != null && interfaces.hasMoreElements()) {
+            java.net.NetworkInterface iface = interfaces.nextElement();
+            if (iface.isLoopback() || !iface.isUp()) continue;
+            java.util.Enumeration<java.net.InetAddress> addresses = iface.getInetAddresses();
+            while (addresses.hasMoreElements()) {
+                java.net.InetAddress address = addresses.nextElement();
+                if (!address.isLoopbackAddress()
+                        && address.getHostAddress().indexOf(':') < 0) {
+                    return address.getHostAddress();
+                }
+            }
+        }
+        return null;
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        if (remoteServer != null) {
+            remoteServer.stop();
+            remoteServer = null;
+        }
     }
 
     private void reverseRow(TextView[] views) {

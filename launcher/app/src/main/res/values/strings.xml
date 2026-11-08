@@ -47,6 +47,9 @@
     <string name="home_settings">Choose default home</string>
     <string name="home_settings_help">Select your original home to stop using CleanYourTV as Home, or CleanYourTV to switch back. The original launcher must be enabled and your TV must provide a home picker; use the restore script first if it was disabled.</string>
     <string name="launcher_settings">隐藏设置</string>
+    <string name="qr_title">Set up from phone or PC</string>
+    <string name="qr_hint">Join the same Wi-Fi, then scan the code or open the address below in a browser to change every setting on this page remotely</string>
+    <string name="qr_unavailable">LAN service unavailable</string>
     <string name="header_settings">设置</string>
     <string name="native_settings">设置</string>
     <string name="columns_label">Apps per row</string>

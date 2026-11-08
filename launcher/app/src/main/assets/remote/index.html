@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<title>电视桌面 · 远程设置</title>
+<style>
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  body {
+    margin: 0; padding: 0 0 96px;
+    font-family: -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif;
+    background: #f2f4f7; color: #1f2933; line-height: 1.5;
+  }
+  header {
+    background: linear-gradient(135deg, #2b6cb0, #3182ce);
+    color: #fff; padding: 22px 20px 20px;
+  }
+  header h1 { margin: 0; font-size: 20px; font-weight: 700; }
+  header p { margin: 6px 0 0; font-size: 13px; opacity: .85; }
+  main { max-width: 640px; margin: 0 auto; padding: 16px; }
+  .card {
+    background: #fff; border-radius: 14px; padding: 6px 16px;
+    margin-bottom: 14px; box-shadow: 0 1px 3px rgba(15,23,42,.08);
+  }
+  .card h2 {
+    font-size: 13px; color: #5b6b7b; font-weight: 700;
+    margin: 14px 0 6px; letter-spacing: .5px;
+  }
+  .row {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 12px 0; border-bottom: 1px solid #eef1f5; gap: 12px;
+  }
+  .row:last-child { border-bottom: none; }
+  .row label { font-size: 15px; flex-shrink: 0; }
+  .row .hint { font-size: 12px; color: #8a97a5; margin-top: 2px; }
+  select, input[type=text] {
+    font-size: 15px; color: #1f2933; background: #f5f7fa;
+    border: 1px solid #d8dee6; border-radius: 9px;
+    padding: 9px 12px; min-width: 132px; text-align: right;
+  }
+  input[type=text] { text-align: left; width: 100%; }
+  .seg { display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
+  .seg button {
+    font-size: 13px; padding: 8px 14px; border-radius: 9px;
+    border: 1px solid #d8dee6; background: #f5f7fa; color: #46586a;
+    cursor: pointer;
+  }
+  .seg button.on { background: #2b6cb0; border-color: #2b6cb0; color: #fff; }
+  .switch { position: relative; width: 50px; height: 29px; flex-shrink: 0; }
+  .switch input { opacity: 0; width: 0; height: 0; }
+  .slider {
+    position: absolute; inset: 0; background: #c4cdd8; border-radius: 29px;
+    transition: .2s; cursor: pointer;
+  }
+  .slider::before {
+    content: ""; position: absolute; width: 23px; height: 23px; left: 3px; top: 3px;
+    background: #fff; border-radius: 50%; transition: .2s;
+    box-shadow: 0 1px 3px rgba(0,0,0,.2);
+  }
+  .switch input:checked + .slider { background: #2b6cb0; }
+  .switch input:checked + .slider::before { transform: translateX(21px); }
+  .upload {
+    display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+    padding: 12px 0;
+  }
+  .upload .file-btn {
+    background: #ebf2fb; color: #2b6cb0; border: 1px solid #c3d8f0;
+    border-radius: 9px; padding: 9px 16px; font-size: 14px; cursor: pointer;
+  }
+  .upload .name { font-size: 13px; color: #5b6b7b; word-break: break-all; }
+  .bar {
+    position: fixed; left: 0; right: 0; bottom: 0;
+    background: rgba(255,255,255,.96); backdrop-filter: blur(8px);
+    border-top: 1px solid #e3e8ee; padding: 12px 16px;
+    display: flex; align-items: center; gap: 12px; justify-content: center;
+  }
+  .bar button {
+    background: #2b6cb0; color: #fff; border: none; border-radius: 11px;
+    font-size: 16px; font-weight: 700; padding: 13px 40px; cursor: pointer;
+    box-shadow: 0 2px 8px rgba(43,108,176,.35);
+  }
+  .bar button:disabled { opacity: .5; }
+  .toast {
+    position: fixed; top: 18px; left: 50%; transform: translateX(-50%) translateY(-80px);
+    background: #2f855a; color: #fff; padding: 11px 22px; border-radius: 10px;
+    font-size: 14px; transition: .3s; box-shadow: 0 4px 14px rgba(0,0,0,.2);
+  }
+  .toast.show { transform: translateX(-50%) translateY(0); }
+  .toast.error { background: #c53030; }
+  .spin { font-size: 13px; color: #8a97a5; }
+</style>
+</head>
+<body>
+<header>
+  <h1>电视桌面 · 远程设置</h1>
+  <p>与电视连接同一 Wi-Fi，修改后点击底部保存即可生效</p>
+</header>
+<main>
+  <div class="card">
+    <h2>外观</h2>
+    <div class="row"><label>主题模式</label><div class="seg" id="appearance_mode"></div></div>
+    <div class="row"><label>背景来源</label><div class="seg" id="background_style"></div></div>
+    <div class="row"><label>开启动画效果</label><label class="switch"><input type="checkbox" id="animations"><span class="slider"></span></label></div>
+    <div class="row"><label>环境背景动态</label><label class="switch"><input type="checkbox" id="ambient_background_motion"><span class="slider"></span></label></div>
+  </div>
+
+  <div class="card">
+    <h2>布局</h2>
+    <div class="row"><label>每行应用数</label><select id="columns"></select></div>
+    <div class="row"><label>程序坞下方行数</label><select id="rows_below_dock"></select></div>
+    <div class="row"><label>程序坞透明度</label><select id="dock_opacity"></select></div>
+  </div>
+
+  <div class="card">
+    <h2>天气</h2>
+    <div class="row"><label>天气城市</label><select id="weather_city"></select></div>
+  </div>
+
+  <div class="card">
+    <h2>壁纸</h2>
+    <div class="row"><label>当前壁纸</label><select id="wallpaper_choice"></select></div>
+    <div class="upload">
+      <label class="file-btn" for="file">选择图片上传</label>
+      <input type="file" id="file" accept="image/*" hidden>
+      <span class="name" id="filename">支持 JPG / PNG / WEBP，单张不超过 10MB</span>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>高级</h2>
+    <div class="row" style="display:block">
+      <label>开机自动打开的应用包名（留空关闭）</label>
+      <input type="text" id="open_on_start" placeholder="例如 com.google.android.youtube.tv" style="margin-top:8px">
+    </div>
+  </div>
+</main>
+
+<div class="bar">
+  <span class="spin" id="spin"></span>
+  <button id="save">保存设置</button>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+const LABELS = {
+  appearance_mode: {night: "夜间", day: "白天", auto: "跟随系统"},
+  background_style: {app: "主题", wallpaper: "壁纸", bing: "必应每日"}
+};
+let state = null;
+
+async function load() {
+  const res = await fetch("/api/state");
+  state = await res.json();
+  render();
+}
+
+function fillSelect(id, values, current) {
+  const el = document.getElementById(id);
+  el.innerHTML = "";
+  values.forEach(v => {
+    const opt = document.createElement("option");
+    opt.value = v; opt.textContent = v;
+    if (String(v) === String(current)) opt.selected = true;
+    el.appendChild(opt);
+  });
+}
+
+function render() {
+  const v = state.values, o = state.options;
+  // segmented buttons
+  ["appearance_mode", "background_style"].forEach(key => {
+    const box = document.getElementById(key);
+    box.innerHTML = "";
+    o[key].forEach(val => {
+      const b = document.createElement("button");
+      b.textContent = LABELS[key][val] || val;
+      if (v[key] === val) b.classList.add("on");
+      b.onclick = () => {
+        v[key] = val;
+        box.querySelectorAll("button").forEach(x => x.classList.remove("on"));
+        b.classList.add("on");
+      };
+      box.appendChild(b);
+    });
+  });
+  // switches
+  document.getElementById("animations").checked = !!v.animations;
+  document.getElementById("ambient_background_motion").checked = !!v.ambient_background_motion;
+  // selects
+  fillSelect("columns", o.columns, v.columns);
+  fillSelect("rows_below_dock", o.rows_below_dock, v.rows_below_dock);
+  fillSelect("dock_opacity", o.dock_opacity, v.dock_opacity);
+  fillSelect("weather_city", o.cities, v.weather_city);
+  const wallpapers = [WallpaperRotationNone()].concat(o.wallpapers);
+  fillSelect("wallpaper_choice", wallpapers, v.wallpaper_choice);
+  document.getElementById("open_on_start").value = v.open_on_start || "";
+}
+
+function WallpaperRotationNone() { return "none"; }
+
+function collect() {
+  const v = state.values;
+  v.animations = document.getElementById("animations").checked;
+  v.ambient_background_motion = document.getElementById("ambient_background_motion").checked;
+  v.columns = parseInt(document.getElementById("columns").value, 10);
+  v.rows_below_dock = parseInt(document.getElementById("rows_below_dock").value, 10);
+  v.dock_opacity = parseInt(document.getElementById("dock_opacity").value, 10);
+  v.weather_city = document.getElementById("weather_city").value;
+  v.wallpaper_choice = document.getElementById("wallpaper_choice").value;
+  v.open_on_start = document.getElementById("open_on_start").value.trim();
+  return v;
+}
+
+function toast(msg, error) {
+  const t = document.getElementById("toast");
+  t.textContent = msg;
+  t.className = "toast show" + (error ? " error" : "");
+  setTimeout(() => t.className = "toast", 2200);
+}
+
+document.getElementById("save").onclick = async () => {
+  const btn = document.getElementById("save");
+  btn.disabled = true;
+  document.getElementById("spin").textContent = "保存中…";
+  try {
+    const res = await fetch("/api/state", {
+      method: "POST",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify(collect())
+    });
+    if (!res.ok) throw new Error("save failed");
+    state = await res.json();
+    render();
+    toast("已保存，电视上立即生效");
+  } catch (e) {
+    toast("保存失败，请重试", true);
+  } finally {
+    btn.disabled = false;
+    document.getElementById("spin").textContent = "";
+  }
+};
+
+document.getElementById("file").onchange = async (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+  document.getElementById("filename").textContent = "正在上传 " + file.name;
+  try {
+    const res = await fetch("/api/upload", {
+      method: "POST",
+      headers: {"X-Filename": file.name, "Content-Type": "application/octet-stream"},
+      body: file
+    });
+    if (!res.ok) throw new Error("upload failed");
+    const data = await res.json();
+    await load();
+    document.getElementById("wallpaper_choice").value = data.saved;
+    state.values.wallpaper_choice = data.saved;
+    toast("上传成功：" + data.saved);
+  } catch (err) {
+    toast("上传失败，请重试", true);
+  }
+  document.getElementById("filename").textContent = "支持 JPG / PNG / WEBP，单张不超过 10MB";
+};
+
+load().catch(() => toast("加载失败，请刷新页面", true));
+</script>
+</body>
+</html>
