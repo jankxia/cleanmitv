@@ -414,6 +414,51 @@ kids_overlay_need = 家长：请允许本应用「显示在其他应用的上层
 
 **涉及文件**：`assets/kids-quiz.json`、`KidsPlan.java`、`KidsBank.java`、`KidsSetupActivity.java`、`KidsQuizActivity.java`、`MainActivity.java`、`activity_kids_setup.xml`、`kids_chip.xml`、`values/strings.xml`、`values-zh-rCN/strings.xml`、`app/build.gradle`（`versionCode` 19 → 20，`versionName` → `2.8.9-stage-grades`）。
 
+## v2.9.0 修改记录（立即答题、设置页重排、答题居中、老人模式独立）
+
+### 一、「立即答题」：和观看限制彻底分开
+
+1. 儿童设置页「答题限制」下面多了一个 **立即答题** 按钮，点一下直接进答题界面，跟答题限制开关、每日组数、当天剩余时长都没有关系。
+2. 儿童模式程序坞固定多一张 **立即答题** 卡片（金色星星图标），紧跟在「儿童模式」卡片后面。它不占白名单里的 app 名额，「调整应用顺序」也动不到它。
+3. 答题界面改成卡通风格：奶油色渐变底、白色圆角题卡、四张答案卡、暖橙色的聚焦框，答对是绿色卡、答错是浅红色卡。
+4. 星级奖励方案（与观看时长完全无关，只记账）：
+   - 答对 1 题 = 1 ⭐，星星从下方飞进画面、回弹一下再飘走；
+   - 一组全对额外 +1 ⭐（满星奖励）；
+   - 答错不给星，下面显示「✊ 继续加油哦！」，同时保留上一版的「你选的是 X，正确答案是 Y」；
+   - 星星累计存在本机（`Kids.stars()`，偏好键 `stars`），答题页右上角常显 ⭐ 总数；
+   - 立即答题里的星星不受「星级奖励」开关限制（练习场景星星就是全部奖励）；锁屏加时流程仍按开关；
+   - 星星不进 `KidsLedger`，不折算 `creditMs`，不影响每日上限、不参与任何锁定判断。
+5. 立即答题只有一条出路：**回到儿童模式**。左上角有「返回」按钮，按 BACK 也是回儿童主页；从锁屏加时流程进来的答题仍然吃掉 BACK 键，不能逃出去。
+6. 立即答题不清错题池、不写错题池、不看 `roundsPerDay`，可以一直练；错题池的清空仍然只在「只练不加时」玩法里发生。
+
+### 二、儿童设置页重排
+
+1. 每组加时 / 每次题量 / 每日组数 —— 从「标题一行 + 芯片一行」的两段式改成「标签在左、芯片在右」的三行紧凑排列（`KidsFieldRow` + `KidsChipSmall`），三项挨在一起，省掉近一半竖向空间。
+2. 通过率挪到「科目」的下一行，顺序变成：学段 → 年级 → 科目 → 通过率 → 三行数字 → 玩法 → 错题加练 → 星级奖励 → 自动下一题 → 观看时段。
+3. 答题限制的「打开 / 关闭」两个芯片合成一个状态芯片：开启时显示「已打开答题限制」，未开启显示「未打开答题限制」，点一下就切换。
+
+### 三、答题界面不再切掉最后一个选项
+
+根因：`activity_kids_quiz.xml` 是「竖排 LinearLayout + 没有滚动」，选项 78dp 高 × 4 再加 12dp 间距，在 1080p 电视上（density≈2，可视高度约 540dp）光选项就要 400dp 左右，加上 40sp 题干和反馈行直接顶穿屏幕底。
+
+修法：
+- 外面套 `ScrollView(fillViewport=true)`，内层 `LinearLayout(gravity=center_vertical)`：内容少于屏高时整块垂直居中，超过时才滚动（题干特别长也不会被截）；
+- 选项 78dp → 56dp、间距 12dp → 8dp、字号 25sp → 23sp、题干 40sp → 25sp。单行题干 + 4 个选项约 520dp，落在 540dp 可视区内，整块居中显示。
+
+### 四、老人模式：三项删掉，PIN 各管各的
+
+1. 老人模式下 工作日时长 / 周末时长 / 休息间隔 三整块不再显示（`weekdaySection` / `weekendSection` / `breakSection` 设为 GONE），「最晚看到」照旧保留。
+2. 逻辑上也真的不生效：`Kids.todayRules()` 在 `Kind.ELDERS` 时把 weekday / weekend / breakEvery 归零后再算锁，所以旧版本存下来的「60 分钟 / 休息 30 分钟」不会偷偷继续管着老人。
+3. 设置页在老人模式下也不再对旧时间值做「超窗自愈」写回，避免把儿童模式的数字顺手改掉。
+4. PIN 分两套：儿童的 `pin_hash` / `pin_arrows`，老人的 `pin_hash_elders` / `pin_arrows_elders`；`pinSet()` / `pinArrows()` / `pinMatches()` / `choosePin()` 一律按当前 kind 取。儿童 PIN 打不开老人模式设置页，反过来也一样，第一次进老人模式会要求单独设一个。
+
+**涉及文件**：`launcher/app/build.gradle`（`versionCode` 20 → 21，`versionName` → `2.9.0-answer-now`）、`Kids.java`、`KidsQuizActivity.java`、`KidsSetupActivity.java`、`AppAdapter.java`、`MainActivity.java`、`activity_kids_setup.xml`、`activity_kids_quiz.xml`、`item_quiz_option.xml`、`styles.xml`、`values/strings.xml`、`values-zh-rCN/strings.xml`、`drawable/quiz_bg_cartoon.xml`、`quiz_card.xml`、`quiz_option_bg.xml`、`quiz_option_right.xml`、`quiz_option_wrong.xml`、`quiz_back_bg.xml`、`ic_kids_quiz.xml`。
+
+### 五、实拍复验后的两处微调
+
+1. 自由练习结算页原来误写「错题池清空了」，但立即答题路径并不清 `extraPool`（见本节一.6），已把 `quiz_practice_sub` 改为「答对 X / Y，继续加油！」，英文同步；
+2. 「每组加时（分钟）」在 104dp 的标签列里折成两行，已把 `KidsFieldLabel` 加宽到 144dp、加 `maxLines=1` 锁定单行，英文标签同步缩短（`Round minutes / Questions / Rounds/day`）。
+
 ## 实机截图
 
 下面 8 张全部在小米电视 **MiTV-ASTR0**（Android 11，1920×1080）上用 `adb shell screencap` 直接截取，没有修图，对应 `2.8.1-settings-weather`（v2.8.3 的界面截图待补）：
@@ -464,7 +509,7 @@ kids_overlay_need = 家长：请允许本应用「显示在其他应用的上层
 
 ## 下载与安装
 
-**安装包：** 到本 fork 的 [Releases](https://github.com/jankxia/cleanmitv/releases) 下载最新的 `tvhome-v*-signed.apk`（当前为 `tvhome-v2.8.9-stage-grades-signed.apk`）；原项目的 `CleanMiTV-2.7.5-local-MiTV-OS3.apk`（版本 2.7.5-local）仍在 [原仓库 release 目录](https://github.com/sqlsec/cleanmitv/tree/main/release)
+**安装包：** 到本 fork 的 [Releases](https://github.com/jankxia/cleanmitv/releases) 下载最新的 `tvhome-v*-signed.apk`（当前为 `tvhome-v2.9.0-answer-now-signed.apk`）；原项目的 `CleanMiTV-2.7.5-local-MiTV-OS3.apk`（版本 2.7.5-local）仍在 [原仓库 release 目录](https://github.com/sqlsec/cleanmitv/tree/main/release)
 
 > ⚠️ 这个包针对小米 OS3 国行固件构建。该固件只允许白名单内的包名成为第三方 Home，所以用 `-PlauncherApplicationId=com.ts.launcher` 编译。Java 代码的命名空间仍然是 `com.gathin.tvhome`，没有修改系统、固件或签名权限。如果你的电视已经装了同包名的其他应用，会出现签名冲突。
 
