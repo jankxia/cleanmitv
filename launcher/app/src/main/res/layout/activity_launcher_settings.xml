@@ -193,6 +193,7 @@
                 android:id="@+id/qrCard"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:layout_marginTop="50dp"
                 android:background="@drawable/bg_qr_card"
                 android:orientation="vertical"
                 android:gravity="center"
@@ -200,15 +201,15 @@
 
                 <com.gathin.tvhome.QrCodeView
                     android:id="@+id/qrCode"
-                    android:layout_width="280dp"
-                    android:layout_height="280dp" />
+                    android:layout_width="220dp"
+                    android:layout_height="220dp" />
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="16dp"
                     android:text="@string/qr_title"
-                    android:textColor="#FF101419"
+                    android:textColor="#FF000000"
                     android:textSize="18sp"
                     android:textStyle="bold" />
 
@@ -218,7 +219,7 @@
                     android:layout_marginTop="8dp"
                     android:gravity="center"
                     android:text="@string/qr_hint"
-                    android:textColor="#FF5B6B7B"
+                    android:textColor="#FF000000"
                     android:textSize="13sp" />
 
                 <TextView
@@ -226,7 +227,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="10dp"
-                    android:textColor="#FF2B6CB0"
+                    android:textColor="#FF000000"
                     android:textSize="14sp"
                     android:textStyle="bold" />
             </LinearLayout>
