@@ -138,6 +138,8 @@ public final class PinDialog extends Dialog {
                 listener.onForgot();
                 dismiss();
             });
+            // build() runs in onCreate (on show), after asAdmin() has set the flag; hide it there.
+            if (adminTitle) forgotButton.setVisibility(View.GONE);
             panel.addView(forgotButton, forgotLp);
         }
 
