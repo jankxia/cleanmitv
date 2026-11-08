@@ -139,10 +139,30 @@ public class KidsQuizActivity extends Activity {
         showQuestion();
     }
 
+    /** Append a fresh batch of questions for free practice, skipping ones already in this round. */
+    private boolean extendRound() {
+        int n = Math.max(1, plan.questionsPerRound);
+        List<KidsBank.Q> more = KidsBank.pickWithPractice(this, n, ledger.extraPool,
+                plan.stage, plan.grade(), plan.subjects());
+        boolean added = false;
+        for (KidsBank.Q q : more) {
+            if (round.contains(q)) continue;
+            round.add(q);
+            added = true;
+        }
+        return added;
+    }
+
     private void showQuestion() {
         if (index >= round.size()) {
-            finishRound();
-            return;
+            // Free practice (the dock's "answer now") has no fixed length: top up the list and keep
+            // going instead of showing the round-result panel, so a child can practise until they go back.
+            if (freePractice && extendRound()) {
+                // round now has more questions; fall through to render the next one
+            } else {
+                finishRound();
+                return;
+            }
         }
         KidsBank.Q q = round.get(index);
         progress.setText(getString(R.string.quiz_progress, index + 1, round.size()));
@@ -188,6 +208,7 @@ public class KidsQuizActivity extends Activity {
         if (right) {
             correct++;
             streak++;
+            QuizSounds.playCorrect();
             optionViews.get(choice).setBackgroundResource(R.drawable.quiz_option_right);
             feedback.setText(R.string.quiz_right);
             feedback.setTextColor(0xFF2E8B57);
@@ -199,6 +220,7 @@ public class KidsQuizActivity extends Activity {
             }
         } else {
             streak = 0;
+            QuizSounds.playWrong();
             // The wrong pick keeps its red frame and the right one goes green; the line below spells
             // out which option was picked, so the wrong answer stays readable after the round moves on.
             optionViews.get(choice).setBackgroundResource(R.drawable.quiz_option_wrong);
@@ -224,6 +246,7 @@ public class KidsQuizActivity extends Activity {
     /** A star flies in from below, bounces, then drifts off: one per right answer. */
     private void popStar() {
         if (starPop == null) return;
+        QuizSounds.playStar();
         starPop.animate().cancel();
         starPop.setVisibility(View.VISIBLE);
         starPop.setAlpha(0f);
