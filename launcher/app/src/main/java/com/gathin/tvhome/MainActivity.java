@@ -2679,7 +2679,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         if (weatherLine == null) return;
         int code = Weather.lastCode(this);
         Drawable icon = code < 0 ? null : getDrawable(Weather.iconRes(code));
-        weatherLine.setCompoundDrawablesRelative(icon, null, null, null);
+        weatherLine.setCompoundDrawablesRelativeWithIntrinsicBounds(icon, null, null, null);
     }
 
     /**
