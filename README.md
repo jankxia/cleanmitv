@@ -513,6 +513,17 @@ kids_overlay_need = 家长：请允许本应用「显示在其他应用的上层
 
 ## 实机截图
 
+下面 4 张全部在小米电视 **MiTV-ASTR0**（Android 11，1920×1080）上用 `adb shell screencap` 直接截取，没有修图，对应当前版本 **2.9.0-answer-now（versionCode 21，含 Home 布局微调与超级管理员）**：
+
+| 普通 Home：5 个应用水平居中、贴底，第二行不冒头，天气带图标 | 儿童模式 Home：3 个 tile 水平居中，无程序坞大名称 |
+|---|---|
+| ![](docs/tvhome/latest-home.jpg) | ![](docs/tvhome/latest-kids-home.jpg) |
+| **管理员密码框：标题「管理员密码」，没有「忘记密码」** | **密码管理菜单：重置儿童 / 重置老人 / 修改管理员** |
+| ![](docs/tvhome/latest-admin-pin.jpg) | ![](docs/tvhome/latest-admin-menu.jpg) |
+
+<details>
+<summary>📜 历史版本实机截图（v2.8.1 – v2.8.9，点击展开）</summary>
+
 下面 8 张全部在小米电视 **MiTV-ASTR0**（Android 11，1920×1080）上用 `adb shell screencap` 直接截取，没有修图，对应 `2.8.1-settings-weather`（v2.8.3 的界面截图待补）：
 
 | 主页：农历在日期上一行、天气在下一行 | 设置下拉：输入源 / 网络 / 隐藏设置 / 系统设置 / 儿童/老人模式 / 调整应用顺序 |
@@ -558,6 +569,8 @@ kids_overlay_need = 家长：请允许本应用「显示在其他应用的上层
 | ![](docs/tvhome/22-kids-grade-rows.jpg) | ![](docs/tvhome/23-kids-high-subjects.jpg) |
 | **三个时间：工作日不允许 / 周末 10 / 最晚不限 / 休息关** | **程序坞归位：两个图标贴在屏幕底部，大标题在上方** |
 | ![](docs/tvhome/24-kids-times.jpg) | ![](docs/tvhome/25-kids-dock-fixed.jpg) |
+
+</details>
 
 ## 下载与安装
 
