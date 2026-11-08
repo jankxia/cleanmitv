@@ -36,6 +36,7 @@ public class AdminActivity extends Activity {
                 finish();
             }
         });
+        dialog.asAdmin();
         dialog.show();
     }
 
@@ -55,6 +56,7 @@ public class AdminActivity extends Activity {
                 finish();
             }
         });
+        dialog.asAdmin();
         dialog.show();
     }
 
@@ -102,6 +104,7 @@ public class AdminActivity extends Activity {
                 showMenu();
             }
         });
+        dialog.asAdmin();
         dialog.show();
     }
 }

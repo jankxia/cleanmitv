@@ -967,6 +967,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
                 @Override public void onCancel() {
                 }
             });
+            admin.asAdmin();
             admin.show();
         } else {
             PinDialog setup = new PinDialog(this, PinDialog.CREATE, true, new PinDialog.PinListener() {
@@ -978,6 +979,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
                 @Override public void onCancel() {
                 }
             });
+            setup.asAdmin();
             setup.show();
         }
     }

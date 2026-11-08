@@ -34,6 +34,8 @@ public final class PinDialog extends Dialog {
     private LinearLayout keypad;
     private TextView padFocus;
     private int errorRes;
+    /** When true, the titles name the administrator PIN instead of a mode's parent PIN. */
+    private boolean adminTitle;
 
     public interface PinListener {
         /** The PIN was entered (verified or created), exactly four digits. */
@@ -308,11 +310,13 @@ public final class PinDialog extends Dialog {
         int titleRes;
         int hintRes;
         if (mode == CREATE) {
-            titleRes = first == null ? R.string.pin_create : R.string.pin_confirm;
+            titleRes = first == null
+                    ? (adminTitle ? R.string.pin_admin_create : R.string.pin_create)
+                    : R.string.pin_confirm;
             hintRes = errorRes != 0 ? errorRes
                     : (arrows ? R.string.pin_arrows_create_hint : R.string.pin_create_hint);
         } else {
-            titleRes = R.string.pin_enter;
+            titleRes = adminTitle ? R.string.pin_admin_enter : R.string.pin_enter;
             hintRes = errorRes != 0 ? errorRes
                     : (arrows ? R.string.pin_arrows_hint : R.string.pin_enter_hint);
         }
@@ -345,6 +349,13 @@ public final class PinDialog extends Dialog {
         }
         listener.onPin(entered);
         dismiss();
+    }
+
+    /** Mark this dialog as the administrator PIN so its titles read "administrator" rather than "parent". */
+    public PinDialog asAdmin() {
+        this.adminTitle = true;
+        refresh();
+        return this;
     }
 
     @Override
