@@ -29,8 +29,8 @@ android {
         applicationId providers.gradleProperty('launcherApplicationId').getOrElse('com.gathin.tvhome')
         minSdk 26
         targetSdk 34
-        versionCode 22
-        versionName '2.9.1-scan-config'
+        versionCode 23
+        versionName '2.9.2-full-remote'
         resConfigs 'en', 'zh-rCN'
     }
 

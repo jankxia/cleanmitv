@@ -179,6 +179,21 @@
                 android:text="@string/kids_settings_help"
                 android:textColor="#FFACB8C1"
                 android:textSize="14sp" />
+
+            <TextView
+                android:id="@+id/updateChoice"
+                style="@style/SettingsRow"
+                android:layout_marginTop="28dp"
+                android:text="@string/update_check" />
+
+            <TextView
+                android:id="@+id/updateHint"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="7dp"
+                android:text="@string/update_hint"
+                android:textColor="#FFACB8C1"
+                android:textSize="14sp" />
         </LinearLayout>
 
         <LinearLayout

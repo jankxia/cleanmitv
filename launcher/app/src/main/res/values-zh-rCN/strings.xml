@@ -330,4 +330,10 @@
     <string name="sched_fri">周五</string>
     <string name="sched_sat">周六</string>
     <string name="sched_sun">周日</string>
+
+    <!-- 一键版本更新：下载已配置的 APK 并调起系统安装器。 -->
+    <string name="update_check">版本更新</string>
+    <string name="update_hint">在手机/电脑网页填写 APK 直链（GitHub Release 链接或夸克网盘的真实下载直链，不能是夸克分享网页），点这里即可下载安装。</string>
+    <string name="update_no_url">请先在手机/电脑网页填写 APK 下载地址。</string>
+    <string name="update_started">开始下载，完成后会自动弹出安装。</string>
 </resources>

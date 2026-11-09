@@ -148,6 +148,16 @@ public final class LauncherSettingsActivity extends Activity {
         // Kids/Elders mode: who it is for, the apps it shows and the time limits.
         findViewById(R.id.kidsChoice).setOnClickListener(v ->
                 open(new Intent(this, KidsSetupActivity.class)));
+        // One-tap update: download the configured APK and open the system installer.
+        findViewById(R.id.updateChoice).setOnClickListener(v -> {
+            String url = choices.getString("update_url", "");
+            if (url.isEmpty()) {
+                Toast.makeText(this, R.string.update_no_url, Toast.LENGTH_LONG).show();
+                return;
+            }
+            ApkUpdater.start(this, url);
+            Toast.makeText(this, R.string.update_started, Toast.LENGTH_SHORT).show();
+        });
         TextView appearance = findViewById(R.id.appearanceChoice);
         appearance.setVisibility(PersonalAppearance.enabled(this) ? View.VISIBLE : View.GONE);
         appearance.setOnClickListener(view -> showAppearancePicker());

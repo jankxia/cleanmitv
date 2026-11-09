@@ -17,22 +17,31 @@
   }
   header h1 { margin: 0; font-size: 20px; font-weight: 700; }
   header p { margin: 6px 0 0; font-size: 13px; opacity: .85; }
-  main { max-width: 640px; margin: 0 auto; padding: 16px; }
+  main { max-width: 720px; margin: 0 auto; padding: 16px; }
   .card {
-    background: #fff; border-radius: 14px; padding: 6px 16px;
+    background: #fff; border-radius: 14px; padding: 8px 16px 14px;
     margin-bottom: 14px; box-shadow: 0 1px 3px rgba(15,23,42,.08);
   }
+  .card > summary {
+    list-style: none; cursor: pointer;
+    font-size: 16px; font-weight: 700; padding: 12px 0;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .card > summary::-webkit-details-marker { display: none; }
+  .card > summary .tag { font-size: 12px; color: #8a97a5; font-weight: 500; }
+  .card > summary::after { content: "展开"; font-size: 12px; color: #3182ce; font-weight: 500; }
+  .card[open] > summary::after { content: "收起"; }
   .card h2 {
     font-size: 13px; color: #5b6b7b; font-weight: 700;
-    margin: 14px 0 6px; letter-spacing: .5px;
+    margin: 16px 0 6px; letter-spacing: .5px;
   }
   .row {
     display: flex; align-items: center; justify-content: space-between;
-    padding: 12px 0; border-bottom: 1px solid #eef1f5; gap: 12px;
+    padding: 11px 0; border-bottom: 1px solid #eef1f5; gap: 12px;
   }
   .row:last-child { border-bottom: none; }
   .row label { font-size: 15px; flex-shrink: 0; }
-  .row .hint { font-size: 12px; color: #8a97a5; margin-top: 2px; }
+  .row .sub { font-size: 12px; color: #8a97a5; margin-top:2px; }
   select, input[type=text] {
     font-size: 15px; color: #1f2933; background: #f5f7fa;
     border: 1px solid #d8dee6; border-radius: 9px;
@@ -41,7 +50,7 @@
   input[type=text] { text-align: left; width: 100%; }
   .seg { display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
   .seg button {
-    font-size: 13px; padding: 8px 14px; border-radius: 9px;
+    font-size: 13px; padding: 8px 13px; border-radius: 9px;
     border: 1px solid #d8dee6; background: #f5f7fa; color: #46586a;
     cursor: pointer;
   }
@@ -59,15 +68,55 @@
   }
   .switch input:checked + .slider { background: #2b6cb0; }
   .switch input:checked + .slider::before { transform: translateX(21px); }
-  .upload {
-    display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
-    padding: 12px 0;
-  }
-  .upload .file-btn {
+  .upload { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; padding: 12px 0; }
+  .file-btn {
     background: #ebf2fb; color: #2b6cb0; border: 1px solid #c3d8f0;
     border-radius: 9px; padding: 9px 16px; font-size: 14px; cursor: pointer;
   }
   .upload .name { font-size: 13px; color: #5b6b7b; word-break: break-all; }
+  .applist { max-height: 360px; overflow-y: auto; border: 1px solid #e6ebf1; border-radius: 10px; margin-top: 8px; }
+  .approw {
+    display: flex; align-items: center; gap: 10px; padding: 10px 12px;
+    border-bottom: 1px solid #f0f3f7; cursor: pointer;
+  }
+  .approw:last-child { border-bottom: none; }
+  .approw .order {
+    width: 26px; height: 26px; border-radius: 50%; flex-shrink: 0;
+    background: #e8eef6; color: #5b6b7b; font-size: 13px;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .approw.picked { background: #f3f8fd; }
+  .approw.picked .order { background: #2b6cb0; color: #fff; }
+  .approw .nm { flex: 1; font-size: 14px; word-break: break-all; }
+  .approw .pk { font-size: 12px; color: #8a97a5; }
+  .grid-wrap { overflow-x: auto; margin-top: 10px; }
+  table.sched { border-collapse: collapse; font-size: 11px; }
+  table.sched th { color: #5b6b7b; padding: 4px 2px; font-weight: 600; }
+  table.sched td.time { color: #8a97a5; padding-right: 6px; white-space: nowrap; text-align: right; }
+  table.sched td.cell { width: 30px; height: 24px; padding: 2px; }
+  table.sched td.cell span {
+    display: block; width: 100%; height: 100%; border-radius: 4px;
+    background: #d3dbe4; cursor: pointer;
+  }
+  table.sched td.cell.open span { background: #38a169; }
+  .grid-actions { display: flex; gap: 8px; margin-top: 10px; }
+  .grid-actions button, .plain-btn {
+    font-size: 13px; padding: 8px 14px; border-radius: 9px;
+    border: 1px solid #d8dee6; background: #f5f7fa; color: #46586a; cursor: pointer;
+  }
+  .pinbox { display: flex; flex-direction: column; gap: 10px; padding: 10px 0; }
+  .pinbox .line { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+  .pinbox select { min-width: 90px; text-align: left; }
+  .pinbox input { min-width: 0; flex: 1; }
+  .note {
+    background: #fffbeb; border: 1px solid #f3e2b3; color: #8a6d2b;
+    border-radius: 10px; padding: 10px 12px; font-size: 13px; margin-top: 10px;
+  }
+  .sysnote {
+    background: #f1f5f9; border: 1px solid #dbe3ec; color: #51606f;
+    border-radius: 10px; padding: 10px 12px; font-size: 13px;
+  }
+  .sysnote li { margin: 4px 0; }
   .bar {
     position: fixed; left: 0; right: 0; bottom: 0;
     background: rgba(255,255,255,.96); backdrop-filter: blur(8px);
@@ -83,55 +132,141 @@
   .toast {
     position: fixed; top: 18px; left: 50%; transform: translateX(-50%) translateY(-80px);
     background: #2f855a; color: #fff; padding: 11px 22px; border-radius: 10px;
-    font-size: 14px; transition: .3s; box-shadow: 0 4px 14px rgba(0,0,0,.2);
+    font-size: 14px; transition: .3s; box-shadow: 0 4px 14px rgba(0,0,0,.2); z-index: 10;
   }
   .toast.show { transform: translateX(-50%) translateY(0); }
   .toast.error { background: #c53030; }
   .spin { font-size: 13px; color: #8a97a5; }
+  .progress { height: 8px; background: #e6ebf1; border-radius: 8px; overflow: hidden; margin-top: 8px; }
+  .progress i { display: block; height: 100%; background: #3182ce; width: 0; transition: .3s; }
 </style>
 </head>
 <body>
 <header>
   <h1>电视桌面 · 远程设置</h1>
-  <p>与电视连接同一 Wi-Fi，修改后点击底部保存即可生效</p>
+  <p>与电视连接同一 Wi-Fi，修改后点底部保存即可生效；带动作的按钮即时执行</p>
 </header>
 <main>
-  <div class="card">
+  <details class="card" open>
+    <summary>外观与布局 <span class="tag">主题 · 行列 · 程序坞</span></summary>
     <h2>外观</h2>
     <div class="row"><label>主题模式</label><div class="seg" id="appearance_mode"></div></div>
     <div class="row"><label>背景来源</label><div class="seg" id="background_style"></div></div>
     <div class="row"><label>开启动画效果</label><label class="switch"><input type="checkbox" id="animations"><span class="slider"></span></label></div>
     <div class="row"><label>环境背景动态</label><label class="switch"><input type="checkbox" id="ambient_background_motion"><span class="slider"></span></label></div>
-  </div>
-
-  <div class="card">
     <h2>布局</h2>
     <div class="row"><label>每行应用数</label><select id="columns"></select></div>
     <div class="row"><label>程序坞下方行数</label><select id="rows_below_dock"></select></div>
     <div class="row"><label>程序坞透明度</label><select id="dock_opacity"></select></div>
-  </div>
-
-  <div class="card">
     <h2>天气</h2>
     <div class="row"><label>天气城市</label><select id="weather_city"></select></div>
-  </div>
+    <h2>开机</h2>
+    <div class="row" style="display:block">
+      <label>开机自动打开的应用包名（留空关闭）</label>
+      <input type="text" id="open_on_start" placeholder="例如 com.google.android.youtube.tv" style="margin-top:8px">
+    </div>
+  </details>
 
-  <div class="card">
-    <h2>壁纸</h2>
+  <details class="card" open>
+    <summary>壁纸 <span class="tag">选择 · 上传</span></summary>
     <div class="row"><label>当前壁纸</label><select id="wallpaper_choice"></select></div>
     <div class="upload">
       <label class="file-btn" for="file">选择图片上传</label>
       <input type="file" id="file" accept="image/*" hidden>
       <span class="name" id="filename">支持 JPG / PNG / WEBP，单张不超过 10MB</span>
     </div>
-  </div>
+  </details>
 
-  <div class="card">
-    <h2>高级</h2>
-    <div class="row" style="display:block">
-      <label>开机自动打开的应用包名（留空关闭）</label>
-      <input type="text" id="open_on_start" placeholder="例如 com.google.android.youtube.tv" style="margin-top:8px">
+  <details class="card" open>
+    <summary>儿童 / 老人模式 <span class="tag">对象 · 时间规则 · 应用</span></summary>
+    <div class="row"><label>适用对象</label><div class="seg" id="kind"></div></div>
+    <div class="row"><label>模式开关</label><label class="switch"><input type="checkbox" id="enabled"><span class="slider"></span></label></div>
+    <div id="kidsLimits">
+      <h2>时间规则</h2>
+      <div class="row"><label>工作日时长</label><div class="seg" id="weekday_minutes"></div></div>
+      <div class="row"><label>周末时长</label><div class="seg" id="weekend_minutes"></div></div>
+      <div class="row"><label>最晚看到</label><div class="seg" id="end_minute"></div></div>
+      <div class="row"><label>休息间隔</label><div class="seg" id="break_every"></div></div>
     </div>
+    <h2>桌面应用（点选，按选择顺序排列）</h2>
+    <div class="applist" id="applist"></div>
+    <div class="row" style="border:none"><label>累计星星</label><span id="stars"></span></div>
+  </details>
+
+  <details class="card">
+    <summary>答题计划 <span class="tag">题库 · 加时 · 时段表</span></summary>
+    <div class="row"><label>答题限制</label><label class="switch"><input type="checkbox" id="quiz_gate"><span class="slider"></span></label></div>
+    <h2>题库</h2>
+    <div class="row"><label>学段</label><div class="seg" id="stage"></div></div>
+    <div class="row"><label>年级</label><div class="seg" id="grade"></div></div>
+    <div class="row"><label>科目</label><div class="seg" id="subjects"></div></div>
+    <h2>加时与玩法</h2>
+    <div class="row"><label>每组加时</label><div class="seg" id="session_minutes"></div></div>
+    <div class="row"><label>每次题量</label><div class="seg" id="questions_per_round"></div></div>
+    <div class="row"><label>通过率</label><div class="seg" id="pass_ratio"></div></div>
+    <div class="row"><label>每日组数</label><div class="seg" id="rounds_per_day"></div></div>
+    <div class="row"><label>玩法</label><div class="seg" id="play_mode"></div></div>
+    <div class="row"><label>自动下一题</label><div class="seg" id="auto_next"></div></div>
+    <div class="row"><label>错题加练</label><label class="switch"><input type="checkbox" id="extra_enabled"><span class="slider"></span></label></div>
+    <div class="row"><label>星级奖励</label><label class="switch"><input type="checkbox" id="star_reward"><span class="slider"></span></label></div>
+    <div class="row"><label>今天按周末算</label><label class="switch"><input type="checkbox" id="holiday_weekend"><span class="slider"></span></label></div>
+    <h2>观看时段表（绿可看 / 灰不可看）</h2>
+    <div class="grid-actions">
+      <button id="gridAllOn">全部打开</button>
+      <button id="gridAllOff">全部关闭</button>
+    </div>
+    <div class="grid-wrap"><table class="sched" id="sched"></table></div>
+  </details>
+
+  <details class="card">
+    <summary>PIN 密码管理 <span class="tag">儿童 · 老人 · 管理员</span></summary>
+    <div class="pinbox">
+      <div class="line">
+        <label>重置对象</label>
+        <select id="pin_target">
+          <option value="kids">儿童模式</option>
+          <option value="elders">老人模式</option>
+          <option value="admin">管理员</option>
+        </select>
+        <label>类型</label>
+        <select id="pin_type">
+          <option value="digits">4 位数字</option>
+          <option value="arrows">4 个方向</option>
+        </select>
+      </div>
+      <div class="line" id="pin_digit_line">
+        <input type="text" id="pin_digit" maxlength="4" inputmode="numeric" placeholder="输入 4 位数字">
+      </div>
+      <div class="line" id="pin_arrow_line" hidden>
+        <select class="ar" id="ar0"></select><select class="ar" id="ar1"></select>
+        <select class="ar" id="ar2"></select><select class="ar" id="ar3"></select>
+      </div>
+      <button class="plain-btn" id="pin_submit" style="align-self:flex-start">保存 PIN</button>
+    </div>
+    <div class="note">PIN 以单向哈希保存，无法反推；忘记后可用管理员 PIN 重置，管理员 PIN 无法被更高层重置。</div>
+  </details>
+
+  <details class="card">
+    <summary>版本更新 <span class="tag">APK 直链 · 一键安装</span></summary>
+    <div class="row" style="display:block">
+      <label>APK 下载地址（直链）</label>
+      <input type="text" id="update_url" placeholder="GitHub Release 链接或夸克网盘真实下载直链" style="margin-top:8px">
+    </div>
+    <div class="note">这里要填能直接返回 APK 文件的地址；夸克网盘的分享网页是 HTML，不能直接用，需用其真实下载直链。GitHub Release 链接会自动跟随跳转。</div>
+    <div class="progress"><i id="update_progress"></i></div>
+    <div class="row" style="border:none">
+      <span class="spin" id="update_state"></span>
+      <button class="plain-btn" id="update_now">立即下载安装</button>
+    </div>
+  </details>
+
+  <div class="sysnote">
+    <b>以下三项属于系统页面，无法在本网页替代，需在电视端操作：</b>
+    <ul>
+      <li>选择默认桌面（系统桌面设置）</li>
+      <li>系统设置</li>
+      <li>悬浮窗 / 显示在其他应用上层权限</li>
+    </ul>
   </div>
 </main>
 
@@ -144,71 +279,22 @@
 <script>
 const LABELS = {
   appearance_mode: {night: "夜间", day: "白天", auto: "跟随系统"},
-  background_style: {app: "主题", wallpaper: "壁纸", bing: "必应每日"}
+  background_style: {app: "主题", wallpaper: "壁纸", bing: "必应"},
+  kind: {kids: "儿童", elders: "老人"},
+  stage: {primary: "小学", middle: "初中", high: "高中"},
+  play_mode: {round: "答一组题", streak: "连对闯关", practice: "只练不加时"},
+  subjects: {chinese:"语文", math:"数学", english:"英语", history:"历史", physics:"物理",
+             chemistry:"化学", biology:"生物", geography:"地理", politics:"政治"}
 };
+const SUBJECT_KEYS = ["chinese","math","english","history","physics","chemistry","biology","geography","politics"];
+const ARROWS = {U:"↑ 上", D:"↓ 下", L:"← 左", R:"→ 右"};
 let state = null;
+let slots = [];
 
 async function load() {
-  const res = await fetch("/api/state");
-  state = await res.json();
+  state = await (await fetch("/api/state")).json();
+  initSlots();
   render();
-}
-
-function fillSelect(id, values, current) {
-  const el = document.getElementById(id);
-  el.innerHTML = "";
-  values.forEach(v => {
-    const opt = document.createElement("option");
-    opt.value = v; opt.textContent = v;
-    if (String(v) === String(current)) opt.selected = true;
-    el.appendChild(opt);
-  });
-}
-
-function render() {
-  const v = state.values, o = state.options;
-  // segmented buttons
-  ["appearance_mode", "background_style"].forEach(key => {
-    const box = document.getElementById(key);
-    box.innerHTML = "";
-    o[key].forEach(val => {
-      const b = document.createElement("button");
-      b.textContent = LABELS[key][val] || val;
-      if (v[key] === val) b.classList.add("on");
-      b.onclick = () => {
-        v[key] = val;
-        box.querySelectorAll("button").forEach(x => x.classList.remove("on"));
-        b.classList.add("on");
-      };
-      box.appendChild(b);
-    });
-  });
-  // switches
-  document.getElementById("animations").checked = !!v.animations;
-  document.getElementById("ambient_background_motion").checked = !!v.ambient_background_motion;
-  // selects
-  fillSelect("columns", o.columns, v.columns);
-  fillSelect("rows_below_dock", o.rows_below_dock, v.rows_below_dock);
-  fillSelect("dock_opacity", o.dock_opacity, v.dock_opacity);
-  fillSelect("weather_city", o.cities, v.weather_city);
-  const wallpapers = [WallpaperRotationNone()].concat(o.wallpapers);
-  fillSelect("wallpaper_choice", wallpapers, v.wallpaper_choice);
-  document.getElementById("open_on_start").value = v.open_on_start || "";
-}
-
-function WallpaperRotationNone() { return "none"; }
-
-function collect() {
-  const v = state.values;
-  v.animations = document.getElementById("animations").checked;
-  v.ambient_background_motion = document.getElementById("ambient_background_motion").checked;
-  v.columns = parseInt(document.getElementById("columns").value, 10);
-  v.rows_below_dock = parseInt(document.getElementById("rows_below_dock").value, 10);
-  v.dock_opacity = parseInt(document.getElementById("dock_opacity").value, 10);
-  v.weather_city = document.getElementById("weather_city").value;
-  v.wallpaper_choice = document.getElementById("wallpaper_choice").value;
-  v.open_on_start = document.getElementById("open_on_start").value.trim();
-  return v;
 }
 
 function toast(msg, error) {
@@ -218,47 +304,334 @@ function toast(msg, error) {
   setTimeout(() => t.className = "toast", 2200);
 }
 
+function fillSelect(id, values, current, labels) {
+  const el = document.getElementById(id);
+  el.innerHTML = "";
+  values.forEach(v => {
+    const opt = document.createElement("option");
+    opt.value = v; opt.textContent = (labels && labels[v]) || v;
+    if (String(v) === String(current)) opt.selected = true;
+    el.appendChild(opt);
+  });
+}
+
+// Generic segmented button group.
+function seg(id, values, current, labelFn, onChange) {
+  const box = document.getElementById(id);
+  box.innerHTML = "";
+  values.forEach(v => {
+    const b = document.createElement("button");
+    b.textContent = labelFn ? labelFn(v) : v;
+    if (v === current) b.classList.add("on");
+    b.onclick = () => {
+      onChange(v);
+      box.querySelectorAll("button").forEach(x => x.classList.remove("on"));
+      b.classList.add("on");
+    };
+    box.appendChild(b);
+  });
+}
+
+function switchEl(id, checked, onChange) {
+  const el = document.getElementById(id);
+  el.checked = !!checked;
+  el.onchange = () => onChange(el.checked);
+}
+
+function minLabel(v) { return v > 0 ? v + " 分钟" : v; }
+
+function render() {
+  const v = state.values, o = state.options;
+  seg("appearance_mode", o.appearance_mode, v.appearance_mode, x => LABELS.appearance_mode[x], x => v.appearance_mode = x);
+  seg("background_style", o.background_style, v.background_style, x => LABELS.background_style[x], x => v.background_style = x);
+  switchEl("animations", v.animations, x => v.animations = x);
+  switchEl("ambient_background_motion", v.ambient_background_motion, x => v.ambient_background_motion = x);
+  fillSelect("columns", o.columns, v.columns);
+  fillSelect("rows_below_dock", o.rows_below_dock, v.rows_below_dock);
+  fillSelect("dock_opacity", o.dock_opacity, v.dock_opacity);
+  fillSelect("weather_city", o.cities, v.weather_city);
+  fillSelect("wallpaper_choice", ["none"].concat(o.wallpapers), v.wallpaper_choice);
+  document.getElementById("open_on_start").value = v.open_on_start || "";
+
+  renderKids();
+  renderPlan();
+  document.getElementById("update_url").value = state.update.url || "";
+  renderUpdateState();
+}
+
+function renderKids() {
+  const k = state.kids, kv = k.values, ko = k.options;
+  seg("kind", ko.kind, kv.kind, x => LABELS.kind[x], x => kv.kind = x);
+  switchEl("enabled", kv.enabled, x => kv.enabled = x);
+  seg("weekday_minutes", ko.weekday_minutes, kv.weekday_minutes,
+      x => x < 0 ? "不允许" : x + " 分", x => kv.weekday_minutes = x);
+  seg("weekend_minutes", ko.weekend_minutes, kv.weekend_minutes,
+      x => x === 0 ? "不限" : x + " 分", x => kv.weekend_minutes = x);
+  seg("end_minute", ko.end_minute, kv.end_minute,
+      x => x === 0 ? "不限" : clockOf(x), x => kv.end_minute = x);
+  seg("break_every", ko.break_every, kv.break_every,
+      x => x === 0 ? "关" : x + " 分", x => kv.break_every = x);
+  document.getElementById("kidsLimits").style.display = kv.kind === "elders" ? "none" : "block";
+  document.getElementById("stars").textContent = kv.stars + " 颗";
+  renderAppList();
+}
+
+function clockOf(m) { return Math.floor(m/60) + ":" + String(m%60).padStart(2,"0"); }
+
+function renderAppList() {
+  const box = document.getElementById("applist");
+  box.innerHTML = "";
+  const allowed = state.kids.allowed;
+  state.kids.apps.forEach(a => {
+    const idx = allowed.indexOf(a.pkg);
+    const row = document.createElement("div");
+    row.className = "approw" + (idx >= 0 ? " picked" : "");
+    row.innerHTML = '<span class="order">' + (idx >= 0 ? idx+1 : "·") + '</span>'
+      + '<span class="nm"></span><span class="pk">' + (idx >= 0 ? "已选" : "点选") + '</span>';
+    row.querySelector(".nm").textContent = a.label;
+    row.onclick = () => {
+      if (idx >= 0) allowed.splice(idx, 1);
+      else allowed.push(a.pkg);
+      renderAppList();
+    };
+    box.appendChild(row);
+  });
+}
+
+function renderPlan() {
+  const p = state.plan, pv = p.values, po = p.options;
+  switchEl("quiz_gate", pv.quiz_gate, x => pv.quiz_gate = x);
+  seg("stage", po.stage, pv.stage, x => LABELS.stage[x], x => {
+    pv.stage = x;
+    pv.grade = KidsPlanGrades(x)[0];
+    SUBJECT_KEYS.forEach(k => pv["subject_"+k] = false);
+    stageSubjects(x).forEach(k => pv["subject_"+k] = true);
+    renderPlan();
+  });
+  const grades = KidsPlanGrades(pv.stage);
+  seg("grade", grades, pv.grade, x => gradeLabel(pv.stage, x), x => pv.grade = x);
+  renderSubjects();
+  seg("session_minutes", po.session_minutes, pv.session_minutes, minLabel, x => pv.session_minutes = x);
+  seg("questions_per_round", po.questions_per_round, pv.questions_per_round, x => x + " 题", x => pv.questions_per_round = x);
+  seg("pass_ratio", po.pass_ratio, pv.pass_ratio, x => x + "%", x => pv.pass_ratio = x);
+  seg("rounds_per_day", po.rounds_per_day, pv.rounds_per_day, x => x + " 组", x => pv.rounds_per_day = x);
+  seg("play_mode", po.play_mode, pv.play_mode, x => LABELS.play_mode[x], x => pv.play_mode = x);
+  seg("auto_next", po.auto_next, pv.auto_next, x => x === 0 ? "关" : x + " 秒", x => pv.auto_next = x);
+  switchEl("extra_enabled", pv.extra_enabled, x => pv.extra_enabled = x);
+  switchEl("star_reward", pv.star_reward, x => pv.star_reward = x);
+  switchEl("holiday_weekend", pv.holiday_weekend, x => pv.holiday_weekend = x);
+  renderGrid();
+}
+
+function KidsPlanGrades(stage) {
+  if (stage === "middle") return [7,8,9];
+  if (stage === "high") return [10,11,12];
+  return [1,2,3,4,5,6];
+}
+function gradeLabel(stage, g) {
+  if (stage === "primary") return ["一","二","三","四","五","六"][g-1] + "年级";
+  if (stage === "middle") return "初" + ["一","二","三"][g-7];
+  return "高" + ["一","二","三"][g-10];
+}
+
+function renderSubjects() {
+  const pv = state.plan.values;
+  const stageKeys = stageSubjects(pv.stage);
+  const box = document.getElementById("subjects");
+  box.innerHTML = "";
+  stageKeys.forEach(k => {
+    const b = document.createElement("button");
+    b.textContent = LABELS.subjects[k];
+    if (pv["subject_"+k]) b.classList.add("on");
+    b.onclick = () => {
+      if (pv["subject_"+k] && countSubjects() <= 1) { toast("至少保留一科", true); return; }
+      pv["subject_"+k] = !pv["subject_"+k];
+      renderSubjects();
+    };
+    box.appendChild(b);
+  });
+}
+function stageSubjects(stage) {
+  if (stage === "middle") return ["chinese","math","english","history","physics","chemistry"];
+  if (stage === "high") return SUBJECT_KEYS;
+  return ["chinese","math","english"];
+}
+function countSubjects() {
+  const pv = state.plan.values;
+  return stageSubjects(pv.stage).filter(k => pv["subject_"+k]).length;
+}
+
+// ---- weekly schedule grid ----
+function initSlots() {
+  const s = state.plan.values.week_slots;
+  if (s && s.length === 336) slots = s.split("");
+  else slots = new Array(336).fill("1");
+}
+function renderGrid() {
+  const t = document.getElementById("sched");
+  t.innerHTML = "";
+  const head = document.createElement("tr");
+  head.innerHTML = "<th></th><th>一</th><th>二</th><th>三</th><th>四</th><th>五</th><th>六</th><th>日</th>";
+  t.appendChild(head);
+  for (let row=0; row<48; row++) {
+    const tr = document.createElement("tr");
+    if (row % 2 === 0) {
+      const tm = document.createElement("td");
+      tm.className = "time"; tm.setAttribute("rowspan", "2");
+      tm.textContent = clockOf(row/2*60);
+      tr.appendChild(tm);
+    }
+    for (let col=0; col<7; col++) {
+      const at = col*48+row;
+      const td = document.createElement("td");
+      td.className = "cell" + (slots[at] === "1" ? " open" : "");
+      const sp = document.createElement("span");
+      sp.onclick = () => {
+        slots[at] = slots[at] === "1" ? "0" : "1";
+        td.classList.toggle("open");
+      };
+      td.appendChild(sp);
+      tr.appendChild(td);
+    }
+    t.appendChild(tr);
+  }
+}
+document.getElementById("gridAllOn").onclick = () => { slots.fill("1"); renderGrid(); };
+document.getElementById("gridAllOff").onclick = () => { slots.fill("0"); renderGrid(); };
+
+// ---- PIN ----
+["ar0","ar1","ar2","ar3"].forEach(id => fillSelect(id, ["U","D","L","R"], "U", ARROWS));
+document.getElementById("pin_type").onchange = e => {
+  const arrows = e.target.value === "arrows";
+  document.getElementById("pin_digit_line").hidden = arrows;
+  document.getElementById("pin_arrow_line").hidden = !arrows;
+};
+document.getElementById("pin_submit").onclick = async () => {
+  const target = document.getElementById("pin_target").value;
+  const arrows = document.getElementById("pin_type").value === "arrows";
+  let pin;
+  if (arrows) pin = ["ar0","ar1","ar2","ar3"].map(id => document.getElementById(id).value).join("");
+  else pin = document.getElementById("pin_digit").value.trim();
+  try {
+    const res = await fetch("/api/pin", {
+      method:"POST", headers:{"Content-Type":"application/json"},
+      body: JSON.stringify({target, arrows, pin})
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || "failed");
+    toast("PIN 已保存");
+    await load();
+  } catch (e) { toast(e.message, true); }
+};
+
+// ---- update ----
+function renderUpdateState() {
+  const u = state.update;
+  const bar = document.getElementById("update_progress");
+  const stateEl = document.getElementById("update_state");
+  bar.style.width = (u.progress || 0) + "%";
+  const map = {idle:"", downloading:"下载中", installing:"等待安装", error:"出错"};
+  const head = map[u.state] || "";
+  stateEl.textContent = head ? head + (u.message ? "：" + u.message : "") : "";
+}
+document.getElementById("update_now").onclick = async () => {
+  const url = document.getElementById("update_url").value.trim();
+  const stateEl = document.getElementById("update_state");
+  stateEl.textContent = "已提交，电视端开始下载…";
+  try {
+    const res = await fetch("/api/update", {
+      method:"POST", headers:{"Content-Type":"application/json"},
+      body: JSON.stringify({url})
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || "failed");
+    toast("已在电视端开始下载");
+    pollUpdate();
+  } catch (e) { toast(e.message, true); }
+};
+async function pollUpdate() {
+  for (let i=0; i<40; i++) {
+    await new Promise(r => setTimeout(r, 1500));
+    try {
+      const s = await (await fetch("/api/state")).json();
+      state.update = s.update;
+      renderUpdateState();
+      if (s.update.state === "idle" || s.update.state === "error") break;
+    } catch (e) {}
+  }
+}
+
+// ---- save ----
+function collect() {
+  const v = state.values;
+  v.columns = parseInt(document.getElementById("columns").value, 10);
+  v.rows_below_dock = parseInt(document.getElementById("rows_below_dock").value, 10);
+  v.dock_opacity = parseInt(document.getElementById("dock_opacity").value, 10);
+  v.weather_city = document.getElementById("weather_city").value;
+  v.wallpaper_choice = document.getElementById("wallpaper_choice").value;
+  v.open_on_start = document.getElementById("open_on_start").value.trim();
+
+  const kv = state.kids.values;
+  const kidsPayload = {values: {
+    kind: kv.kind, enabled: kv.enabled,
+    weekday_minutes: kv.weekday_minutes, weekend_minutes: kv.weekend_minutes,
+    end_minute: kv.end_minute, break_every: kv.break_every
+  }, allowed: state.kids.allowed.slice()};
+
+  const pv = state.plan.values;
+  const planValues = {
+    quiz_gate: pv.quiz_gate, stage: pv.stage, grade: pv.grade,
+    session_minutes: pv.session_minutes, questions_per_round: pv.questions_per_round,
+    pass_ratio: pv.pass_ratio, rounds_per_day: pv.rounds_per_day, play_mode: pv.play_mode,
+    auto_next: pv.auto_next, extra_enabled: pv.extra_enabled, star_reward: pv.star_reward,
+    holiday_weekend: pv.holiday_weekend, week_slots: slots.join("")
+  };
+  SUBJECT_KEYS.forEach(k => planValues["subject_"+k] = pv["subject_"+k]);
+
+  return {
+    values: v,
+    kids: kidsPayload,
+    plan: {values: planValues},
+    update: {url: document.getElementById("update_url").value.trim()}
+  };
+}
+
 document.getElementById("save").onclick = async () => {
   const btn = document.getElementById("save");
   btn.disabled = true;
   document.getElementById("spin").textContent = "保存中…";
   try {
     const res = await fetch("/api/state", {
-      method: "POST",
-      headers: {"Content-Type": "application/json"},
-      body: JSON.stringify(collect())
+      method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify(collect())
     });
-    if (!res.ok) throw new Error("save failed");
-    state = await res.json();
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || "failed");
+    state = data;
+    initSlots();
     render();
     toast("已保存，电视上立即生效");
   } catch (e) {
-    toast("保存失败，请重试", true);
+    toast("保存失败：" + e.message, true);
   } finally {
     btn.disabled = false;
     document.getElementById("spin").textContent = "";
   }
 };
 
-document.getElementById("file").onchange = async (e) => {
+document.getElementById("file").onchange = async e => {
   const file = e.target.files[0];
   if (!file) return;
   document.getElementById("filename").textContent = "正在上传 " + file.name;
   try {
     const res = await fetch("/api/upload", {
-      method: "POST",
-      headers: {"X-Filename": file.name, "Content-Type": "application/octet-stream"},
-      body: file
+      method:"POST", headers:{"X-Filename":file.name,"Content-Type":"application/octet-stream"}, body:file
     });
     if (!res.ok) throw new Error("upload failed");
     const data = await res.json();
     await load();
     document.getElementById("wallpaper_choice").value = data.saved;
-    state.values.wallpaper_choice = data.saved;
     toast("上传成功：" + data.saved);
-  } catch (err) {
-    toast("上传失败，请重试", true);
-  }
+  } catch (err) { toast("上传失败", true); }
   document.getElementById("filename").textContent = "支持 JPG / PNG / WEBP，单张不超过 10MB";
 };
 

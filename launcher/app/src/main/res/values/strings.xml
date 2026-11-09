@@ -337,4 +337,10 @@
     <string name="sched_fri">Fri</string>
     <string name="sched_sat">Sat</string>
     <string name="sched_sun">Sun</string>
+
+    <!-- One-tap update: download the configured APK and open the system installer. -->
+    <string name="update_check">System update</string>
+    <string name="update_hint">Set the direct APK link on the phone/PC page (a GitHub release link or a real Quark Drive download link, not a share page), then tap here to install.</string>
+    <string name="update_no_url">Set the APK download URL on the phone/PC page first.</string>
+    <string name="update_started">Downloading; the installer will open when it finishes.</string>
 </resources>
