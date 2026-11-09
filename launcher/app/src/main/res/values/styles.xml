@@ -52,6 +52,21 @@
         <item name="android:layout_weight">1</item>
         <item name="android:layout_marginEnd">10dp</item>
         <item name="android:gravity">center</item>
+        <!-- Tight horizontal padding and a single line keep "100%" from wrapping and clipping. -->
+        <item name="android:paddingStart">8dp</item>
+        <item name="android:paddingEnd">8dp</item>
+        <item name="android:maxLines">1</item>
+    </style>
+
+    <!-- A full-width (pulled-across) two-column grid cell: the wrapping column carries the weight,
+         this row fills that column and may show a hint underneath. -->
+    <style name="SettingsGridCell" parent="SettingsRow">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">52dp</item>
+        <item name="android:gravity">center_vertical</item>
+        <item name="android:paddingStart">16dp</item>
+        <item name="android:paddingEnd">16dp</item>
+        <item name="android:maxLines">2</item>
     </style>
 
     <!-- Kids mode: a small choice pill. Selected and focused states come from kids_chip_bg. -->

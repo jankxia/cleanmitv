@@ -53,7 +53,10 @@
     <string name="header_settings">设置</string>
     <string name="native_settings">设置</string>
     <string name="columns_label">Apps per row</string>
+    <string name="columns_state">Apps per row: %1$d</string>
     <string name="rows_below_dock_label">Rows below dock</string>
+    <string name="rows_state">Rows below dock: %1$d</string>
+    <string name="dock_state">Dock band opacity: %1$d%%</string>
     <string name="dock_opacity_label">Dock band opacity</string>
     <string name="wallpaper_label">Wallpaper</string>
     <string name="wallpaper_state">Wallpaper: %1$s</string>

@@ -10,7 +10,6 @@ import android.content.pm.ResolveInfo;
 import android.os.Bundle;
 import android.provider.Settings;
 import android.view.View;
-import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -23,10 +22,10 @@ import java.util.List;
 public final class LauncherSettingsActivity extends Activity {
     static final String EXTRA_REORDER = "com.gathin.tvhome.extra.REORDER_FROM_SETTINGS";
     private SharedPreferences choices;
-    private final TextView[] columnChoices = new TextView[4];
-    private final TextView[] rowChoices = new TextView[4];
     private static final int[] DOCK_OPACITIES = {100, 70, 50, 30};
-    private final TextView[] dockChoices = new TextView[DOCK_OPACITIES.length];
+    private TextView columnsChoice;
+    private TextView rowsChoice;
+    private TextView dockChoice;
     private TextView wallpaperChoice;
     private TextView animationsChoice;
     private TextView ambientMotionChoice;
@@ -57,49 +56,12 @@ public final class LauncherSettingsActivity extends Activity {
         animations = config.animations;
         ambientMotion = PersonalAppearance.ambientMotion(this);
 
-        int[] ids = {R.id.columns4, R.id.columns5, R.id.columns6, R.id.columns7};
-        for (int i = 0; i < ids.length; i++) {
-            final int value = i + 4;
-            columnChoices[i] = findViewById(ids[i]);
-            columnChoices[i].setOnClickListener(v -> {
-                if (columns == value) return;
-                columns = value;
-                choices.edit().putInt("columns", value).apply();
-                changed();
-                refresh();
-            });
-        }
-        int[] rowIds = {R.id.rows0, R.id.rows1, R.id.rows2, R.id.rows3};
-        for (int i = 0; i < rowIds.length; i++) {
-            final int value = i;
-            rowChoices[i] = findViewById(rowIds[i]);
-            rowChoices[i].setOnClickListener(v -> {
-                if (rowsBelowDock == value) return;
-                rowsBelowDock = value;
-                choices.edit().putInt(Config.ROWS_BELOW_DOCK_KEY, value).apply();
-                changed();
-                refresh();
-            });
-        }
-        int[] dockIds = {R.id.dock100, R.id.dock70, R.id.dock50, R.id.dock30};
-        for (int i = 0; i < dockIds.length; i++) {
-            final int value = DOCK_OPACITIES[i];
-            dockChoices[i] = findViewById(dockIds[i]);
-            dockChoices[i].setOnClickListener(v -> {
-                if (dockOpacity == value) return;
-                dockOpacity = value;
-                choices.edit().putInt(Config.DOCK_OPACITY_KEY, value).apply();
-                changed();
-                refresh();
-            });
-        }
-        // Keep the numeric choices increasing in the Hebrew reading direction. Reorder the
-        // actual views so D-pad focus follows their positions without changing the saved values.
-        if (getResources().getBoolean(R.bool.rtl_app_grid)) {
-            reverseRow(columnChoices);
-            reverseRow(rowChoices);
-            reverseRow(dockChoices);
-        }
+        columnsChoice = findViewById(R.id.columnsChoice);
+        columnsChoice.setOnClickListener(v -> showColumnsPicker());
+        rowsChoice = findViewById(R.id.rowsChoice);
+        rowsChoice.setOnClickListener(v -> showRowsPicker());
+        dockChoice = findViewById(R.id.dockChoice);
+        dockChoice.setOnClickListener(v -> showDockPicker());
         wallpaperChoice = findViewById(R.id.wallpaperChoice);
         wallpaperChoice.setOnClickListener(v -> showWallpaperPicker());
         findViewById(R.id.weatherCityChoice).setOnClickListener(v -> showWeatherCityPicker());
@@ -202,7 +164,7 @@ public final class LauncherSettingsActivity extends Activity {
         refresh();
         PersonalAppearance.settings(this);
         if (config.launcherSettingsButton) reorderChoice.requestFocus();
-        else columnChoices[Math.max(0, Math.min(columns - 4, 3))].requestFocus();
+        else columnsChoice.requestFocus();
         setupRemote();
     }
 
@@ -252,10 +214,48 @@ public final class LauncherSettingsActivity extends Activity {
         }
     }
 
-    private void reverseRow(TextView[] views) {
-        LinearLayout row = (LinearLayout) views[0].getParent();
-        row.removeAllViews();
-        for (int i = views.length - 1; i >= 0; i--) row.addView(views[i]);
+    private void showColumnsPicker() {
+        new AlertDialog.Builder(this).setTitle(R.string.columns_label)
+                .setSingleChoiceItems(new String[]{"4", "5", "6", "7"}, columns - 4, (dialog, which) -> {
+                    int value = which + 4;
+                    dialog.dismiss();
+                    if (columns == value) return;
+                    columns = value;
+                    choices.edit().putInt("columns", value).apply();
+                    changed();
+                    refresh();
+                }).setNegativeButton(android.R.string.cancel, null).show();
+    }
+
+    private void showRowsPicker() {
+        new AlertDialog.Builder(this).setTitle(R.string.rows_below_dock_label)
+                .setSingleChoiceItems(new String[]{"0", "1", "2", "3"}, rowsBelowDock, (dialog, which) -> {
+                    dialog.dismiss();
+                    if (rowsBelowDock == which) return;
+                    rowsBelowDock = which;
+                    choices.edit().putInt(Config.ROWS_BELOW_DOCK_KEY, which).apply();
+                    changed();
+                    refresh();
+                }).setNegativeButton(android.R.string.cancel, null).show();
+    }
+
+    private void showDockPicker() {
+        String[] labels = new String[DOCK_OPACITIES.length];
+        int checked = -1;
+        for (int i = 0; i < DOCK_OPACITIES.length; i++) {
+            labels[i] = DOCK_OPACITIES[i] + "%";
+            if (DOCK_OPACITIES[i] == dockOpacity) checked = i;
+        }
+        new AlertDialog.Builder(this).setTitle(R.string.dock_opacity_label)
+                .setSingleChoiceItems(labels, checked, (dialog, which) -> {
+                    int value = DOCK_OPACITIES[which];
+                    dialog.dismiss();
+                    if (dockOpacity == value) return;
+                    dockOpacity = value;
+                    choices.edit().putInt(Config.DOCK_OPACITY_KEY, value).apply();
+                    changed();
+                    refresh();
+                }).setNegativeButton(android.R.string.cancel, null).show();
     }
 
     private void showAppearancePicker() {
@@ -480,15 +480,9 @@ public final class LauncherSettingsActivity extends Activity {
             backgroundChoice.setText("背景：" + state);
         }
         if (appearance != null) appearance.setText("外观模式：" + AppearancePolicy.label(PersonalAppearance.mode(this)));
-        for (int i = 0; i < columnChoices.length; i++) {
-            columnChoices[i].setSelected(columns == i + 4);
-        }
-        for (int i = 0; i < rowChoices.length; i++) {
-            rowChoices[i].setSelected(rowsBelowDock == i);
-        }
-        for (int i = 0; i < dockChoices.length; i++) {
-            dockChoices[i].setSelected(dockOpacity == DOCK_OPACITIES[i]);
-        }
+        if (columnsChoice != null) columnsChoice.setText(getString(R.string.columns_state, columns));
+        if (rowsChoice != null) rowsChoice.setText(getString(R.string.rows_state, rowsBelowDock));
+        if (dockChoice != null) dockChoice.setText(getString(R.string.dock_state, dockOpacity));
         animationsChoice.setText(getString(R.string.animations_state,
                 getString(animations ? R.string.on : R.string.off)));
         boolean appBackground = PersonalAppearance.appBackdrop(this);
