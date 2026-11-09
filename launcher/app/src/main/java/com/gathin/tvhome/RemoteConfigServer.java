@@ -427,16 +427,16 @@ final class RemoteConfigServer {
                     || values.has("end_minute") || values.has("break_every")) {
                 Kids.Rules r = Kids.rules();
                 if (values.has("weekday_minutes")) {
-                    r = r.withWeekday(values.getInt("weekday_minutes"));
+                    r = r.withWeekday(values.optInt("weekday_minutes"));
                 }
                 if (values.has("weekend_minutes")) {
-                    r = r.withWeekend(values.getInt("weekend_minutes"));
+                    r = r.withWeekend(values.optInt("weekend_minutes"));
                 }
                 if (values.has("end_minute")) {
-                    r = r.copy(-1, -1, -1, values.getInt("end_minute"), -1, -1);
+                    r = r.copy(-1, -1, -1, values.optInt("end_minute"), -1, -1);
                 }
                 if (values.has("break_every")) {
-                    r = r.copy(-1, -1, -1, -1, values.getInt("break_every"), -1);
+                    r = r.copy(-1, -1, -1, -1, values.optInt("break_every"), -1);
                 }
                 if (r.valid()) Kids.chooseRules(r);
                 else throw new BadRequest("resulting rules are not valid");
