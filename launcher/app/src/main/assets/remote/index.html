@@ -358,7 +358,7 @@ function renderKids() {
   seg("kind", ko.kind, kv.kind, x => LABELS.kind[x], x => kv.kind = x);
   switchEl("enabled", kv.enabled, x => kv.enabled = x);
   seg("weekday_minutes", ko.weekday_minutes, kv.weekday_minutes,
-      x => x < 0 ? "不允许" : x + " 分", x => kv.weekday_minutes = x);
+      x => x === 0 ? "不限" : (x < 0 ? "不允许" : x + " 分"), x => kv.weekday_minutes = x);
   seg("weekend_minutes", ko.weekend_minutes, kv.weekend_minutes,
       x => x === 0 ? "不限" : x + " 分", x => kv.weekend_minutes = x);
   seg("end_minute", ko.end_minute, kv.end_minute,

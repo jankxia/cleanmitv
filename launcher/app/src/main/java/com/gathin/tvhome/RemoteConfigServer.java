@@ -261,7 +261,7 @@ final class RemoteConfigServer {
 
         JSONObject options = new JSONObject();
         options.put("kind", new JSONArray(Arrays.asList("kids", "elders")));
-        options.put("weekday_minutes", new JSONArray(Arrays.asList(-1, 10, 30, 60, 90, 120)));
+        options.put("weekday_minutes", new JSONArray(Arrays.asList(0, -1, 10, 30, 60, 90, 120)));
         options.put("weekend_minutes", new JSONArray(Arrays.asList(0, 10, 30, 60, 90, 120)));
         options.put("end_minute", new JSONArray(Arrays.asList(0, 20 * 60, 21 * 60, 22 * 60)));
         options.put("break_every", new JSONArray(Arrays.asList(0, 5, 10, 30)));
@@ -760,7 +760,7 @@ final class RemoteConfigServer {
     static {
         KIDS_RULE_OPTIONS = new java.util.HashMap<>();
         KIDS_RULE_OPTIONS.put("weekday_minutes",
-                new HashSet<>(Arrays.asList(-1, 10, 30, 60, 90, 120)));
+                new HashSet<>(Arrays.asList(0, -1, 10, 30, 60, 90, 120)));
         KIDS_RULE_OPTIONS.put("weekend_minutes",
                 new HashSet<>(Arrays.asList(0, 10, 30, 60, 90, 120)));
         KIDS_RULE_OPTIONS.put("end_minute",
