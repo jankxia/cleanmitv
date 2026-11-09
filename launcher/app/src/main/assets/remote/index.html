@@ -160,11 +160,6 @@
     <div class="row"><label>程序坞透明度</label><select id="dock_opacity"></select></div>
     <h2>天气</h2>
     <div class="row"><label>天气城市</label><select id="weather_city"></select></div>
-    <h2>开机</h2>
-    <div class="row" style="display:block">
-      <label>开机自动打开的应用包名（留空关闭）</label>
-      <input type="text" id="open_on_start" placeholder="例如 com.google.android.youtube.tv" style="margin-top:8px">
-    </div>
   </details>
 
   <details class="card" open>
@@ -351,7 +346,6 @@ function render() {
   fillSelect("dock_opacity", o.dock_opacity, v.dock_opacity);
   fillSelect("weather_city", o.cities, v.weather_city);
   fillSelect("wallpaper_choice", ["none"].concat(o.wallpapers), v.wallpaper_choice);
-  document.getElementById("open_on_start").value = v.open_on_start || "";
 
   renderKids();
   renderPlan();
@@ -569,7 +563,6 @@ function collect() {
   v.dock_opacity = parseInt(document.getElementById("dock_opacity").value, 10);
   v.weather_city = document.getElementById("weather_city").value;
   v.wallpaper_choice = document.getElementById("wallpaper_choice").value;
-  v.open_on_start = document.getElementById("open_on_start").value.trim();
 
   const kv = state.kids.values;
   const kidsPayload = {values: {
