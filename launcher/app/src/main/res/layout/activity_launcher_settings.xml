@@ -8,49 +8,67 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical">
+        android:orientation="vertical"
+        android:paddingStart="72dp"
+        android:paddingEnd="72dp"
+        android:paddingTop="38dp"
+        android:paddingBottom="38dp">
 
-        <!-- Header: title on the left, the compact QR card on the right. -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/launcher_settings"
+            android:textColor="#FFFFFFFF"
+            android:textSize="34sp" />
+
+        <TextView
+            android:id="@+id/displayInfo"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:textSize="14sp"
+            android:textColor="#ACB8C1" />
+
+        <!-- Top block: four setting rows on the left, the QR card fills the same four-row height on the right. -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:gravity="center_vertical"
-            android:paddingStart="72dp"
-            android:paddingEnd="72dp"
-            android:paddingTop="38dp">
-
-            <TextView
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="@string/launcher_settings"
-                android:textColor="#FFFFFFFF"
-                android:textSize="34sp" />
-
-            <LinearLayout
-                android:id="@+id/qrCard"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:background="@drawable/bg_qr_card_dark"
-                android:orientation="horizontal"
-                android:gravity="center_vertical"
-                android:padding="16dp">
-
-                <com.gathin.tvhome.QrCodeView
-                    android:id="@+id/qrCode"
-                    android:layout_width="108dp"
-                    android:layout_height="108dp" />
+            android:layout_marginTop="20dp"
+            android:orientation="horizontal">
 
                 <LinearLayout
-                    android:layout_width="240dp"
+                    android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:layout_marginStart="16dp"
+                    android:layout_weight="1"
+                    android:layout_marginEnd="10dp"
                     android:orientation="vertical">
+
+                    <TextView android:id="@+id/appearanceChoice" style="@style/SettingsGridCell" />
+                    <TextView android:id="@+id/backgroundChoice" style="@style/SettingsGridCell" android:layout_marginTop="18dp" />
+                    <TextView android:id="@+id/columnsChoice" style="@style/SettingsGridCell" android:layout_marginTop="18dp" />
+                    <TextView android:id="@+id/rowsChoice" style="@style/SettingsGridCell" android:layout_marginTop="18dp" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:id="@+id/qrCard"
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1"
+                    android:layout_marginStart="10dp"
+                    android:background="@drawable/bg_qr_card_dark"
+                    android:orientation="vertical"
+                    android:gravity="center"
+                    android:padding="18dp">
+
+                    <com.gathin.tvhome.QrCodeView
+                        android:id="@+id/qrCode"
+                        android:layout_width="150dp"
+                        android:layout_height="150dp" />
 
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
+                        android:layout_marginTop="12dp"
                         android:text="@string/qr_title"
                         android:textColor="#FFFFFFFF"
                         android:textSize="16sp"
@@ -60,6 +78,7 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="6dp"
+                        android:gravity="center"
                         android:text="@string/qr_hint"
                         android:textColor="#FFACB8C1"
                         android:textSize="12sp" />
@@ -73,276 +92,207 @@
                         android:textSize="13sp"
                         android:textStyle="bold" />
                 </LinearLayout>
-            </LinearLayout>
         </LinearLayout>
 
-        <!-- Every setting below is a uniform two-column grid. -->
+        <!-- Remaining settings continue in the same two-column grid. -->
+
+        <!-- dock opacity | wallpaper -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:paddingStart="72dp"
-            android:paddingEnd="72dp"
-            android:paddingTop="20dp"
-            android:paddingBottom="38dp">
+            android:layout_marginTop="18dp"
+            android:orientation="horizontal">
 
-            <!-- Row 1: appearance | background -->
             <LinearLayout
-                android:layout_width="match_parent"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:orientation="horizontal">
-
-                <LinearLayout
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:layout_marginEnd="10dp"
-                    android:orientation="vertical">
-                    <TextView android:id="@+id/appearanceChoice" style="@style/SettingsGridCell" />
-                </LinearLayout>
-
-                <LinearLayout
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:layout_marginStart="10dp"
-                    android:orientation="vertical">
-                    <TextView android:id="@+id/backgroundChoice" style="@style/SettingsGridCell" />
-                </LinearLayout>
+                android:layout_weight="1"
+                android:layout_marginEnd="10dp"
+                android:orientation="vertical">
+                <TextView android:id="@+id/dockChoice" style="@style/SettingsGridCell" />
             </LinearLayout>
 
-            <TextView
-                android:id="@+id/displayInfo"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="10dp"
-                android:textSize="14sp"
-                android:textColor="#ACB8C1" />
-
-            <!-- Row 2: apps per row | rows below dock -->
             <LinearLayout
-                android:layout_width="match_parent"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="18dp"
-                android:orientation="horizontal">
+                android:layout_weight="1"
+                android:layout_marginStart="10dp"
+                android:orientation="vertical">
+                <TextView android:id="@+id/wallpaperChoice" style="@style/SettingsGridCell" />
+            </LinearLayout>
+        </LinearLayout>
 
-                <LinearLayout
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:layout_marginEnd="10dp"
-                    android:orientation="vertical">
-                    <TextView android:id="@+id/columnsChoice" style="@style/SettingsGridCell" />
-                </LinearLayout>
+        <!-- weather city | animations -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="18dp"
+            android:orientation="horizontal">
 
-                <LinearLayout
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:layout_marginStart="10dp"
-                    android:orientation="vertical">
-                    <TextView android:id="@+id/rowsChoice" style="@style/SettingsGridCell" />
-                </LinearLayout>
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:layout_marginEnd="10dp"
+                android:orientation="vertical">
+                <TextView android:id="@+id/weatherCityChoice" style="@style/SettingsGridCell" />
             </LinearLayout>
 
-            <!-- Row 3: dock opacity | wallpaper -->
             <LinearLayout
-                android:layout_width="match_parent"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="18dp"
-                android:orientation="horizontal">
+                android:layout_weight="1"
+                android:layout_marginStart="10dp"
+                android:orientation="vertical">
+                <TextView android:id="@+id/animationsChoice" style="@style/SettingsGridCell" />
+            </LinearLayout>
+        </LinearLayout>
 
-                <LinearLayout
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:layout_marginEnd="10dp"
-                    android:orientation="vertical">
-                    <TextView android:id="@+id/dockChoice" style="@style/SettingsGridCell" />
-                </LinearLayout>
+        <!-- ambient motion | follow theme -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="18dp"
+            android:orientation="horizontal">
 
-                <LinearLayout
-                    android:layout_width="0dp"
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:layout_marginEnd="10dp"
+                android:orientation="vertical">
+                <TextView android:id="@+id/ambientMotionChoice" style="@style/SettingsGridCell" />
+                <TextView
+                    android:id="@+id/ambientMotionHint"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:layout_marginStart="10dp"
-                    android:orientation="vertical">
-                    <TextView android:id="@+id/wallpaperChoice" style="@style/SettingsGridCell" />
-                </LinearLayout>
+                    android:layout_marginTop="7dp"
+                    android:text="@string/ambient_motion_hint"
+                    android:textColor="#FFACB8C1"
+                    android:textSize="14sp" />
             </LinearLayout>
 
-            <!-- Row 4: weather city | animations -->
             <LinearLayout
-                android:layout_width="match_parent"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="18dp"
-                android:orientation="horizontal">
-
-                <LinearLayout
-                    android:layout_width="0dp"
+                android:layout_weight="1"
+                android:layout_marginStart="10dp"
+                android:orientation="vertical">
+                <TextView android:id="@+id/followThemeChoice" style="@style/SettingsGridCell" android:text="@string/follow_theme" />
+                <TextView
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:layout_marginEnd="10dp"
-                    android:orientation="vertical">
-                    <TextView android:id="@+id/weatherCityChoice" style="@style/SettingsGridCell" />
-                </LinearLayout>
+                    android:layout_marginTop="7dp"
+                    android:text="@string/follow_theme_hint"
+                    android:textColor="#FFACB8C1"
+                    android:textSize="14sp" />
+            </LinearLayout>
+        </LinearLayout>
 
-                <LinearLayout
-                    android:layout_width="0dp"
+        <!-- default home | system settings -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="18dp"
+            android:orientation="horizontal">
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:layout_marginEnd="10dp"
+                android:orientation="vertical">
+                <TextView android:id="@+id/defaultHomeChoice" style="@style/SettingsGridCell" android:text="@string/home_settings" />
+                <TextView
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:layout_marginStart="10dp"
-                    android:orientation="vertical">
-                    <TextView android:id="@+id/animationsChoice" style="@style/SettingsGridCell" />
-                </LinearLayout>
+                    android:layout_marginTop="7dp"
+                    android:text="@string/home_settings_help"
+                    android:textColor="#FFACB8C1"
+                    android:textSize="14sp" />
             </LinearLayout>
 
-            <!-- Row 5: ambient motion | follow theme -->
             <LinearLayout
-                android:layout_width="match_parent"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="18dp"
-                android:orientation="horizontal">
+                android:layout_weight="1"
+                android:layout_marginStart="10dp"
+                android:orientation="vertical">
+                <TextView android:id="@+id/tvSettingsChoice" style="@style/SettingsGridCell" android:text="@string/tv_settings" />
+            </LinearLayout>
+        </LinearLayout>
 
-                <LinearLayout
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:layout_marginEnd="10dp"
-                    android:orientation="vertical">
-                    <TextView android:id="@+id/ambientMotionChoice" style="@style/SettingsGridCell" />
-                    <TextView
-                        android:id="@+id/ambientMotionHint"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="7dp"
-                        android:text="@string/ambient_motion_hint"
-                        android:textColor="#FFACB8C1"
-                        android:textSize="14sp" />
-                </LinearLayout>
+        <!-- kids/elders | update -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="18dp"
+            android:orientation="horizontal">
 
-                <LinearLayout
-                    android:layout_width="0dp"
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:layout_marginEnd="10dp"
+                android:orientation="vertical">
+                <TextView android:id="@+id/kidsChoice" style="@style/SettingsGridCell" android:text="@string/kids_settings" />
+                <TextView
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:layout_marginStart="10dp"
-                    android:orientation="vertical">
-                    <TextView android:id="@+id/followThemeChoice" style="@style/SettingsGridCell" android:text="@string/follow_theme" />
-                    <TextView
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="7dp"
-                        android:text="@string/follow_theme_hint"
-                        android:textColor="#FFACB8C1"
-                        android:textSize="14sp" />
-                </LinearLayout>
+                    android:layout_marginTop="7dp"
+                    android:text="@string/kids_settings_help"
+                    android:textColor="#FFACB8C1"
+                    android:textSize="14sp" />
             </LinearLayout>
 
-            <!-- Row 6: default home | system settings -->
             <LinearLayout
-                android:layout_width="match_parent"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="18dp"
-                android:orientation="horizontal">
-
-                <LinearLayout
-                    android:layout_width="0dp"
+                android:layout_weight="1"
+                android:layout_marginStart="10dp"
+                android:orientation="vertical">
+                <TextView android:id="@+id/updateChoice" style="@style/SettingsGridCell" android:text="@string/update_check" />
+                <TextView
+                    android:id="@+id/updateHint"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:layout_marginEnd="10dp"
-                    android:orientation="vertical">
-                    <TextView android:id="@+id/defaultHomeChoice" style="@style/SettingsGridCell" android:text="@string/home_settings" />
-                    <TextView
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="7dp"
-                        android:text="@string/home_settings_help"
-                        android:textColor="#FFACB8C1"
-                        android:textSize="14sp" />
-                </LinearLayout>
+                    android:layout_marginTop="7dp"
+                    android:text="@string/update_hint"
+                    android:textColor="#FFACB8C1"
+                    android:textSize="14sp" />
+            </LinearLayout>
+        </LinearLayout>
 
-                <LinearLayout
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:layout_marginStart="10dp"
-                    android:orientation="vertical">
-                    <TextView android:id="@+id/tvSettingsChoice" style="@style/SettingsGridCell" android:text="@string/tv_settings" />
-                </LinearLayout>
+        <!-- conditional entries, hidden by default. -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="18dp"
+            android:orientation="horizontal">
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:layout_marginEnd="10dp"
+                android:orientation="vertical">
+                <TextView
+                    android:id="@+id/reorderChoice"
+                    style="@style/SettingsGridCell"
+                    android:text="@string/reorder"
+                    android:visibility="gone" />
             </LinearLayout>
 
-            <!-- Row 7: kids/elders | update -->
             <LinearLayout
-                android:layout_width="match_parent"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="18dp"
-                android:orientation="horizontal">
-
-                <LinearLayout
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:layout_marginEnd="10dp"
-                    android:orientation="vertical">
-                    <TextView android:id="@+id/kidsChoice" style="@style/SettingsGridCell" android:text="@string/kids_settings" />
-                    <TextView
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="7dp"
-                        android:text="@string/kids_settings_help"
-                        android:textColor="#FFACB8C1"
-                        android:textSize="14sp" />
-                </LinearLayout>
-
-                <LinearLayout
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:layout_marginStart="10dp"
-                    android:orientation="vertical">
-                    <TextView android:id="@+id/updateChoice" style="@style/SettingsGridCell" android:text="@string/update_check" />
-                    <TextView
-                        android:id="@+id/updateHint"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="7dp"
-                        android:text="@string/update_hint"
-                        android:textColor="#FFACB8C1"
-                        android:textSize="14sp" />
-                </LinearLayout>
-            </LinearLayout>
-
-            <!-- Row 8: conditional entries, hidden by default. -->
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="18dp"
-                android:orientation="horizontal">
-
-                <LinearLayout
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:layout_marginEnd="10dp"
-                    android:orientation="vertical">
-                    <TextView
-                        android:id="@+id/reorderChoice"
-                        style="@style/SettingsGridCell"
-                        android:text="@string/reorder"
-                        android:visibility="gone" />
-                </LinearLayout>
-
-                <LinearLayout
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:layout_marginStart="10dp"
-                    android:orientation="vertical">
-                    <TextView
-                        android:id="@+id/openOnStartChoice"
-                        style="@style/SettingsGridCell"
-                        android:visibility="gone" />
-                </LinearLayout>
+                android:layout_weight="1"
+                android:layout_marginStart="10dp"
+                android:orientation="vertical">
+                <TextView
+                    android:id="@+id/openOnStartChoice"
+                    style="@style/SettingsGridCell"
+                    android:visibility="gone" />
             </LinearLayout>
         </LinearLayout>
     </LinearLayout>
