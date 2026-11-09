@@ -69,6 +69,18 @@
         <item name="android:maxLines">2</item>
     </style>
 
+    <!-- Section header: same-category rows are grouped under one small label. -->
+    <style name="SettingsGroupHeader">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_marginTop">26dp</item>
+        <item name="android:layout_marginBottom">2dp</item>
+        <item name="android:textColor">#FF8FA0AE</item>
+        <item name="android:textSize">15sp</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:letterSpacing">0.02</item>
+    </style>
+
     <!-- Kids mode: a small choice pill. Selected and focused states come from kids_chip_bg. -->
     <style name="KidsChip">
         <item name="android:layout_width">wrap_content</item>

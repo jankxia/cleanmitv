@@ -339,4 +339,13 @@
     <string name="update_hint">在手机/电脑网页填写 APK 直链（GitHub Release 链接或夸克网盘的真实下载直链，不能是夸克分享网页），点这里即可下载安装。</string>
     <string name="update_no_url">请先在手机/电脑网页填写 APK 下载地址。</string>
     <string name="update_started">开始下载，完成后会自动弹出安装。</string>
+
+    <!-- 设置页分组标题：同类设置连续排列。 -->
+    <string name="group_appearance">外观与布局</string>
+    <string name="group_dock">程序坞</string>
+    <string name="group_wallpaper">壁纸与背景</string>
+    <string name="group_effects">动态效果</string>
+    <string name="group_weather">天气</string>
+    <string name="group_system">系统入口</string>
+    <string name="group_features">功能</string>
 </resources>

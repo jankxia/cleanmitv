@@ -346,4 +346,13 @@
     <string name="update_hint">Set the direct APK link on the phone/PC page (a GitHub release link or a real Quark Drive download link, not a share page), then tap here to install.</string>
     <string name="update_no_url">Set the APK download URL on the phone/PC page first.</string>
     <string name="update_started">Downloading; the installer will open when it finishes.</string>
+
+    <!-- Settings page section headers: same-category rows stay grouped together. -->
+    <string name="group_appearance">Appearance &amp; layout</string>
+    <string name="group_dock">Dock</string>
+    <string name="group_wallpaper">Wallpaper &amp; background</string>
+    <string name="group_effects">Motion effects</string>
+    <string name="group_weather">Weather</string>
+    <string name="group_system">System</string>
+    <string name="group_features">Features</string>
 </resources>
