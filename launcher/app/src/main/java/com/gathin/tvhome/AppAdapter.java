@@ -440,7 +440,9 @@ public class AppAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         float density = parent.getResources().getDisplayMetrics().density;
         int width = parent.getWidth() > 0 ? parent.getWidth() : parent.getMeasuredWidth();
         int inner = width - parent.getPaddingLeft() - parent.getPaddingRight();
-        int w = tileWidthPx(inner, parent.getHeight(), dockSize, rowsBelowDock, dockTitle, dockRow, density), h = tileHeightPx(w);
+        // The dock now sits on the bottom edge, so no row is kept visible under it and the tiles take the size the
+        // columns alone allow: rows_below_dock no longer shrinks them (see MainActivity.fitDockPadding).
+        int w = tileWidthPx(inner, parent.getHeight(), dockSize, 0, dockTitle, dockRow, density), h = tileHeightPx(w);
         View card = v.findViewById(R.id.card);
         ViewGroup.LayoutParams cardLp = card.getLayoutParams();
         cardLp.width = w;

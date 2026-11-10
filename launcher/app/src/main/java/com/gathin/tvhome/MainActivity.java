@@ -826,7 +826,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         int rowsBelowDock = cfg.rowsBelowDock;
         // Item height follows the tile size, which follows the columns and the rows that must fit (AppAdapter.tileWidthPx).
         int inner = width - grid.getPaddingLeft() - grid.getPaddingRight();
-        int tileW = AppAdapter.tileWidthPx(inner, height, COLUMNS, rowsBelowDock, cfg.dockTitle, dockRow, density);
+        int tileW = AppAdapter.tileWidthPx(inner, height, COLUMNS, 0, cfg.dockTitle, dockRow, density);
         int itemH = AppAdapter.itemHeightPx(AppAdapter.tileHeightPx(tileW), density);
         int dockH = itemH + (int) (AppAdapter.DOCK_EXTRA_DP * density);   // item height plus DockDecoration offsets
         // The dock sits on the bottom edge in every mode (normal, kids, elders), so nothing is reserved under it
@@ -834,8 +834,11 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         // leaving the icons parked in the middle of a half-empty screen.
         // The App library pill is drawn in the row right after the dock, so its 84dp strip stays reserved. The
         // adapter is the one that knows whether the footer exists (Kids/Elders Home keeps it off).
-        int pillH = adapter != null && adapter.getItemCount() > adapter.appCount()
-                ? (int) (PILL_ROW_DP * density) : 0;
+        // The App library pill is drawn in the row right after the dock only while the dock is the whole Home (fewer
+        // apps than a full dock row); then its 84dp strip stays reserved under the dock. Once apps beyond that row
+        // exist the pill sits at the end of the list, far below the bottom edge, so reserving for it would only lift
+        // the dock into the middle of the screen.
+        int pillH = adapter != null && adapter.isLibraryAt(COLUMNS) ? (int) (PILL_ROW_DP * density) : 0;
         // Keep the hero below the header when the library is enabled on a short screen,
         // even when the theme requests an extra visible row below the dock.
         int shelfClearance = cfg.appLibrary ? hero.getMeasuredHeight() + (int) (40 * density) : 0;
