@@ -196,6 +196,10 @@ launcher/app/src/main/res/drawable/
 - 下载地址完全由用户配置，可能指向局域网 HTTP 服务器或模拟器，因此 `res/xml/network_security_config.xml` 对所有主机放行明文（`cleartextTrafficPermitted="true"`）；夸克 / GitHub 的实际链接均为 HTTPS，不受影响。
 - 已在雷电模拟器（Android 9）端到端实测：进度到 100%、成功调起安装器并完成同版本覆盖安装；旧版降级会被系统以 `INSTALL_FAILED_VERSION_DOWNGRADE` 正常拒绝，属系统保护而非本桌面缺陷。
 
+**Settings page layout (2.9.3)**
+
+The hidden settings page is a two-column grid on TV. Appearance & layout keeps three rows on the left (appearance mode / follow theme / weather city) with the QR card on the right; the dock group puts dock opacity and apps-per-row in the left column and rows-below-dock in the right one. The two motion toggles swapped places (animation left, ambient background right). Every explanatory line under a button is hidden by default and only appears while that button holds focus, so the page stays compact on a TV screen.
+
 <details>
 <summary>📜 历史版本更新记录（v2.7.7 – v2.9.0，点击展开）</summary>
 

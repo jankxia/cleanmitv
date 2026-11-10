@@ -211,6 +211,8 @@ TV_HOST=192.168.1.50 tools/theme.sh --reset
 
 由于下载地址完全由用户自己配置，且可能指向局域网内的 HTTP 服务器或模拟器，`res/xml/network_security_config.xml` 对所有主机放行明文流量（`cleartextTrafficPermitted="true"`）；夸克网盘与 GitHub 的实际链接均为 HTTPS，不受影响。该流程已在雷电模拟器（Android 9）端到端实测：下载进度到 100%、成功调起安装器并完成安装（同版本覆盖；旧版降级会被系统以 `INSTALL_FAILED_VERSION_DOWNGRADE` 正常拒绝，属系统保护而非桌面缺陷）。
 
+**设置页布局（2.9.3）**：隐藏设置页在电视上是两栏栅格。「外观与布局」左列固定三行（外观模式 / 跟随主题 / 天气城市），右侧是扫码卡片；「程序坞」左列上下为程序坞透明度与每行应用数量，右列为程序坞下方行数。「动态效果」组两个开关左右对调（左=动态效果，右=动态背景）。按钮下方的说明文字默认隐藏，只在焦点落到该按钮时才展开，电视上更紧凑；二维码卡片高度自适应，不会裁掉提示与地址。
+
 ### 语言、屏保与遥控器
 
 以下 ADB 命令使用 macOS/Linux 的虚拟环境路径；Windows 将前缀 `tools/venv/bin/python -I tools/tv.py` 换为 `tools\venv\Scripts\python.exe -I tools\tv.py`。
