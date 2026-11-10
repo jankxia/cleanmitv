@@ -103,6 +103,8 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
     static final String ACTION_VIEW_INPUTS = "com.android.tv.action.VIEW_INPUTS";
     /** Tiles per row and dock slots (res/values/config.xml, columns). Set in onCreate. */
     static int COLUMNS = 4;
+    /** Height of the App library pill row (row_app_library.xml), kept free under the dock when it is shown. */
+    private static final int PILL_ROW_DP = 84;
     private boolean rtlAppGrid;
     private static final long MINUTE_MS = 60_000L;
     private static final long STATS_MS = 10_000L;
@@ -827,11 +829,17 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         int tileW = AppAdapter.tileWidthPx(inner, height, COLUMNS, rowsBelowDock, cfg.dockTitle, dockRow, density);
         int itemH = AppAdapter.itemHeightPx(AppAdapter.tileHeightPx(tileW), density);
         int dockH = itemH + (int) (AppAdapter.DOCK_EXTRA_DP * density);   // item height plus DockDecoration offsets
-        int gridRows = itemH * rowsBelowDock;
+        // The dock sits on the bottom edge in every mode (normal, kids, elders), so nothing is reserved under it
+        // any more: rows_below_dock now only sizes the tiles, and further rows scroll up over the dock instead of
+        // leaving the icons parked in the middle of a half-empty screen.
+        // The App library pill is drawn in the row right after the dock, so its 84dp strip stays reserved. The
+        // adapter is the one that knows whether the footer exists (Kids/Elders Home keeps it off).
+        int pillH = adapter != null && adapter.getItemCount() > adapter.appCount()
+                ? (int) (PILL_ROW_DP * density) : 0;
         // Keep the hero below the header when the library is enabled on a short screen,
         // even when the theme requests an extra visible row below the dock.
         int shelfClearance = cfg.appLibrary ? hero.getMeasuredHeight() + (int) (40 * density) : 0;
-        int want = Math.max(shelfClearance, height - dockH - gridRows - (int) (AppAdapter.BOTTOM_ROOM_DP * density));
+        int want = Math.max(shelfClearance, height - dockH - pillH - (int) (AppAdapter.BOTTOM_ROOM_DP * density));
         // Where the rows cannot fit even at the smallest tile (3 rows with the title on), the title keeps its
         // room above the dock and the last rows run off the bottom instead of the title drawing over the clock.
         if (dockRow && cfg.dockTitle && rowsBelowDock > 0) want = Math.max(want, (int) (AppAdapter.TITLE_ROOM_DP * density));
@@ -840,9 +848,6 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         // A single row never shows the names under its tiles (the title above the row names the app), so the
         // 7dp gap and 22dp label item_app.xml keeps for them would only lift the row: sit it that much lower.
         if (singleRow && !cfg.alwaysShowNames) want += (int) (29 * density);
-        // rows_below_dock 0: the next grid row otherwise peeks a few dozen pixels above the screen edge. Park
-        // the dock a little lower so that row starts off-screen (pressing Down still scrolls it into view).
-        if (dockRow && !singleRow && rowsBelowDock == 0) want += (int) (AppAdapter.HIDE_NEXT_ROW_DP * density);
         if (grid.getPaddingTop() == want) return;
         grid.setPadding(grid.getPaddingLeft(), want, grid.getPaddingRight(), grid.getPaddingBottom());
         // A vertical grid parks the dock on the new padding line by scrolling (onTileFocused); a sideways
