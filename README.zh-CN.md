@@ -198,6 +198,19 @@ TV_HOST=192.168.1.50 tools/theme.sh --reset
 
 主题格式和可用配置见 [`themes/README.md`](themes/README.md)。
 
+### 手机/电脑远程配置与一键更新
+
+隐藏设置页内置一个零依赖的局域网 HTTP 服务（手写 `ServerSocket`，无第三方库）。打开该页后，用手机或电脑扫描页面上的二维码，或在浏览器打开页面底部的地址，即可在手机/电脑上完成本页所有设置，无需在电视上逐项操作：
+
+- 外观布局、程序坞、壁纸、动效、天气等基础设置；
+- 儿童/老人模式的可用应用、时长限制与应用白名单；
+- 答题计划的学段、科目、题量与周网格；
+- 远程重置儿童、老人和管理员 PIN；上传壁纸图片。
+
+**一键版本更新**：在「版本更新」分组填入 APK 的**直链**（GitHub Release 或夸克网盘导出的下载地址；夸克分享页是 HTML 页面，需使用其暴露的文件直链），保存后点更新。桌面用原生 `HttpURLConnection` 下载、自动跟随重定向、实时回报进度，先写 `update.part` 再改名，校验 ZIP 的 PK 头，随后通过自写的 `ApkShareProvider` 以 content URI 调起系统安装器。Android 8 以上若未授予「安装未知应用」权限，会先引导前往授权，再重新更新即可。
+
+由于下载地址完全由用户自己配置，且可能指向局域网内的 HTTP 服务器或模拟器，`res/xml/network_security_config.xml` 对所有主机放行明文流量（`cleartextTrafficPermitted="true"`）；夸克网盘与 GitHub 的实际链接均为 HTTPS，不受影响。该流程已在雷电模拟器（Android 9）端到端实测：下载进度到 100%、成功调起安装器并完成安装（同版本覆盖；旧版降级会被系统以 `INSTALL_FAILED_VERSION_DOWNGRADE` 正常拒绝，属系统保护而非桌面缺陷）。
+
 ### 语言、屏保与遥控器
 
 以下 ADB 命令使用 macOS/Linux 的虚拟环境路径；Windows 将前缀 `tools/venv/bin/python -I tools/tv.py` 换为 `tools\venv\Scripts\python.exe -I tools\tv.py`。

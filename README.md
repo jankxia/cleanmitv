@@ -193,6 +193,8 @@ launcher/app/src/main/res/drawable/
 
 - 安装器不直接读应用私有目录，而是经自写 `ApkShareProvider`（`ContentProvider`，authority `${applicationId}.apkshare`）暴露；该 Provider 只读、对路径做 canonical 校验，无法通过 `..` 逃逸到其他文件。
 - Manifest 声明 `REQUEST_INSTALL_PACKAGES`；更新状态（`state / progress / message`）经 `/api/state` 的 `update` 字段返回，网页可轮询进度。
+- 下载地址完全由用户配置，可能指向局域网 HTTP 服务器或模拟器，因此 `res/xml/network_security_config.xml` 对所有主机放行明文（`cleartextTrafficPermitted="true"`）；夸克 / GitHub 的实际链接均为 HTTPS，不受影响。
+- 已在雷电模拟器（Android 9）端到端实测：进度到 100%、成功调起安装器并完成同版本覆盖安装；旧版降级会被系统以 `INSTALL_FAILED_VERSION_DOWNGRADE` 正常拒绝，属系统保护而非本桌面缺陷。
 
 <details>
 <summary>📜 历史版本更新记录（v2.7.7 – v2.9.0，点击展开）</summary>
