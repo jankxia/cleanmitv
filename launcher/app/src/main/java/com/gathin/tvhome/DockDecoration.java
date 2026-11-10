@@ -85,6 +85,10 @@ public class DockDecoration extends RecyclerView.ItemDecoration {
     public void getItemOffsets(@NonNull Rect outRect, @NonNull View view, @NonNull RecyclerView parent,
                                @NonNull RecyclerView.State state) {
         int pos = parent.getChildAdapterPosition(view);
+        // The App-library footer follows the last app row and spans every column. The dock's offsets and the
+        // centring shift below are for tiles, and applied here they slid the whole row right and narrowed it, so the
+        // pill ended up off-centre; the row lays itself out, so give it no insets at all.
+        if (pos >= 0 && adapter != null && adapter.isLibraryAt(pos)) return;
         if (pos >= 0 && (singleRow || pos < dockSize)) {
             outRect.top = (int) (6 * density);
             outRect.bottom = (int) (12 * density);
