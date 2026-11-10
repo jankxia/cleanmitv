@@ -163,9 +163,21 @@ public final class LauncherSettingsActivity extends Activity {
         displayInfo.setText("桌面显示：" + Math.round(getWindowManager().getDefaultDisplay().getRefreshRate()) + " Hz · 使用系统可用的最高刷新率");
         refresh();
         PersonalAppearance.settings(this);
+        // Hints are hidden until their row is focused, keeping the page compact until a row is selected.
+        bindHint(R.id.ambientMotionChoice, R.id.ambientMotionHint);
+        bindHint(R.id.defaultHomeChoice, R.id.defaultHomeHint);
+        bindHint(R.id.kidsChoice, R.id.kidsHint);
+        bindHint(R.id.updateChoice, R.id.updateHint);
         if (config.launcherSettingsButton) reorderChoice.requestFocus();
         else columnsChoice.requestFocus();
         setupRemote();
+    }
+
+    /** Show the row's hint only while it holds focus; hide it again when focus moves away. */
+    private void bindHint(int buttonId, int hintId) {
+        View hint = findViewById(hintId);
+        findViewById(buttonId).setOnFocusChangeListener((v, hasFocus) ->
+                hint.setVisibility(hasFocus ? View.VISIBLE : View.GONE));
     }
 
     /** Start the LAN server and render the QR code/URL a phone or computer can open on the same Wi-Fi. */
@@ -487,7 +499,8 @@ public final class LauncherSettingsActivity extends Activity {
                 getString(animations ? R.string.on : R.string.off)));
         boolean appBackground = PersonalAppearance.appBackdrop(this);
         ambientMotionChoice.setVisibility(appBackground ? View.VISIBLE : View.GONE);
-        findViewById(R.id.ambientMotionHint).setVisibility(appBackground ? View.VISIBLE : View.GONE);
+        // The hint's visibility is owned by focus; only force it hidden when the whole row is unavailable.
+        if (!appBackground) findViewById(R.id.ambientMotionHint).setVisibility(View.GONE);
         ambientMotionChoice.setText(getString(R.string.ambient_motion_state,
                 getString(animations && ambientMotion ? R.string.on : R.string.off)));
         ambientMotionChoice.setEnabled(animations);
