@@ -96,6 +96,14 @@
         <item name="android:clickable">true</item>
     </style>
 
+    <!-- Six-hour-limit rows: the six chips have to share one line in a 369dp column, so they drop KidsChip's
+         64dp floor and 16dp side padding instead of being squeezed and clipped at the end of the row. -->
+    <style name="KidsChipTight" parent="KidsChip">
+        <item name="android:minWidth">0dp</item>
+        <item name="android:paddingStart">10dp</item>
+        <item name="android:paddingEnd">10dp</item>
+    </style>
+
     <!-- Kids mode: the wide action button at the bottom of the rules column. -->
     <style name="KidsButton" parent="KidsChip">
         <item name="android:layout_height">50dp</item>
