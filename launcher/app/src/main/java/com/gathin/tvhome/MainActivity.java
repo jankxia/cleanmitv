@@ -838,7 +838,8 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         // apps than a full dock row); then its 84dp strip stays reserved under the dock. Once apps beyond that row
         // exist the pill sits at the end of the list, far below the bottom edge, so reserving for it would only lift
         // the dock into the middle of the screen.
-        int pillH = adapter != null && adapter.isLibraryAt(COLUMNS) ? (int) (PILL_ROW_DP * density) : 0;
+        int pillH = adapter != null && adapter.getItemCount() > adapter.appCount() && adapter.isLibraryAt(COLUMNS)
+                ? (int) (PILL_ROW_DP * density) : 0;
         // Keep the hero below the header when the library is enabled on a short screen,
         // even when the theme requests an extra visible row below the dock.
         int shelfClearance = cfg.appLibrary ? hero.getMeasuredHeight() + (int) (40 * density) : 0;
@@ -1313,6 +1314,9 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         // Kids/Elders mode shows only the tiles chosen for it, in the order picked.
         adapter.setKidsMode(Kids.active() ? Kids.allowed() : null);
         adapter.reload(cards.isEmpty() ? none : CardFeature.run(() -> Cards.shown(cards), none), leanback);
+        // The padding was worked out while the grid still held the previous (or no) tiles, and the dock position
+        // depends on how many rows and whether the library pill now exist, so fit it again once the tiles are in.
+        refitDockAfterReload();
         // The mode's guard knows what belongs on this Home (and no TV inputs of its own to keep).
         Kids.notePackages(new HashSet<>(adapter.packages()), Collections.emptySet());
         lastFocusedKey = returnKey;
