@@ -67,8 +67,8 @@
 
                 <com.gathin.tvhome.QrCodeView
                     android:id="@+id/qrCode"
-                    android:layout_width="96dp"
-                    android:layout_height="96dp" />
+                    android:layout_width="108dp"
+                    android:layout_height="108dp" />
 
                 <TextView
                     android:layout_width="wrap_content"
