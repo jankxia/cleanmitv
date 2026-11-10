@@ -850,6 +850,15 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         if (singleRow && !cfg.alwaysShowNames) want += (int) (29 * density);
         if (grid.getPaddingTop() == want) return;
         grid.setPadding(grid.getPaddingLeft(), want, grid.getPaddingRight(), grid.getPaddingBottom());
+        // Park the dock row itself on the new line. Without this the grid keeps whatever scroll offset the previous
+        // padding left it at, and once rows below the dock make the content taller than the screen the first row
+        // ends up somewhere in the middle instead of on the bottom edge.
+        if (dockRow) grid.post(() -> {
+            RecyclerView.LayoutManager lm = grid.getLayoutManager();
+            if (lm instanceof GridLayoutManager) {
+                ((GridLayoutManager) lm).scrollToPositionWithOffset(0, 0);
+            }
+        });
         // A vertical grid parks the dock on the new padding line by scrolling (onTileFocused); a sideways
         // row cannot scroll vertically, and the layout request made from inside this layout pass is
         // dropped, so lay the row out again on the next frame. The glass and the title were placed for the
