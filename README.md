@@ -200,6 +200,10 @@ launcher/app/src/main/res/drawable/
 
 The hidden settings page is a two-column grid on TV. Appearance & layout keeps three rows on the left (appearance mode / follow theme / weather city) with the QR card on the right; the dock group puts dock opacity and apps-per-row in the left column and rows-below-dock in the right one. The two motion toggles swapped places (animation left, ambient background right). Every explanatory line under a button is hidden by default and only appears while that button holds focus, so the page stays compact on a TV screen.
 
+**Dock on the bottom edge, no more clipped settings (2.9.4)**
+
+The dock sits on the bottom edge of the screen, horizontally centred, in all three modes (normal, kids, elders): the dock row ends where the screen ends, so the next row no longer peeks out underneath it, and tile size now follows the column count alone — rows_below_dock only decides how many rows are reachable by scrolling instead of lifting the dock into the middle of a half-empty screen. On the kids/elders setup page the three bottom buttons were squeezed into one row and "turn off mode" collapsed into a narrow bar; it now has a row of its own, and the six time options for weekday/weekend use a tighter style that keeps all six on one line, so 90 and 120 minutes are no longer cut off or squeezed.
+
 <details>
 <summary>📜 历史版本更新记录（v2.7.7 – v2.9.0，点击展开）</summary>
 
