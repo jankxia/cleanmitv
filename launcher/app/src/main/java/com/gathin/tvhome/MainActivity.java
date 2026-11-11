@@ -2706,13 +2706,12 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
             else card.requestFocus();
             return;
         }
-        // Not laid out yet: scroll there, then focus once the scroll settles.
+        // Not laid out yet: scroll there and focus the tile as soon as the grid has it. A smooth scroll that
+        // goes nowhere never reports IDLE, so waiting for the scroll listener alone can leave Home with no
+        // highlight at all until a key is pressed.
         if (!animations) {
             grid.scrollToPosition(pos);
-            grid.post(() -> {
-                RecyclerView.ViewHolder h = grid.findViewHolderForAdapterPosition(pos);
-                if (h != null) h.itemView.findViewById(R.id.card).requestFocus();
-            });
+            focusTileWhenLaidOut(pos, 5);
             return;
         }
         pendingFocusScroll = new RecyclerView.OnScrollListener() {
@@ -2729,6 +2728,26 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         };
         grid.addOnScrollListener(pendingFocusScroll);
         grid.smoothScrollToPosition(pos);
+        focusTileWhenLaidOut(pos, 5);
+    }
+
+    /** Focuses the tile at {@code pos} once the grid has laid it out, checking back for a few frames only. */
+    private void focusTileWhenLaidOut(int pos, int tries) {
+        handler.postDelayed(new Runnable() {
+            private int left = tries;
+
+            @Override
+            public void run() {
+                if (tileHasFocus() || isFinishing()) return;
+                RecyclerView.ViewHolder h = grid.findViewHolderForAdapterPosition(pos);
+                if (h != null) {
+                    cancelPendingFocusScroll();
+                    h.itemView.findViewById(R.id.card).requestFocus();
+                } else if (--left > 0) {
+                    handler.postDelayed(this, 80L);
+                }
+            }
+        }, 80L);
     }
 
     // ---- top bar ---------------------------------------------------------------------------------
