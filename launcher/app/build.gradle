@@ -29,8 +29,8 @@ android {
         applicationId providers.gradleProperty('launcherApplicationId').getOrElse('com.gathin.tvhome')
         minSdk 26
         targetSdk 34
-        versionCode 25
-        versionName '2.9.4-bottom-dock'
+        versionCode 26
+        versionName '2.9.5-kids-focus'
         resConfigs 'en', 'zh-rCN'
     }
 

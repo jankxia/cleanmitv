@@ -204,9 +204,12 @@ The hidden settings page is a two-column grid on TV. Appearance & layout keeps t
 
 The dock sits on the bottom edge of the screen, horizontally centred, in all three modes (normal, kids, elders): the dock row ends where the screen ends, so the next row no longer peeks out underneath it, and tile size now follows the column count alone — rows_below_dock only decides how many rows are reachable by scrolling instead of lifting the dock into the middle of a half-empty screen. On the kids/elders setup page the three bottom buttons were squeezed into one row and "turn off mode" collapsed into a narrow bar; it now has a row of its own, and the six time options for weekday/weekend use a tighter style that keeps all six on one line, so 90 and 120 minutes are no longer cut off or squeezed.
 
+**The kids Home starts with its highlight on a tile (2.9.5)**
+
+Home used to come up in kids/elders mode with the selection box floating over the wallpaper instead of sitting on a tile — and sometimes with no selection box at all, until a key was pressed. The dock's line comes from the grid's top padding, and a padding change moves the tiles without scrolling the grid, so the highlight — an overlay that only follows scroll events — kept the size and the place of the tile it was last fitted to, while the reloaded dock tiles had already moved down to the bottom edge. It now re-anchors itself whenever the focused tile is no longer under it (2dp of drift, or any change in tile size, is enough), it refits right after every reload and after every dock padding pass, and Home hands the dock its focus back when a focus request issued before the window could take focus was dropped.
+
 <details>
 <summary>📜 历史版本更新记录（v2.7.7 – v2.9.0，点击展开）</summary>
-
 ## v2.7.7 修复记录（实机反馈）
 
 小米电视（MiTV-ASTR0，包名 `com.ts.launcher`）上装机后反馈的 5 个问题：

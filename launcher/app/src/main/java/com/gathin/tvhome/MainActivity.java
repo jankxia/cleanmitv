@@ -369,6 +369,15 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         }
     };
     private boolean dayAppearance;
+    /**
+     * Android refuses a requestFocus issued before Home's window has focus, and the tiles are then left without
+     * any highlight — the selection box missing until a key is pressed. Try once more after the window is up;
+     * a key press cancels this, so a parent who already moved the focus keeps it.
+     */
+    private final Runnable ensureDockFocus = () -> {
+        if (!resumed || isFinishing() || appLibrary != null || reordering || tileHasFocus()) return;
+        focusTile(Math.max(0, lastFocused));
+    };
     private final Runnable minuteTick = new Runnable() {
         @Override
         public void run() {
@@ -864,6 +873,10 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
             if (lm instanceof GridLayoutManager) {
                 ((GridLayoutManager) lm).scrollToPositionWithOffset(0, 0);
             }
+            // The new padding moves the dock row down the screen. That is no scroll (the grid's bounds stay the
+            // same), so neither onScrolled nor the layout listener runs, and the focus highlight would be left on
+            // the row's old place — a white box floating over the wallpaper with no tile under it.
+            refitGlass();
         });
         // A vertical grid parks the dock on the new padding line by scrolling (onTileFocused); a sideways
         // row cannot scroll vertically, and the layout request made from inside this layout pass is
@@ -887,7 +900,13 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
     /** A mode change swaps the tiles; put the dock back where the grid's size now wants it. */
     private void refitDockAfterReload() {
         if (grid == null) return;
-        grid.post(() -> fitDockPadding(grid.getWidth(), grid.getHeight()));
+        grid.post(() -> {
+            fitDockPadding(grid.getWidth(), grid.getHeight());
+            // The reload also changes the tiles themselves — kids and elders modes tile far bigger than the grid
+            // does — and the grid keeps its bounds, so no layout callback follows. Without this the highlight of
+            // the focused tile would keep the size and the place it had on the tiles the mode replaced.
+            refitGlass();
+        });
     }
 
     /** Kids/Elders mode was on at the last applyKidsMode; null until the first look. */
@@ -1342,10 +1361,18 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         });
     }
 
+    /** True when a tile holds the input focus; the focus highlight is only ever drawn behind one of those. */
+    private boolean tileHasFocus() {
+        View focused = getCurrentFocus();
+        return focused != null && focused.getId() == R.id.card;
+    }
+
     /** Any key on Home restarts the countdown to the idle clock. */
     @Override
     public void onUserInteraction() {
         super.onUserInteraction();
+        // The user found a focus of their own: no retry may take it away.
+        handler.removeCallbacks(ensureDockFocus);
         restartIdleClock();
     }
 
@@ -1367,6 +1394,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         ambient.animate().cancel();
         heroArt.animate().cancel();
         handler.removeCallbacks(minuteTick);
+        handler.removeCallbacks(ensureDockFocus);
         stopStats();
         if (diya != null) diya.stop();
         cancelPendingFocusScroll();
@@ -1428,6 +1456,11 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
             // ends up here: put the dock on its line for the grid's real size, in case the last word on
             // the padding came from a pass that measured it as nothing.
             refitDockAfterReload();
+            // A focus request made before the window could take focus is refused by Android, and Home then comes up
+            // with no highlight at all — the dock's selection box simply missing. Give it back once the window can.
+            if (tilesReady && appLibrary == null && !reordering && !tileHasFocus()) restoreFocus();
+            handler.removeCallbacks(ensureDockFocus);
+            handler.postDelayed(ensureDockFocus, 700);
             startPendingSettingsReorder();
             if (libraryFocusPending && appLibrary == null) focusLibrary();
             showCardPrompt();
@@ -1953,7 +1986,17 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         float scale = adapter.focusScale();
         int w = (int) (card.getWidth() * scale + 2 * pad);
         int h = (int) (card.getHeight() * scale + 2 * pad);
-        if (!glassShown || card.getWidth() != glassCardW || glass.getWidth() != w || glass.getHeight() != h) {
+        // The glass is an overlay in root coordinates, so it only follows the grid through onScrolled. A tile that
+        // moved because the grid's padding changed (the dock line, see fitDockPadding) or was laid out again after
+        // the focus request left the highlight on the old spot, with nothing drawn under it. Compare the settled
+        // target with the tile's real centre and put it back whenever the two parted.
+        Rect r = tileRect;
+        r.set(0, 0, card.getWidth(), card.getHeight());
+        root.offsetDescendantRectToMyCoords(card, r);
+        boolean offCentre = glassShown
+                && (Math.abs(glassTargetX + glass.getWidth() / 2f - r.exactCenterX()) > 2f * density
+                    || Math.abs(glassTargetY + glass.getHeight() / 2f - r.exactCenterY()) > 2f * density);
+        if (offCentre || !glassShown || card.getWidth() != glassCardW || glass.getWidth() != w || glass.getHeight() != h) {
             onTileFocused(pos, card);
         }
     }
