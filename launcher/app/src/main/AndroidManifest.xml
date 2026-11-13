@@ -113,11 +113,14 @@
             </intent-filter>
         </activity>
 
+        <!-- Glass window: the Home wallpaper stays behind the page's glass sheet, like the top pills.
+             No screenOrientation: requesting one from a translucent activity throws on Android 8.0, and
+             these pages always open on Home's landscape task anyway. -->
         <activity
             android:name=".LauncherSettingsActivity"
             android:exported="false"
             android:excludeFromRecents="true"
-            android:screenOrientation="landscape" />
+            android:theme="@style/Theme.TvHome.Glass" />
         <!-- The system input switcher (com.android.tv.action.VIEW_INPUTS), which is what the remote's Input
              button becomes through the TV's Live TV app or InputKeyService. Disabled here and switched on by
              MainActivity only while handle_view_inputs is true (config.xml or a theme), for sets whose stock
@@ -158,8 +161,7 @@
             android:name=".KidsSetupActivity"
             android:exported="false"
             android:excludeFromRecents="true"
-            android:screenOrientation="landscape"
-            android:theme="@style/Theme.TvHome" />
+            android:theme="@style/Theme.TvHome.Glass" />
         <!-- The full-screen Kids lock: nothing behind it is reachable until a parent's PIN. -->
         <activity
             android:name=".KidsLockActivity"
@@ -191,8 +193,7 @@
             android:exported="false"
             android:excludeFromRecents="true"
             android:noHistory="true"
-            android:screenOrientation="landscape"
-            android:theme="@android:style/Theme.Black.NoTitleBar.Fullscreen" />
+            android:theme="@style/Theme.TvHome.Glass" />
         <!-- Home button for remotes that send KEYCODE_ALL_APPS (Xiaomi). Opt-in: HOME_KEY_SERVICE=1
              build-and-install.sh; see HomeKeyService. -->
         <service
