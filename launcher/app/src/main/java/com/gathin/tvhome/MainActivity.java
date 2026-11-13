@@ -1098,18 +1098,10 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         return true;
     }
 
-    /** The settings page opens in its own window, where Home's picture is gone: hand it the current one. */
-    private Intent launcherSettings() {
-        Intent intent = new Intent(this, LauncherSettingsActivity.class);
-        File picture = wallpaperPlayer == null ? null : wallpaperPlayer.currentFile();
-        if (picture != null) intent.putExtra(GlassBackdrop.EXTRA, picture.getAbsolutePath());
-        return intent;
-    }
-
     private boolean openLauncherSettingsIfAsked(Intent intent) {
         if (intent == null || !ACTION_LAUNCHER_SETTINGS.equals(intent.getAction())) return false;
         setIntent(new Intent(Intent.ACTION_MAIN));
-        startActivityForResult(launcherSettings(), LAUNCHER_SETTINGS_REQUEST);
+        startActivityForResult(new Intent(this, LauncherSettingsActivity.class), LAUNCHER_SETTINGS_REQUEST);
         return true;
     }
 
@@ -3520,7 +3512,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         addInputRow(rows, popup, R.drawable.ic_swap_vert, getString(R.string.reorder), -1, this::toggleReorder);
         if (launcherSettingsButton) {
             addInputRow(rows, popup, R.drawable.ic_home_settings_pill, getString(R.string.launcher_settings), -1,
-                    () -> startActivityForResult(launcherSettings(), LAUNCHER_SETTINGS_REQUEST));
+                    () -> startActivityForResult(new Intent(this, LauncherSettingsActivity.class), LAUNCHER_SETTINGS_REQUEST));
         } else {
             addInputRow(rows, popup, R.drawable.ic_settings, getString(R.string.settings), -1,
                     () -> open(systemIntent(Settings.ACTION_SETTINGS)));
@@ -3564,7 +3556,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         }
         if (launcherSettingsButton) {
             addInputRow(rows, popup, R.drawable.ic_home_settings_pill, getString(R.string.launcher_settings), -1,
-                    () -> startActivityForResult(launcherSettings(), LAUNCHER_SETTINGS_REQUEST));
+                    () -> startActivityForResult(new Intent(this, LauncherSettingsActivity.class), LAUNCHER_SETTINGS_REQUEST));
         }
         // The TV's own settings: the page with Accounts & Security, where ADB is switched on.
         addInputRow(rows, popup, R.drawable.ic_settings, getString(R.string.system_settings), -1,
@@ -3634,7 +3626,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
             return;
         }
         if (!launcherSettingsButton) addSettingsMenuRow(rows, popup, R.string.launcher_settings, () -> startActivityForResult(
-                launcherSettings(), LAUNCHER_SETTINGS_REQUEST));
+                new Intent(this, LauncherSettingsActivity.class), LAUNCHER_SETTINGS_REQUEST));
         // Firmware that ships its own settings app next to the AOSP one (Xiaomi China is one): the
         // vendor app holds pages the AOSP settings has no row for, such as Account & Security with
         // the ADB switch. Offered here only while one of them is installed.
@@ -3907,3 +3899,4 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         }
     }
 }
+

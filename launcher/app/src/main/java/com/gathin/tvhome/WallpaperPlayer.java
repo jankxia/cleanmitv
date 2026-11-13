@@ -175,14 +175,6 @@ final class WallpaperPlayer {
         active = false;
     }
 
-    /** The picture Home is showing, so a settings page can put the same one behind its glass. */
-    File currentFile() {
-        for (File file : files) {
-            if (file.getName().equals(displayed)) return file;
-        }
-        return files.isEmpty() ? null : files.get(0);
-    }
-
     /** Drops the wallpaper texture when Home is hidden and Android asks the process to free memory. */
     void releaseForMemoryPressure() {
         if (current == null) return;

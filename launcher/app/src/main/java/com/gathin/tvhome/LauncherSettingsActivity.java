@@ -37,13 +37,15 @@ public final class LauncherSettingsActivity extends Activity {
     private boolean animations;
     private boolean ambientMotion;
     private RemoteConfigServer remoteServer;
+    /** Home's wallpaper behind the page's rows; null when the theme shows none. */
+    private WallpaperPlayer backdrop;
 
     @Override
     protected void onCreate(Bundle state) {
         super.onCreate(state);
         setContentView(R.layout.activity_launcher_settings);
-        // Home hands over the picture it was showing, so this page's glass has the wallpaper under it.
-        GlassBackdrop.apply(this);
+        // The same wallpaper Home shows, behind the rows: this page's glass needs something to be glass over.
+        backdrop = GlassBackdrop.attach(this);
         choices = getSharedPreferences(Config.SETTINGS_NAME, MODE_PRIVATE);
         Config config = Config.load(this);
         View reorderChoice = findViewById(R.id.reorderChoice);
@@ -220,8 +222,24 @@ public final class LauncherSettingsActivity extends Activity {
     }
 
     @Override
+    protected void onResume() {
+        super.onResume();
+        if (backdrop != null) backdrop.start();
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        if (backdrop != null) backdrop.stop();
+    }
+
+    @Override
     protected void onDestroy() {
         super.onDestroy();
+        if (backdrop != null) {
+            backdrop.close();
+            backdrop = null;
+        }
         if (remoteServer != null) {
             remoteServer.stop();
             remoteServer = null;
