@@ -1,25 +1,24 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Kids/elders choice chips, in the top pills' material: translucent white, one hairline border,
-     21dp corners (a 42dp chip, so the same pill as Home). Focused is the pills' focused look. -->
+<!-- Kids/elders choice chips: dark row with a green focus ring, as before the settings page went glass. -->
 <selector xmlns:android="http://schemas.android.com/apk/res/android">
     <item android:state_focused="true">
         <shape android:shape="rectangle">
-            <solid android:color="#F5FFFFFF" />
+            <solid android:color="#5574A987" />
             <corners android:radius="21dp" />
+            <stroke android:width="2dp" android:color="#FFB9E7C7" />
         </shape>
     </item>
     <item android:state_selected="true">
         <shape android:shape="rectangle">
-            <solid android:color="#66FFFFFF" />
+            <solid android:color="#334DAE6D" />
             <corners android:radius="21dp" />
-            <stroke android:width="1dp" android:color="#8CFFFFFF" />
+            <stroke android:width="1dp" android:color="#FF4DAE6D" />
         </shape>
     </item>
     <item>
         <shape android:shape="rectangle">
-            <solid android:color="#26FFFFFF" />
+            <solid android:color="#FF242B34" />
             <corners android:radius="21dp" />
-            <stroke android:width="1dp" android:color="#3DFFFFFF" />
         </shape>
     </item>
 </selector>
