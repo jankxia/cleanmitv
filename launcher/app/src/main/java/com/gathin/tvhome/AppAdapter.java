@@ -38,6 +38,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -77,6 +78,8 @@ public class AppAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         int ambient;
         /** uniform_tiles card fill, top and bottom colour; null until sampled from the icon. */
         int[] backdrop;
+        /** The fill made from {@link #backdrop}; built once instead of on every bind. */
+        GradientDrawable backdropDrawable;
         /** The artwork's own colours, weightiest first; null until sampled for the room's weather. */
         int[] palette;
 
@@ -222,6 +225,30 @@ public class AppAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
     private List<String> kidsAllowed;
     private final List<Entry> items = new ArrayList<>();
 
+    /**
+     * Tile icons by package and version code. loadIcon decodes a fresh drawable on the UI thread for every
+     * call, and a reload (a settings change, an install, a theme switch) used to re-read every app's. The
+     * version code in the key means an app update misses the cache instead of keeping a stale icon; the
+     * least recently used entries fall out at 64, so a big app library cannot grow it without bound.
+     */
+    private static final Map<String, Drawable> ICONS = new LinkedHashMap<String, Drawable>(16, 0.75f, true) {
+        @Override
+        protected boolean removeEldestEntry(Map.Entry<String, Drawable> eldest) {
+            return size() > 64;
+        }
+    };
+
+    private static Drawable icon(PackageManager pm, ResolveInfo ri) {
+        // The icon resource id shifts when an app update replaces its artwork, so the key still changes with it.
+        String key = ri.activityInfo.packageName + '#' + ri.activityInfo.icon;
+        Drawable cached = ICONS.get(key);
+        if (cached == null) {
+            cached = ri.loadIcon(pm);
+            if (cached != null) ICONS.put(key, cached);
+        }
+        return cached;
+    }
+
     AppAdapter(Context ctx, TileListener listener, int dockSize, Config cfg) {
         this.ctx = ctx;
         this.listener = listener;
@@ -318,7 +345,7 @@ public class AppAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
             }
             // The icon is only drawn (and sampled for the glow) when there is no banner, so a tile with a
             // banner skips loading and decoding it.
-            Drawable icon = banner == null ? ri.loadIcon(pm) : null;
+            Drawable icon = banner == null ? icon(pm, ri) : null;
             if (card != null) {
                 fresh.add(new Entry(Entry.CARD, label, component, banner, icon, card.caption, card.accent));
             } else {
@@ -513,7 +540,10 @@ public class AppAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         h.card.setBackground(e.banner != null && e.banner.getOpacity() == PixelFormat.OPAQUE ? null : h.cardBackground);
         if ((uniformTiles || PersonalAppearance.enabled(ctx)) && e.banner == null) {
             if (e.backdrop == null) e.backdrop = backdrop(e.icon, ambientColorAt(position));
-            h.card.setBackground(new GradientDrawable(GradientDrawable.Orientation.TOP_BOTTOM, e.backdrop));
+            if (e.backdropDrawable == null) {
+                e.backdropDrawable = new GradientDrawable(GradientDrawable.Orientation.TOP_BOTTOM, e.backdrop);
+            }
+            h.card.setBackground(e.backdropDrawable);
         }
         if (e.banner != null) {
             h.banner.setImageDrawable(e.banner);

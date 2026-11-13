@@ -13,9 +13,9 @@ final class GlassBackdrop {
     }
 
     /** Start the page's wallpaper; the caller drives stop/close with the page's own lifecycle. */
-    static WallpaperPlayer attach(Activity activity) {
+    static WallpaperPlayer attach(Activity activity, Config config) {
         FrameLayout backdrop = activity.findViewById(R.id.backdrop);
         if (backdrop == null) return null;
-        return new WallpaperPlayer(activity, backdrop, Config.load(activity));
+        return new WallpaperPlayer(activity, backdrop, config);
     }
 }

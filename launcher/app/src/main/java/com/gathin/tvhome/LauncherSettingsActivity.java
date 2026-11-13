@@ -44,10 +44,10 @@ public final class LauncherSettingsActivity extends Activity {
     protected void onCreate(Bundle state) {
         super.onCreate(state);
         setContentView(R.layout.activity_launcher_settings);
-        // The same wallpaper Home shows, behind the rows: this page's glass needs something to be glass over.
-        backdrop = GlassBackdrop.attach(this);
-        choices = getSharedPreferences(Config.SETTINGS_NAME, MODE_PRIVATE);
         Config config = Config.load(this);
+        // The same wallpaper Home shows, behind the rows: this page's glass needs something to be glass over.
+        backdrop = GlassBackdrop.attach(this, config);
+        choices = getSharedPreferences(Config.SETTINGS_NAME, MODE_PRIVATE);
         View reorderChoice = findViewById(R.id.reorderChoice);
         reorderChoice.setVisibility(config.launcherSettingsButton ? View.VISIBLE : View.GONE);
         reorderChoice.setOnClickListener(v -> {
