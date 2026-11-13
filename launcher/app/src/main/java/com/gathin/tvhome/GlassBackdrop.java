@@ -8,7 +8,7 @@ import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
 import android.graphics.drawable.LayerDrawable;
 import android.text.TextUtils;
-import android.view.View;
+import android.util.Log;
 
 import java.io.File;
 import java.util.concurrent.ExecutorService;
@@ -21,6 +21,7 @@ import java.util.concurrent.Executors;
  */
 final class GlassBackdrop {
     static final String EXTRA = "com.gathin.tvhome.extra.WALLPAPER";
+    private static final String TAG = "TvHomeGlass";
 
     private static final ExecutorService DECODER = Executors.newSingleThreadExecutor();
     /** Wide enough for a dimmed 1080p backdrop, small enough to decode in tens of milliseconds. */
@@ -32,44 +33,62 @@ final class GlassBackdrop {
     private GlassBackdrop() {
     }
 
-    /** Paint the backdrop behind {@code root}; a picture from Home, or Home's own background colour. */
-    static void apply(Activity activity, View root) {
+    /** Paint the backdrop behind the whole window of {@code activity}; Home's picture or its colour. */
+    static void apply(Activity activity) {
         Config config = Config.load(activity);
         String path = activity.getIntent() == null ? null : activity.getIntent().getStringExtra(EXTRA);
-        if (TextUtils.isEmpty(path)) path = config.wallpapers.isEmpty()
-                ? null : config.wallpapers.get(0).getAbsolutePath();
+        if (TextUtils.isEmpty(path) && !config.wallpapers.isEmpty()) {
+            path = config.wallpapers.get(0).getAbsolutePath();
+        }
+        Log.i(TAG, "extra=" + activity.getIntent().getStringExtra(EXTRA)
+                + " wallpapers=" + config.wallpapers.size() + " use=" + path);
         if (TextUtils.isEmpty(path)) {
-            // No pictures at all: Home shows its background colour, so put that colour here instead.
-            root.setBackground(new LayerDrawable(new Drawable[]{
-                    new ColorDrawable(config.backgroundColor), new ColorDrawable(NO_SCRIM)}));
+            paint(activity, colourOf(config), SCRIM);
             return;
         }
         String file = path;
         DECODER.execute(() -> {
             Bitmap bitmap = decode(file);
+            Log.i(TAG, "decoded " + file + " -> " + (bitmap == null ? "null"
+                    : bitmap.getWidth() + "x" + bitmap.getHeight()));
             activity.runOnUiThread(() -> {
                 if (activity.isDestroyed()) {
                     if (bitmap != null) bitmap.recycle();
                     return;
                 }
                 if (bitmap == null) {
-                    root.setBackground(new LayerDrawable(new Drawable[]{
-                            new ColorDrawable(config.backgroundColor), new ColorDrawable(NO_SCRIM)}));
-                    return;
+                    paint(activity, colourOf(config), SCRIM);
+                } else {
+                    paint(activity, new BitmapDrawable(activity.getResources(), bitmap), SCRIM);
                 }
-                root.setBackground(new LayerDrawable(new Drawable[]{
-                        new BitmapDrawable(activity.getResources(), bitmap), new ColorDrawable(SCRIM)}));
             });
         });
     }
 
+    private static Drawable colourOf(Config config) {
+        return new ColorDrawable(config.backgroundColor);
+    }
+
+    /** The window's own background sits under the content view, so nothing above it can cover it. */
+    private static void paint(Activity activity, Drawable under, int scrim) {
+        LayerDrawable layers = new LayerDrawable(new Drawable[]{under, new ColorDrawable(scrim)});
+        activity.getWindow().setBackgroundDrawable(layers);
+        Log.i(TAG, "painted " + layers.getNumberOfLayers() + " layers");
+    }
+
     private static Bitmap decode(String path) {
         File file = new File(path);
-        if (!file.isFile()) return null;
+        if (!file.isFile()) {
+            Log.i(TAG, "not a file: " + path);
+            return null;
+        }
         BitmapFactory.Options bounds = new BitmapFactory.Options();
         bounds.inJustDecodeBounds = true;
         BitmapFactory.decodeFile(path, bounds);
-        if (bounds.outWidth <= 0) return null;
+        if (bounds.outWidth <= 0) {
+            Log.i(TAG, "no bounds: " + path);
+            return null;
+        }
         int sample = 1;
         while (bounds.outWidth / (sample * 2) >= MAX_WIDTH) sample *= 2;
         BitmapFactory.Options options = new BitmapFactory.Options();
@@ -77,6 +96,7 @@ final class GlassBackdrop {
         try {
             return BitmapFactory.decodeFile(path, options);
         } catch (OutOfMemoryError e) {
+            Log.i(TAG, "oom: " + path);
             return null;
         }
     }
