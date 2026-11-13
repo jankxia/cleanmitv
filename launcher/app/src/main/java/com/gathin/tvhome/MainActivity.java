@@ -396,12 +396,15 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        Perf.start();
         instance = this;
         setContentView(R.layout.activity_main);
+        Perf.mark("inflate");
         dayAppearance = PersonalAppearance.day(this);
         density = getResources().getDisplayMetrics().density;
         // config.xml, overlaid by config.json from a pushed theme (see Config and tools/theme.sh).
         cfg = Config.load(this);
+        Perf.mark("config");
         appLibrarySelection = cfg.appLibrarySelection;
         libraryOkOpens = cfg.libraryOkOpens;
         // restore_key_services: after a force stop, put back the remote's accessibility helpers that Android took
@@ -435,12 +438,21 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         coocaaSources = cfg.coocaaSources;
 
         root = findViewById(R.id.root);
+        root.getViewTreeObserver().addOnPreDrawListener(new ViewTreeObserver.OnPreDrawListener() {
+            @Override
+            public boolean onPreDraw() {
+                root.getViewTreeObserver().removeOnPreDrawListener(this);
+                Perf.mark("first-draw");
+                return true;
+            }
+        });
         root.setBackgroundColor(cfg.backgroundColor);
         // root fills the window with an opaque colour (Config keeps background_color opaque), so the window's own
         // black under it is a second full-screen fill on every frame for nothing. The starting window still uses
         // the theme's background, so launch looks the same.
         getWindow().setBackgroundDrawable(null);
         wallpaperPlayer = new WallpaperPlayer(this, root, cfg);
+        Perf.mark("wallpaper");
         if (PersonalAppearance.appBackdrop(this)) {
             appBackdrop = new AppColorBackdrop(this,
                     animations && !reducedMotion && PersonalAppearance.ambientMotion(this));
@@ -1319,6 +1331,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
      * ones and cards stay off for this process.
      */
     private void reloadTiles() {
+        Perf.mark("reload-start");
         if (reordering) endReorder();   // an app installed or removed while reordering: keep the order so far
         // Read these before reload(): rebinding can move focus to the first tile and overwrite them.
         final String returnKey = lastFocusedKey;
@@ -1335,9 +1348,11 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         // Kids/Elders mode shows only the tiles chosen for it, in the order picked.
         adapter.setKidsMode(Kids.active() ? Kids.allowed() : null);
         adapter.reload(cards.isEmpty() ? none : CardFeature.run(() -> Cards.shown(cards), none), leanback);
+        Perf.mark("adapter-reload");
         // The padding was worked out while the grid still held the previous (or no) tiles, and the dock position
         // depends on how many rows and whether the library pill now exist, so fit it again once the tiles are in.
         refitDockAfterReload();
+        Perf.mark("refit");
         // The mode's guard knows what belongs on this Home (and no TV inputs of its own to keep).
         Kids.notePackages(new HashSet<>(adapter.packages()), Collections.emptySet());
         lastFocusedKey = returnKey;

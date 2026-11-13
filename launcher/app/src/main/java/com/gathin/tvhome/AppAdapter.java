@@ -261,6 +261,7 @@ public class AppAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
     }
 
     void reload(List<Cards.Card> cards, List<ResolveInfo> leanback) {
+        Perf.mark("adapter:start");
         PackageManager pm = ctx.getPackageManager();
         // The LEANBACK query is shared with the module-card check (MainActivity); copy it before adding
         // library apps so the caller's list stays as it was.
@@ -324,6 +325,7 @@ public class AppAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                 fresh.add(new Entry(label, component, banner, icon));
             }
         }
+        Perf.mark("adapter:entries");
         Collections.sort(fresh, (a, b) -> {
             // In Kids/Elders mode the chosen order rules; the owner's order is never touched.
             if (kidsAllowed != null) {
@@ -378,7 +380,9 @@ public class AppAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         }
         items.clear();
         items.addAll(fresh);
+        Perf.mark("adapter:commit");
         notifyDataSetChanged();
+        Perf.mark("adapter:notify");
     }
 
     /** A banner_* drawable bundled with the launcher, or null for none or a name that is not one. */
