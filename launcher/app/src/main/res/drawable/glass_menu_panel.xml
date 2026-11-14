@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Settings menu drop-in: smoked glass over the wallpaper, same material as the header pills. -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+    <gradient android:angle="270" android:startColor="#C41A1D24" android:endColor="#A60C0E14" />
+    <stroke android:width="1dp" android:color="#4DFFFFFF" />
+    <corners android:radius="21dp" />
+</shape>

@@ -3611,11 +3611,14 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
     private void showSettingsMenu() {
         View anchor = findViewById(R.id.btnSettings);
         View panel = getLayoutInflater().inflate(R.layout.popup_inputs, root, false);
+        // Smoked glass in every appearance mode: the wallpaper shows through, like the header pills.
+        panel.setBackgroundResource(R.drawable.glass_menu_panel);
         LinearLayout rows = panel.findViewById(R.id.rows);
         PopupWindow popup = glassPopup(panel, (int) (200 * density));
         // Hold OK in a mode: the same one row, nothing else to reach.
         if (Kids.active()) {
             addSettingsMenuRow(rows, popup, R.string.mode_leave, this::leaveKidsMode);
+            glassSettingsRows(rows);
             panel.measure(View.MeasureSpec.UNSPECIFIED, View.MeasureSpec.UNSPECIFIED);
             popup.setWidth(Math.max((int) (200 * density), panel.getMeasuredWidth()));
             dropIn(popup, panel, anchor, getResources().getBoolean(R.bool.rtl_menu_bar)
@@ -3637,6 +3640,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         if (moduleCards) addSettingsMenuRow(rows, popup, R.string.module_cards, this::showModuleCards);
         if (dockRow) addSettingsMenuRow(rows, popup, R.string.dock_edit, this::startDockEdit);
         addSettingsMenuRow(rows, popup, R.string.reorder, this::toggleReorder);
+        glassSettingsRows(rows);
         panel.measure(View.MeasureSpec.UNSPECIFIED, View.MeasureSpec.UNSPECIFIED);
         popup.setWidth(Math.max((int) (200 * density), panel.getMeasuredWidth()));
         // Hebrew puts Settings at the left of the header: grow the menu inward from it.
@@ -3698,6 +3702,13 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
                     .setInterpolator(new android.view.animation.DecelerateInterpolator(1.6f)).start();
         }
         rows.getChildAt(0).requestFocus();
+    }
+
+    /** The settings rows sit on the smoked glass as thin capsules instead of bare text. */
+    private void glassSettingsRows(LinearLayout rows) {
+        for (int i = 0; i < rows.getChildCount(); i++) {
+            rows.getChildAt(i).setBackgroundResource(R.drawable.glass_menu_row);
+        }
     }
 
     private void addSettingsMenuRow(LinearLayout rows, PopupWindow popup, int title, Runnable action) {
