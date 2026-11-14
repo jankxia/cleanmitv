@@ -4,6 +4,7 @@ import android.content.ActivityNotFoundException;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.ActivityInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
 import android.content.res.Resources;
@@ -38,6 +39,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -77,6 +79,8 @@ public class AppAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         int ambient;
         /** uniform_tiles card fill, top and bottom colour; null until sampled from the icon. */
         int[] backdrop;
+        /** The fill built from backdrop, kept so a rebind does not allocate it again. */
+        GradientDrawable backdropDrawable;
         /** The artwork's own colours, weightiest first; null until sampled for the room's weather. */
         int[] palette;
 
@@ -222,6 +226,34 @@ public class AppAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
     private List<String> kidsAllowed;
     private final List<Entry> items = new ArrayList<>();
 
+    /** Name colour for the whole grid, read once instead of on every bind. */
+    private final int nameColor;
+
+    /**
+     * Icons are decoded from the app's resources every time the tiles are rebuilt: when the settings
+     * come back, when the wallpaper or a theme changes, when a mode is entered. The same package and
+     * the same icon resource id mean the same picture, so the last few decoded icons are kept and a
+     * reload costs a map lookup instead of a drawable decode.
+     */
+    private static final int ICON_CACHE_MAX = 64;
+    private static final LinkedHashMap<String, Drawable> ICON_CACHE =
+            new LinkedHashMap<String, Drawable>(ICON_CACHE_MAX, 0.75f, true) {
+                @Override
+                protected boolean removeEldestEntry(Map.Entry<String, Drawable> eldest) {
+                    return size() > ICON_CACHE_MAX;
+                }
+            };
+
+    private static Drawable iconFor(PackageManager pm, ResolveInfo ri) {
+        ActivityInfo ai = ri.activityInfo;
+        String key = ai.packageName + '#' + ai.icon + '#' + ai.name;
+        Drawable cached = ICON_CACHE.get(key);
+        if (cached != null) return cached;
+        Drawable icon = ri.loadIcon(pm);
+        if (icon != null) ICON_CACHE.put(key, icon);
+        return icon;
+    }
+
     AppAdapter(Context ctx, TileListener listener, int dockSize, Config cfg) {
         this.ctx = ctx;
         this.listener = listener;
@@ -246,6 +278,9 @@ public class AppAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         this.appLabels = cfg.appLabels;
         this.appBanners = cfg.appBanners;
         this.uniformTiles = cfg.uniformTiles;
+        // PersonalAppearance.foreground reads the preferences; the grid only needs the value once,
+        // and a change of appearance recreates the activity anyway.
+        this.nameColor = PersonalAppearance.enabled(ctx) ? PersonalAppearance.foreground(ctx) : 0;
         // Tiles keep their identity across reload(), so a focused tile stays on its app instead of
         // its view being rebound to whatever app now sits in that slot.
         setHasStableIds(true);
@@ -317,7 +352,7 @@ public class AppAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
             }
             // The icon is only drawn (and sampled for the glow) when there is no banner, so a tile with a
             // banner skips loading and decoding it.
-            Drawable icon = banner == null ? ri.loadIcon(pm) : null;
+            Drawable icon = banner == null ? iconFor(pm, ri) : null;
             if (card != null) {
                 fresh.add(new Entry(Entry.CARD, label, component, banner, icon, card.caption, card.accent));
             } else {
@@ -491,7 +526,7 @@ public class AppAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         h.card.setVisibility(View.VISIBLE);
         h.card.setFocusable(true);
         h.name.setText(e.name);
-        if (PersonalAppearance.enabled(ctx)) h.name.setTextColor(PersonalAppearance.foreground(ctx));
+        if (nameColor != 0) h.name.setTextColor(nameColor);
         // The dock has no labels, unless always_show_names asks for them (DockDecoration then makes room in the band).
         // In a single row every tile is the dock's kind: the big title above names it.
         boolean dockKind = dockRow && (singleRow || position < dockSize);
@@ -509,7 +544,11 @@ public class AppAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         h.card.setBackground(e.banner != null && e.banner.getOpacity() == PixelFormat.OPAQUE ? null : h.cardBackground);
         if ((uniformTiles || PersonalAppearance.enabled(ctx)) && e.banner == null) {
             if (e.backdrop == null) e.backdrop = backdrop(e.icon, ambientColorAt(position));
-            h.card.setBackground(new GradientDrawable(GradientDrawable.Orientation.TOP_BOTTOM, e.backdrop));
+            if (e.backdropDrawable == null) {
+                e.backdropDrawable = new GradientDrawable(GradientDrawable.Orientation.TOP_BOTTOM, e.backdrop);
+            }
+            // Same drawable as last time: setting it again would rebuild the tile's outline and cost a redraw.
+            if (h.card.getBackground() != e.backdropDrawable) h.card.setBackground(e.backdropDrawable);
         }
         if (e.banner != null) {
             h.banner.setImageDrawable(e.banner);
