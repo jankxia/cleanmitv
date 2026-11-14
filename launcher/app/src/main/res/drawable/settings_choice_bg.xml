@@ -1,26 +1,23 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- A settings row, in the top pills' material: translucent white over the page's glass sheet, one
-     hairline border, 26dp corners (the row is 52dp tall, so it reads as the same pill as Home's).
-     Focused is the pills' focused look: near-white fill with dark text (see pill_text). -->
 <selector xmlns:android="http://schemas.android.com/apk/res/android">
     <item android:state_focused="true">
         <shape android:shape="rectangle">
-            <solid android:color="#F5FFFFFF" />
-            <corners android:radius="26dp" />
+            <solid android:color="#5574A987" />
+            <corners android:radius="14dp" />
+            <stroke android:width="2dp" android:color="#FFB9E7C7" />
         </shape>
     </item>
     <item android:state_selected="true">
         <shape android:shape="rectangle">
-            <solid android:color="#66FFFFFF" />
-            <corners android:radius="26dp" />
-            <stroke android:width="1dp" android:color="#8CFFFFFF" />
+            <solid android:color="#334DAE6D" />
+            <corners android:radius="14dp" />
+            <stroke android:width="1dp" android:color="#FF4DAE6D" />
         </shape>
     </item>
     <item>
         <shape android:shape="rectangle">
-            <solid android:color="#26FFFFFF" />
-            <corners android:radius="26dp" />
-            <stroke android:width="1dp" android:color="#3DFFFFFF" />
+            <solid android:color="#FF242B34" />
+            <corners android:radius="14dp" />
         </shape>
     </item>
 </selector>

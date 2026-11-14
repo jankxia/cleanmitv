@@ -1,27 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Home hands its picture to this page, and it goes in this view behind the rows: the glass has
-     something to be glass over, and the rows stay readable through the scrim above it. -->
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@android:color/black">
-
-    <FrameLayout
-        android:id="@+id/backdrop"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent" />
-
-    <View
-        android:id="@+id/backdropScrim"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:background="#66000000" />
-
-    <ScrollView
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:background="@android:color/transparent"
-        android:fillViewport="true">
+    android:background="#FF101419"
+    android:fillViewport="true">
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -327,5 +309,4 @@
             </LinearLayout>
         </LinearLayout>
     </LinearLayout>
-    </ScrollView>
-</FrameLayout>
+</ScrollView>

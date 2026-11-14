@@ -686,9 +686,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
                 // Critically damped: glides straight onto the tile without swinging past it.
                 s.setSpring(new SpringForce().setStiffness(PersonalAppearance.enabled(this) ? 720f : 440f).setDampingRatio(1f));
             } else {
-                // A little overshoot, but stiffer than a soft spring: the highlight catches up with the
-                // key press instead of trailing it, which is what felt slow on the TV's own remote.
-                s.setSpring(new SpringForce().setStiffness(420f).setDampingRatio(0.72f));
+                s.setSpring(new SpringForce().setStiffness(260f).setDampingRatio(0.58f));
             }
         }
 
@@ -3899,4 +3897,3 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         }
     }
 }
-
