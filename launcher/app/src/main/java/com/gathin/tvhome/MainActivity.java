@@ -3529,6 +3529,8 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
     private void showGearMenu() {
         View anchor = findViewById(R.id.btnSettings);
         View panel = getLayoutInflater().inflate(R.layout.popup_inputs, root, false);
+        // Smoked glass in every appearance mode: the wallpaper shows through, like the header pills.
+        panel.setBackgroundResource(R.drawable.glass_menu_panel);
         LinearLayout rows = panel.findViewById(R.id.rows);
         PopupWindow popup = glassPopup(panel, (int) (240 * density));
         // In a mode the gear is the one way out and nothing else: no inputs, no Wi-Fi, no launcher
@@ -3536,6 +3538,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         if (Kids.active()) {
             addInputRow(rows, popup, R.drawable.ic_kids_mode, getString(R.string.mode_leave), -1,
                     this::leaveKidsMode);
+            glassSettingsRows(rows);
             panel.measure(View.MeasureSpec.UNSPECIFIED, View.MeasureSpec.UNSPECIFIED);
             popup.setWidth(Math.max((int) (240 * density), Math.min(panel.getMeasuredWidth(), (int) (380 * density))));
             dropIn(popup, panel, anchor, getResources().getBoolean(R.bool.rtl_menu_bar) ? Gravity.START : Gravity.END);
@@ -3566,6 +3569,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         // Top-level password manager: the administrator PIN resets the children's and elders passwords.
         addInputRow(rows, popup, R.drawable.ic_controls, getString(R.string.admin_entry), -1,
                 () -> startActivity(new Intent(this, AdminActivity.class)));
+        glassSettingsRows(rows);
         panel.measure(View.MeasureSpec.UNSPECIFIED, View.MeasureSpec.UNSPECIFIED);
         popup.setWidth(Math.max((int) (240 * density), Math.min(panel.getMeasuredWidth(), (int) (380 * density))));
         dropIn(popup, panel, anchor, getResources().getBoolean(R.bool.rtl_menu_bar) ? Gravity.START : Gravity.END);
@@ -3707,7 +3711,10 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
     /** The settings rows sit on the smoked glass as thin capsules instead of bare text. */
     private void glassSettingsRows(LinearLayout rows) {
         for (int i = 0; i < rows.getChildCount(); i++) {
-            rows.getChildAt(i).setBackgroundResource(R.drawable.glass_menu_row);
+            View row = rows.getChildAt(i);
+            // Separators are a hairline: they keep their own colour.
+            if (row.getLayoutParams() != null && row.getLayoutParams().height <= (int) (2 * density)) continue;
+            row.setBackgroundResource(R.drawable.glass_menu_row);
         }
     }
 
