@@ -267,6 +267,12 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
     private final TileRefresh tileRefresh = new TileRefresh();
     /** PackageManager's change counter at the last rebuild, to catch a package broadcast that never arrived. */
     private int packageSequence;
+    /**
+     * The LEANBACK query is the same as long as no package changed: returning to Home, changing a mode
+     * or a theme all rebuild the tiles without an install, and re-asking PackageManager for every app
+     * costs tens of milliseconds each time.
+     */
+    private List<ResolveInfo> leanbackCache;
     /** The Inputs or Module cards dropdown while one is open, so onPause can close it. */
     private PopupWindow openPopup;
     /** Reorder mode is on (top-bar button). */
@@ -1327,9 +1333,15 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         // An updated app may bring new artwork; the backdrop is cheap to make again.
         heroArtCache.clear();
         heroArtKey = null;
-        // One LEANBACK query for both the tiles and the card checks.
-        final List<ResolveInfo> leanback = getPackageManager().queryIntentActivities(
-                new Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_LEANBACK_LAUNCHER), 0);
+        // One LEANBACK query for both the tiles and the card checks, re-used while no package changed.
+        final List<ResolveInfo> leanback;
+        if (leanbackCache != null && !packagesChangedSinceRebuild()) {
+            leanback = leanbackCache;
+        } else {
+            leanback = getPackageManager().queryIntentActivities(
+                    new Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_LEANBACK_LAUNCHER), 0);
+            leanbackCache = leanback;
+        }
         cards = moduleCards ? CardFeature.run(() -> Cards.discover(this, hiddenApps,
                 () -> Cards.load(Cards.storeFile(this)), leanback), none) : none;
         // Kids/Elders mode shows only the tiles chosen for it, in the order picked.
