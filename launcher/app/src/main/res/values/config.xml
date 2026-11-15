@@ -64,9 +64,10 @@
     <string name="live_tv_input_id" translatable="false"></string>
 
     <!-- The question pack manifest: {"version": "...", "files": [{"name", "url", "sha256"}]}.
-         Point it at the OpenList folder in front of the Quark drive; empty keeps the bundled
-         per-grade files and hides nothing. The hidden settings row "question pack" downloads it. -->
-    <string name="quiz_pack_url" translatable="false">https://list.717611.xyz/p/%E5%A4%B8%E5%85%8B/CleanMiTV/quiz/index.json</string>
+         Point it at the OpenList folder in front of the Quark drive; the LAN address is used
+         because the TV sits on the same network as the OpenList box and the WAN reverse proxy
+         drops long reads. Empty keeps the bundled per-grade files. -->
+    <string name="quiz_pack_url" translatable="false">http://192.168.1.24:5244/p/%E5%A4%B8%E5%85%8B/CleanMiTV/quiz/index.json</string>
 
     <!-- Tiles that open a screen of the app instead of its start screen: "package=action", sent to that package.
          A tile whose action no longer resolves opens the app normally. MagentaTV's program guide:

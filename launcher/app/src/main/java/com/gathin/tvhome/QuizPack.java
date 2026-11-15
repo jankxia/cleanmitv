@@ -101,9 +101,11 @@ public final class QuizPack {
             if (!name.endsWith(".json")) continue;
             String link = f.optString("url", "");
             if (link.isEmpty()) link = folder + name;
-            byte[] body = get(link, 180000);
-            String sha = f.optString("sha256", "");
-            if (!sha.isEmpty() && !sha.equalsIgnoreCase(sha256(body))) {
+            byte[] body = getWithRetry(link, 180000);
+            String sha = f.optString("sha256", "").trim().toLowerCase(Locale.US);
+            // A short manifest entry (the author once wrote 16 hex digits) still pins the file:
+            // the computed digest has to start with it.
+            if (!sha.isEmpty() && !sha256(body).startsWith(sha)) {
                 throw new Exception("checksum " + name);
             }
             String text = new String(body, StandardCharsets.UTF_8);
@@ -164,6 +166,24 @@ public final class QuizPack {
         if (files != null) for (File f : files) f.delete();
         prefs(c).edit().putString(VERSION_KEY, "").putLong(STAMP_KEY, 0).apply();
         KidsBank.forget();
+    }
+
+    /** OpenList in front of Quark drops a long read now and then; three tries ride that out. */
+    private static byte[] getWithRetry(String link, int readTimeout) throws Exception {
+        Exception last = null;
+        for (int i = 0; i < 3; i++) {
+            try {
+                return get(link, readTimeout);
+            } catch (Exception e) {
+                last = e;
+                try {
+                    Thread.sleep(600);
+                } catch (InterruptedException ignored) {
+                    // go straight to the next try
+                }
+            }
+        }
+        throw last;
     }
 
     private static byte[] get(String link, int readTimeout) throws Exception {
