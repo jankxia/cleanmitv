@@ -29,8 +29,8 @@ android {
         applicationId providers.gradleProperty('launcherApplicationId').getOrElse('com.gathin.tvhome')
         minSdk 26
         targetSdk 34
-        versionCode 26
-        versionName '2.9.5-kids-focus'
+        versionCode 27
+        versionName '2.9.6-quiz-pack'
         resConfigs 'en', 'zh-rCN'
     }
 

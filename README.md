@@ -208,6 +208,14 @@ The dock sits on the bottom edge of the screen, horizontally centred, in all thr
 
 Home used to come up in kids/elders mode with the selection box floating over the wallpaper instead of sitting on a tile — and sometimes with no selection box at all, until a key was pressed. The dock's line comes from the grid's top padding, and a padding change moves the tiles without scrolling the grid, so the highlight — an overlay that only follows scroll events — kept the size and the place of the tile it was last fitted to, while the reloaded dock tiles had already moved down to the bottom edge. It now re-anchors itself whenever the focused tile is no longer under it (2dp of drift, or any change in tile size, is enough), it refits right after every reload and after every dock padding pass, and Home hands the dock its focus back when a focus request issued before the window could take focus was dropped.
 
+**The question bank lives on Quark, the apk only carries a floor (2.9.6)**
+
+The twelve thousand questions no longer sit in the apk. They live in a pack on Quark — twelve grade files plus an `index.json` — served by the OpenList box on the LAN (`http://192.168.1.24:5244/p/夸克/CleanMiTV/quiz/index.json`) with `https://list.717611.xyz` behind it as the fallback; the hidden settings row and the web form can point the pack at any other `index.json`, and an empty field means "LAN first, WAN second". The apk keeps 25 questions per grade as an offline floor (45,877 B raw, 16,585 B compressed), so a fresh install can answer with no network, and the full pack is pulled in the background the first time the quiz opens.
+
+Two things had to be fixed before the download worked at all. OpenList answers `200` with a correct `Content-Length` but never ends a kept-alive response, so the client sat in `read()` until the socket timed out and reported `ProtocolException: unexpected end of stream` — a bare-socket test on the same network showed 20 s and a truncated read without `Connection: close`, 0.27 s and the whole body with it, so every request now sends `Connection: close` and `Accept-Encoding: identity`, and a failed whole read falls back to a 32 KB ranged walk before the checksum is verified. And the pack measures its own freshness: once complete, `ensure()` reads the manifest at most every five minutes and re-pulls only when the version moved on, so a rebuilt bank reaches the TV without anyone touching the hidden settings row.
+
+The bank itself also grew: 597 new textbook facts went into the pools (173 Chinese, 96 English, 85 physics, 67 chemistry, 65 biology, 77 history, 51 geography, 63 politics), 4,293 in total, and the twelve grades were rebuilt from them. APK 862,730 B → 503,278 B, of which the whole question floor is now 16,585 B compressed.
+
 <details>
 <summary>📜 历史版本更新记录（v2.7.7 – v2.9.0，点击展开）</summary>
 ## v2.7.7 修复记录（实机反馈）
