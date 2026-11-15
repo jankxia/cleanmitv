@@ -1,6 +1,7 @@
 package com.gathin.tvhome;
 
 import android.app.Activity;
+import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
@@ -57,6 +58,7 @@ public class KidsQuizActivity extends Activity {
     private final List<Integer> picked = new ArrayList<>();
     private TextView prevButton;
     private TextView continueButton;
+    private boolean pinOpen;
     private TextView progress;
     private TextView score;
     private TextView starsView;
@@ -413,17 +415,12 @@ public class KidsQuizActivity extends Activity {
     @Override
     public boolean onKeyDown(int keyCode, KeyEvent event) {
         if (keyCode == KeyEvent.KEYCODE_BACK) {
-            // Back steps back one question first, exactly like the button in the corner.
-            if (index > 0) {
-                previous();
-                return true;
-            }
-            // Only free practice goes back to the mode it came from; a locked round cannot be escaped,
-            // but the key no longer does nothing without saying why.
-            if (freePractice) {
-                close();
+            // Back is a way out only for a parent: the PIN decides, so a child cannot walk out of a
+            // round, and one step back stays on the button in the corner.
+            if (leavesBehindPin()) {
+                askPin();
             } else {
-                Toast.makeText(this, R.string.quiz_back_hint, Toast.LENGTH_SHORT).show();
+                close();
             }
             return true;
         }
@@ -440,9 +437,57 @@ public class KidsQuizActivity extends Activity {
     @Override
     public void onBackPressed() {
         // Key handling above already covers Back; this only runs if a system path delivers it directly.
-        if (index > 0) previous();
-        else if (freePractice) close();
-        else Toast.makeText(this, R.string.quiz_back_hint, Toast.LENGTH_SHORT).show();
+        if (leavesBehindPin()) askPin();
+        else close();
+    }
+
+    @Override
+    protected void onUserLeaveHint() {
+        super.onUserLeaveHint();
+        // Home is a system key no activity can take, so the round hands over to the gate at once:
+        // the gate opens on the parent's PIN, and nothing behind it is reachable until it is entered.
+        if (!leavesBehindPin() || closing) return;
+        KidsWatch.quizShowing = false;
+        KidsLockActivity.pinFirst = true;
+        try {
+            startActivity(new Intent(this, KidsLockActivity.class));
+        } catch (Exception e) {
+            KidsWatch.poke();
+        }
+    }
+
+    /**
+     * Whether leaving this page needs the parent's PIN. A kids session always does, locked round or
+     * practice; free practice in the ordinary mode is just a page and closes on its own.
+     */
+    private boolean leavesBehindPin() {
+        return !freePractice || Kids.kind() == Kids.Kind.KIDS;
+    }
+
+    /** Four digits from the parent, then the page closes; a wrong PIN only says so and stays. */
+    private void askPin() {
+        if (pinOpen) return;
+        if (!Kids.pinSet()) {
+            Toast.makeText(this, R.string.kids_pin_first, Toast.LENGTH_LONG).show();
+            return;
+        }
+        pinOpen = true;
+        PinDialog verify = new PinDialog(this, PinDialog.VERIFY, Kids.pinArrows(),
+                new PinDialog.PinListener() {
+            @Override public void onPin(String pin) {
+                pinOpen = false;
+                if (Kids.pinMatches(pin)) {
+                    close();
+                } else {
+                    Toast.makeText(KidsQuizActivity.this, R.string.pin_wrong, Toast.LENGTH_LONG).show();
+                }
+            }
+
+            @Override public void onCancel() {
+                pinOpen = false;
+            }
+        });
+        verify.show();
     }
 
     @Override

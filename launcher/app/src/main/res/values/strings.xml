@@ -279,6 +279,7 @@
     <string name="quiz_prev">Back one</string>
     <string name="quiz_continue">Continue</string>
     <string name="quiz_back_hint">Finish these questions to leave; a parent can enter the PIN</string>
+    <string name="quiz_leave_hint">Enter the parent PIN to leave the questions</string>
     <string name="kids_grade_1">Year 1</string>
     <string name="kids_grade_2">Year 2</string>
     <string name="kids_grade_3">Year 3</string>

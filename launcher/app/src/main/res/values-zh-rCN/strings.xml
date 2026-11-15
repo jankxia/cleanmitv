@@ -272,6 +272,7 @@
     <string name="quiz_prev">返回一题</string>
     <string name="quiz_continue">继续</string>
     <string name="quiz_back_hint">答完这几道题才能离开，家长可输入密码退出</string>
+    <string name="quiz_leave_hint">输入家长密码才能退出答题</string>
     <string name="kids_grade_1">一年级</string>
     <string name="kids_grade_2">二年级</string>
     <string name="kids_grade_3">三年级</string>

@@ -28,6 +28,9 @@ public class KidsLockActivity extends Activity {
     private boolean granting;
     private boolean pinOpen;
 
+    /** Set by the quiz page when Home sent a child here: this visit starts on the parent's PIN. */
+    static volatile boolean pinFirst;
+
     private final Runnable secondTick = new Runnable() {
         @Override
         public void run() {
@@ -65,6 +68,11 @@ public class KidsLockActivity extends Activity {
         ((TextView) findViewById(R.id.grantDay)).setText(R.string.kids_grant_day);
 
         render();
+        if (pinFirst) {
+            // Arrived from a locked round: ask for the PIN before anything on this screen is reachable.
+            pinFirst = false;
+            handler.post(this::askParent);
+        }
         handler.post(secondTick);
         handler.post(lockCheck);
     }
