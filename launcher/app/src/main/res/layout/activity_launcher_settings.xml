@@ -235,13 +235,12 @@
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="horizontal">
+            android:orientation="vertical">
 
+            <!-- Kids settings keep a row of their own: the hint under it is the longest one here. -->
             <LinearLayout
-                android:layout_width="0dp"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:layout_marginEnd="10dp"
                 android:orientation="vertical">
                 <TextView android:id="@+id/kidsChoice" style="@style/SettingsGridCell"
                     android:text="@string/kids_settings" />
@@ -256,35 +255,50 @@
                     android:textSize="14sp" />
             </LinearLayout>
 
+            <!-- Version update and question-pack update share one row: two short labels, one line. -->
             <LinearLayout
-                android:layout_width="0dp"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:layout_marginStart="10dp"
-                android:orientation="vertical">
-                <TextView android:id="@+id/quizPackChoice" style="@style/SettingsGridCell"
-                    android:text="@string/quiz_pack_row" />
-                <TextView
-                    android:id="@+id/quizPackHint"
-                    android:layout_width="match_parent"
+                android:layout_marginTop="18dp"
+                android:orientation="horizontal">
+
+                <LinearLayout
+                    android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="7dp"
-                    android:visibility="gone"
-                    android:text="@string/quiz_pack_hint"
-                    android:textColor="#FFACB8C1"
-                    android:textSize="14sp" />
-                <TextView android:id="@+id/updateChoice" style="@style/SettingsGridCell"
-                    android:layout_marginTop="18dp"
-                    android:text="@string/update_check" />
-                <TextView
-                    android:id="@+id/updateHint"
-                    android:layout_width="match_parent"
+                    android:layout_weight="1"
+                    android:layout_marginEnd="10dp"
+                    android:orientation="vertical">
+                    <TextView android:id="@+id/updateChoice" style="@style/SettingsGridCell"
+                        android:text="@string/update_check" />
+                    <TextView
+                        android:id="@+id/updateHint"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="7dp"
+                        android:visibility="gone"
+                        android:text="@string/update_hint"
+                        android:textColor="#FFACB8C1"
+                        android:textSize="14sp" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="7dp"
-                    android:visibility="gone"
-                    android:text="@string/update_hint"
-                    android:textColor="#FFACB8C1"
-                    android:textSize="14sp" />
+                    android:layout_weight="1"
+                    android:layout_marginStart="10dp"
+                    android:orientation="vertical">
+                    <TextView android:id="@+id/quizPackChoice" style="@style/SettingsGridCell"
+                        android:text="@string/quiz_pack_row" />
+                    <TextView
+                        android:id="@+id/quizPackHint"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="7dp"
+                        android:visibility="gone"
+                        android:text="@string/quiz_pack_hint"
+                        android:textColor="#FFACB8C1"
+                        android:textSize="14sp" />
+                </LinearLayout>
             </LinearLayout>
         </LinearLayout>
 
