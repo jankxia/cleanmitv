@@ -31,6 +31,18 @@ public class KidsLockActivity extends Activity {
     /** Set by the quiz page when Home sent a child here: this visit starts on the parent's PIN. */
     static volatile boolean pinFirst;
 
+    @Override
+    protected void onResume() {
+        super.onResume();
+        // A round that was left with Home sent us here: ask for the PIN before anything on this
+        // screen is reachable. Done on resume so it still happens if the guard, not the quiz, is
+        // what brings the gate back to the front.
+        if (pinFirst) {
+            pinFirst = false;
+            handler.post(this::askParent);
+        }
+    }
+
     private final Runnable secondTick = new Runnable() {
         @Override
         public void run() {
@@ -68,11 +80,6 @@ public class KidsLockActivity extends Activity {
         ((TextView) findViewById(R.id.grantDay)).setText(R.string.kids_grant_day);
 
         render();
-        if (pinFirst) {
-            // Arrived from a locked round: ask for the PIN before anything on this screen is reachable.
-            pinFirst = false;
-            handler.post(this::askParent);
-        }
         handler.post(secondTick);
         handler.post(lockCheck);
     }
