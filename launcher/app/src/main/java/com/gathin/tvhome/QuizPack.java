@@ -70,7 +70,8 @@ public final class QuizPack {
         List<String> out = new ArrayList<>();
         String saved = prefs(c).getString(URL_KEY, "").trim();
         if (!saved.isEmpty()) out.add(saved);
-        for (int id : new int[]{R.string.quiz_pack_url, R.string.quiz_pack_url_backup}) {
+        for (int id : new int[]{R.string.quiz_pack_url, R.string.quiz_pack_url_github,
+                R.string.quiz_pack_url_backup}) {
             String u = c.getString(id).trim();
             if (!u.isEmpty() && !out.contains(u)) out.add(u);
         }

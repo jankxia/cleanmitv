@@ -69,9 +69,19 @@
          drops long reads. Empty keeps the bundled per-grade files. -->
     <string name="quiz_pack_url" translatable="false">http://192.168.1.24:5244/p/%E5%A4%B8%E5%85%8B/CleanMiTV/quiz/index.json</string>
 
+    <!-- The same manifest mirrored on GitHub, for anyone whose OpenList box is not on the TV's
+         network (or for people running this build without a Quark account). Sits between the LAN
+         folder and the author's own reverse proxy: the two grade files are 130-170 KB each and
+         GitHub serves them without the long-read trouble the Quark-backed proxy has. -->
+    <string name="quiz_pack_url_github" translatable="false">https://github.com/jankxia/cleanmitv/releases/download/quiz-pack-v4/index.json</string>
+
     <!-- The same manifest through the WAN reverse proxy: used only when the LAN one cannot be
          reached, e.g. the OpenList box is off or the TV is on another network. -->
     <string name="quiz_pack_url_backup" translatable="false">https://list.717611.xyz/p/%E5%A4%B8%E5%85%8B/CleanMiTV/quiz/index.json</string>
+
+    <!-- Where "版本更新" points when nothing was saved from the settings row or the web form.
+         The release asset keeps the same URL across rebuilds of this version. -->
+    <string name="update_url_default" translatable="false">https://github.com/jankxia/cleanmitv/releases/download/v2.9.6-quiz-pack/tvhome-v2.9.6-quiz-pack-signed.apk</string>
 
     <!-- Tiles that open a screen of the app instead of its start screen: "package=action", sent to that package.
          A tile whose action no longer resolves opens the app normally. MagentaTV's program guide:

@@ -165,6 +165,7 @@ final class RemoteConfigServer {
             JSONObject incoming = new JSONObject(new String(body, StandardCharsets.UTF_8));
             String url = incoming.optString("url", "").trim();
             if (url.isEmpty()) url = prefs.getString(UPDATE_URL_KEY, "");
+            if (url.isEmpty()) url = appContext.getString(R.string.update_url_default).trim();
             ApkUpdater.start(appContext, url);
             writeJson(socket, 200, new JSONObject().put("started", true));
         } else if ("POST".equals(method) && "/api/upload".equals(base)) {
@@ -312,7 +313,10 @@ final class RemoteConfigServer {
 
     private JSONObject buildUpdate() throws Exception {
         JSONObject update = new JSONObject();
-        update.put("url", prefs.getString(UPDATE_URL_KEY, ""));
+        // An empty saved value means "use the compiled release link", and the form shows that one
+        // so the field is not blank on a fresh install.
+        String saved = prefs.getString(UPDATE_URL_KEY, "");
+        update.put("url", saved.isEmpty() ? appContext.getString(R.string.update_url_default).trim() : saved);
         update.put("can_install", ApkUpdater.canRequestInstall(appContext));
         update.put("state", ApkUpdater.state());
         update.put("progress", ApkUpdater.progress());

@@ -245,9 +245,9 @@
     <summary>版本更新 <span class="tag">APK 直链 · 一键安装</span></summary>
     <div class="row" style="display:block">
       <label>APK 下载地址（直链）</label>
-      <input type="text" id="update_url" placeholder="GitHub Release 链接或夸克网盘真实下载直链" style="margin-top:8px">
+      <input type="text" id="update_url" placeholder="留空 = 内置 GitHub Release 直链；也可填任意 APK 直链" style="margin-top:8px">
     </div>
-    <div class="note">这里要填能直接返回 APK 文件的地址；夸克网盘的分享网页是 HTML，不能直接用，需用其真实下载直链。GitHub Release 链接会自动跟随跳转。</div>
+    <div class="note">留空时用 config.xml 里的默认 Release 链接，装上就是最新版；也可以填别的直链。夸克网盘的分享网页是 HTML，不能直接用，需用其真实下载直链。GitHub Release 链接会自动跟随跳转。</div>
     <div class="progress"><i id="update_progress"></i></div>
     <div class="row" style="border:none">
       <span class="spin" id="update_state"></span>

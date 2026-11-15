@@ -115,6 +115,9 @@ public final class LauncherSettingsActivity extends Activity {
         // One-tap update: download the configured APK and open the system installer.
         findViewById(R.id.updateChoice).setOnClickListener(v -> {
             String url = choices.getString("update_url", "");
+            // Nothing saved: fall back to the release link compiled into config.xml, so the row
+            // works on a fresh install instead of only after someone typed an address.
+            if (url.isEmpty()) url = getString(R.string.update_url_default).trim();
             if (url.isEmpty()) {
                 Toast.makeText(this, R.string.update_no_url, Toast.LENGTH_LONG).show();
                 return;
