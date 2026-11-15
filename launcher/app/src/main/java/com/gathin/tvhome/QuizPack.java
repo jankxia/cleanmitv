@@ -2,6 +2,7 @@ package com.gathin.tvhome;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.util.Log;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -140,13 +141,15 @@ public final class QuizPack {
         }
         syncing = true;
         final Context app = c.getApplicationContext();
+        Log.i("QuizPack", "no pack on device, fetching " + url(c));
         new Thread(new Runnable() {
             @Override
             public void run() {
                 try {
-                    sync(app, null);
-                } catch (Exception ignored) {
-                    // offline, or the host is down: the bundled floor keeps the quiz working
+                    int done = sync(app, null);
+                    Log.i("QuizPack", "pack ready: " + done + " files, version " + version(app));
+                } catch (Exception e) {
+                    Log.w("QuizPack", "pack fetch failed, bundled floor kept: " + e);
                 } finally {
                     syncing = false;
                 }

@@ -2,6 +2,7 @@ package com.gathin.tvhome;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.util.Log;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -126,6 +127,8 @@ public final class KidsBank {
         }
         if (json != null) parse(json, list);
         loaded.put(name, list);
+        Log.i("KidsBank", name + ": " + list.size() + " questions from "
+                + (pack.isFile() ? "pack" : "apk"));
         return list;
     }
 
