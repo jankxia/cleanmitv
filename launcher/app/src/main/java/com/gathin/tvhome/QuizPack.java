@@ -314,6 +314,11 @@ public final class QuizPack {
         conn.setReadTimeout(readTimeout);
         conn.setInstanceFollowRedirects(true);
         conn.setRequestProperty("User-Agent", "CleanMiTV/quiz");
+        // OpenList answers Content-Length but never closes a kept-alive response, so the set sits
+        // in read() until the socket times out and reports "unexpected end of stream". Asking it to
+        // close turns a 20 s hang into a 0.3 s complete read.
+        conn.setRequestProperty("Connection", "close");
+        conn.setRequestProperty("Accept-Encoding", "identity");
         try {
             int code = conn.getResponseCode();
             if (code < 200 || code >= 300) throw new Exception("HTTP " + code);
