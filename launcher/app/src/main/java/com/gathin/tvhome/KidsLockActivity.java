@@ -223,8 +223,11 @@ public class KidsLockActivity extends Activity {
 
     @Override
     public boolean onKeyDown(int keyCode, KeyEvent event) {
-        // Nothing behind this screen is reachable; Back does not leave it.
-        if (keyCode == KeyEvent.KEYCODE_BACK) return true;
+        // Nothing behind this screen is reachable; Back does not leave it, but says why.
+        if (keyCode == KeyEvent.KEYCODE_BACK) {
+            Toast.makeText(this, R.string.quiz_back_hint, Toast.LENGTH_SHORT).show();
+            return true;
+        }
         return super.onKeyDown(keyCode, event);
     }
 

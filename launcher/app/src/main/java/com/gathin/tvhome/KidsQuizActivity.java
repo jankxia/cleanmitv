@@ -413,10 +413,17 @@ public class KidsQuizActivity extends Activity {
     @Override
     public boolean onKeyDown(int keyCode, KeyEvent event) {
         if (keyCode == KeyEvent.KEYCODE_BACK) {
-            // Free practice only ever goes back to the mode it came from; a locked round cannot be escaped.
+            // Back steps back one question first, exactly like the button in the corner.
+            if (index > 0) {
+                previous();
+                return true;
+            }
+            // Only free practice goes back to the mode it came from; a locked round cannot be escaped,
+            // but the key no longer does nothing without saying why.
             if (freePractice) {
                 close();
-                return true;
+            } else {
+                Toast.makeText(this, R.string.quiz_back_hint, Toast.LENGTH_SHORT).show();
             }
             return true;
         }
@@ -432,8 +439,10 @@ public class KidsQuizActivity extends Activity {
 
     @Override
     public void onBackPressed() {
-        // Free practice leaves for the mode it came from; nothing behind a locked round is reachable.
-        if (freePractice) close();
+        // Key handling above already covers Back; this only runs if a system path delivers it directly.
+        if (index > 0) previous();
+        else if (freePractice) close();
+        else Toast.makeText(this, R.string.quiz_back_hint, Toast.LENGTH_SHORT).show();
     }
 
     @Override
