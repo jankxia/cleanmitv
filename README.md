@@ -216,7 +216,7 @@ Two things had to be fixed before the download worked at all. OpenList answers `
 
 The bank itself also grew: 597 new textbook facts went into the pools (173 Chinese, 96 English, 85 physics, 67 chemistry, 65 biology, 77 history, 51 geography, 63 politics), 4,293 in total, and the twelve grades were rebuilt from them. APK 862,730 B → 503,278 B, of which the whole question floor is now 16,585 B compressed.
 
-The pack is also published on GitHub for anyone who does not run a Quark-backed OpenList: release `quiz-pack-v4` carries the twelve grade files, an `index.json` whose `files[].url` already point at those assets, the same set as `quiz-pack-v4.zip`, and a `README.txt` with the two steps for hosting it yourself (drop the files in any HTTP directory, rewrite `files[].url` to your own paths, then paste that `index.json` URL into the "题库更新" card). `candidates()` walks LAN → GitHub → the author's reverse proxy, so a TV that is not on the same network can still pull the full bank.
+The pack is also published on GitHub for anyone who does not run a Quark-backed OpenList: release `quiz-pack-v4` carries the twelve grade files, an `index.json` whose `files[].url` already point at those assets, the same set as `quiz-pack-v4.zip`, and a `README.txt` with the two steps for hosting it yourself (drop the files in any HTTP directory, rewrite `files[].url` to your own paths, then paste that `index.json` URL into the "题库更新" card). `candidates()` walks LAN → the author's reverse proxy → GitHub, so a TV that is not on the same network can still pull the full bank, and a hop that cannot be reached gives up after 5 s (LAN) or 10 s (remote) instead of stalling the queue.
 
 <details>
 <summary>📜 历史版本更新记录（v2.7.7 – v2.9.0，点击展开）</summary>

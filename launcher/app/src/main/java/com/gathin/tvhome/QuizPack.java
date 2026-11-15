@@ -70,8 +70,11 @@ public final class QuizPack {
         List<String> out = new ArrayList<>();
         String saved = prefs(c).getString(URL_KEY, "").trim();
         if (!saved.isEmpty()) out.add(saved);
-        for (int id : new int[]{R.string.quiz_pack_url, R.string.quiz_pack_url_github,
-                R.string.quiz_pack_url_backup}) {
+        // Local first, then the author's reverse proxy, then GitHub last: a browser reaches GitHub
+        // through a proxy, but a TV on a bare link often cannot open it at all, so it must not stand
+        // in front of a mirror that does answer.
+        for (int id : new int[]{R.string.quiz_pack_url, R.string.quiz_pack_url_backup,
+                R.string.quiz_pack_url_github}) {
             String u = c.getString(id).trim();
             if (!u.isEmpty() && !out.contains(u)) out.add(u);
         }
@@ -300,7 +303,7 @@ public final class QuizPack {
             int pos = out.size();
             int end = total > 0 ? Math.min(pos + CHUNK, total) - 1 : pos + CHUNK - 1;
             HttpURLConnection conn = (HttpURLConnection) new URL(link).openConnection();
-            conn.setConnectTimeout(15000);
+            conn.setConnectTimeout(connectTimeout(link));
             conn.setReadTimeout(readTimeout);
             conn.setInstanceFollowRedirects(true);
             conn.setRequestProperty("User-Agent", "CleanMiTV/quiz");
@@ -357,9 +360,20 @@ public final class QuizPack {
         }
     }
 
+    /**
+     * A LAN hop answers in milliseconds, so waiting the full 15 s on it only delays the fallback; a
+     * remote hop gets a little more room because DNS and TLS setup are the slow parts there. The
+     * three hops are tried in order, so each one has to give up quickly for the next to be useful.
+     */
+    private static int connectTimeout(String link) {
+        return link.startsWith("http://192.168.") || link.startsWith("http://10.")
+                || link.startsWith("http://127.0.0.1") || link.startsWith("http://localhost/")
+                ? 5000 : 10000;
+    }
+
     private static byte[] get(String link, int readTimeout) throws Exception {
         HttpURLConnection conn = (HttpURLConnection) new URL(link).openConnection();
-        conn.setConnectTimeout(15000);
+        conn.setConnectTimeout(connectTimeout(link));
         conn.setReadTimeout(readTimeout);
         conn.setInstanceFollowRedirects(true);
         conn.setRequestProperty("User-Agent", "CleanMiTV/quiz");
