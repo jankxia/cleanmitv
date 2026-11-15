@@ -270,6 +270,7 @@
     <string name="quiz_pack_no_url">还没有配置题库地址</string>
     <string name="quiz_score_pair">答对 %1$d · 答错 %2$d</string>
     <string name="quiz_prev">返回一题</string>
+    <string name="quiz_continue">继续</string>
     <string name="kids_grade_1">一年级</string>
     <string name="kids_grade_2">二年级</string>
     <string name="kids_grade_3">三年级</string>

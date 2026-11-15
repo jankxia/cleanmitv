@@ -56,6 +56,7 @@ public class KidsQuizActivity extends Activity {
     /** What was picked for each question in the round: -1 until it is answered. */
     private final List<Integer> picked = new ArrayList<>();
     private TextView prevButton;
+    private TextView continueButton;
     private TextView progress;
     private TextView score;
     private TextView starsView;
@@ -102,8 +103,10 @@ public class KidsQuizActivity extends Activity {
         againButton = findViewById(R.id.againButton);
         closeButton = findViewById(R.id.closeButton);
         prevButton = findViewById(R.id.prevButton);
+        continueButton = findViewById(R.id.continueButton);
         starPop = findViewById(R.id.starPop);
         prevButton.setOnClickListener(v -> previous());
+        continueButton.setOnClickListener(v -> next());
 
         againButton.setOnClickListener(v -> restart());
         closeButton.setOnClickListener(v -> close());
@@ -198,6 +201,9 @@ public class KidsQuizActivity extends Activity {
         }
         prevButton.setEnabled(index > 0);
         prevButton.setAlpha(index > 0 ? 1f : 0.4f);
+        // Continue waits for the answer: skipping a question would skip the thing being asked.
+        continueButton.setEnabled(answered);
+        continueButton.setAlpha(answered ? 1f : 0.4f);
         if (answered) {
             // Stepping back: show what was picked, what was right, and let a press move on.
             markAnswer(q, choice);
@@ -241,6 +247,8 @@ public class KidsQuizActivity extends Activity {
         }
         markAnswer(q, choice);
         showScore();
+        continueButton.setEnabled(true);
+        continueButton.setAlpha(1f);
 
         long delay = plan.autoNextSeconds > 0 ? plan.autoNextSeconds * 1_000L : 0;
         if (delay > 0) {
@@ -274,6 +282,15 @@ public class KidsQuizActivity extends Activity {
                     + "\n✊ " + getString(R.string.quiz_cheer));
             feedback.setTextColor(0xFFC0432F);
         }
+    }
+
+    /** On to the next question without waiting out the auto-advance. */
+    private void next() {
+        if (closing || !answered) return;
+        handler.removeCallbacks(nextQuestion);
+        waitingNext = false;
+        index++;
+        showQuestion();
     }
 
     /** One question back; an answered question shows its result again instead of asking twice. */
