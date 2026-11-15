@@ -122,7 +122,14 @@ public final class QuizPack {
                 done++;
             } catch (Exception e) {
                 // One bad file must not sink the twelve: it is listed and retried next time.
+                Log.w("QuizPack", "failed " + name + ": " + e);
                 missing.add(name);
+            }
+            // Quark behind OpenList dislikes a burst of reads; give it a moment between files.
+            try {
+                Thread.sleep(400);
+            } catch (InterruptedException ignored) {
+                // carry on
             }
             if (progress != null) progress.onStep(name, done, files.length());
         }
@@ -186,7 +193,7 @@ public final class QuizPack {
             } catch (Exception e) {
                 last = e;
                 try {
-                    Thread.sleep(600);
+                    Thread.sleep(600L * (i + 1));
                 } catch (InterruptedException ignored) {
                     // go straight to the next try
                 }
