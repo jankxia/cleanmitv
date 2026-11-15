@@ -21,6 +21,9 @@ public final class KidsLedger {
     public int extraPool;
     /** Wrong answers since the pool last paid out; the threshold tops the pool up. */
     public int wrongSince;
+    /** Right and wrong answers today; midnight clears both, like the rounds. */
+    public int rightToday;
+    public int wrongToday;
     public String day = "";
 
     public static KidsLedger load(Context context) {
@@ -30,6 +33,8 @@ public final class KidsLedger {
         l.roundsToday = p.getInt("rounds_today", 0);
         l.extraPool = p.getInt("extra_pool", 0);
         l.wrongSince = p.getInt("wrong_since", 0);
+        l.rightToday = p.getInt("right_today", 0);
+        l.wrongToday = p.getInt("wrong_today", 0);
         l.day = p.getString("day", "");
         return l;
     }
@@ -40,6 +45,8 @@ public final class KidsLedger {
                 .putInt("rounds_today", roundsToday)
                 .putInt("extra_pool", extraPool)
                 .putInt("wrong_since", wrongSince)
+                .putInt("right_today", rightToday)
+                .putInt("wrong_today", wrongToday)
                 .putString("day", day)
                 .apply();
     }
@@ -50,6 +57,8 @@ public final class KidsLedger {
         day = today;
         creditMs = 0;
         roundsToday = 0;
+        rightToday = 0;
+        wrongToday = 0;
     }
 
     /** Watching ms, charged to the credit first; returns how much of it the credit covered. */

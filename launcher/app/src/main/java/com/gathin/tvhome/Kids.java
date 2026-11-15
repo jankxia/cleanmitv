@@ -584,6 +584,9 @@ public final class Kids {
 
     /** One answer, right or wrong: enough wrong ones top up the practice pool. */
     public static void recordAnswer(boolean correct) {
+        if (correct) ledger.rightToday++;
+        else ledger.wrongToday++;
+        ledger.save(app);
         if (!plan.extraEnabled) return;
         if (correct) {
             if (ledger.wrongSince > 0) {

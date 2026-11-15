@@ -190,15 +190,16 @@ public final class KidsBank {
         if (pool.isEmpty()) pool = everyPool(c, subjects);
 
         Set<String> seen = seenToday(c);
+        Set<String> avoid = recent(c);
         List<Q> fresh = new ArrayList<>();
         List<Q> unseen = new ArrayList<>();
         List<Q> rest = new ArrayList<>();
         for (Q q : pool) {
-            if (seen.contains(q.id)) rest.add(q);
+            if (seen.contains(q.id) || avoid.contains(q.id)) rest.add(q);
             else if (right(c, q.id) == 0) unseen.add(q);
             else fresh.add(q);
         }
-        Random random = new Random(System.currentTimeMillis());
+        Random random = new Random();
         Collections.shuffle(fresh, random);
         Collections.shuffle(unseen, random);
         Collections.shuffle(rest, random);
@@ -279,6 +280,19 @@ public final class KidsBank {
         Set<String> seen = seenToday(c);
         seen.add(id);
         e.putStringSet("seen_day", seen).putString("seen_on", today).apply();
+    }
+
+    /** The ids of the last round: opening the quiz again starts on other questions. */
+    public static Set<String> recent(Context c) {
+        Set<String> stored = prefs(c).getStringSet("recent", null);
+        return stored == null ? new HashSet<>() : new HashSet<>(stored);
+    }
+
+    /** Remembers the round just handed out, so the next one skips it until the pool runs dry. */
+    public static void remember(Context c, List<Q> round) {
+        Set<String> ids = new HashSet<>();
+        for (Q q : round) ids.add(q.id);
+        prefs(c).edit().putStringSet("recent", ids).apply();
     }
 
     /** Ids asked today; a new day starts empty. */

@@ -53,6 +53,9 @@ public class KidsQuizActivity extends Activity {
     private boolean waitingNext;
     private boolean closing;
 
+    /** What was picked for each question in the round: -1 until it is answered. */
+    private final List<Integer> picked = new ArrayList<>();
+    private TextView prevButton;
     private TextView progress;
     private TextView score;
     private TextView starsView;
@@ -98,7 +101,9 @@ public class KidsQuizActivity extends Activity {
         resultSub = findViewById(R.id.resultSub);
         againButton = findViewById(R.id.againButton);
         closeButton = findViewById(R.id.closeButton);
+        prevButton = findViewById(R.id.prevButton);
         starPop = findViewById(R.id.starPop);
+        prevButton.setOnClickListener(v -> previous());
 
         againButton.setOnClickListener(v -> restart());
         closeButton.setOnClickListener(v -> close());
@@ -121,6 +126,7 @@ public class KidsQuizActivity extends Activity {
 
     private void startRound() {
         round.clear();
+        picked.clear();
         index = 0;
         correct = 0;
         streak = 0;
@@ -136,6 +142,9 @@ public class KidsQuizActivity extends Activity {
             close();
             return;
         }
+        for (int i = 0; i < round.size(); i++) picked.add(-1);
+        // The next round has to start somewhere else, or a child sees the same questions twice.
+        KidsBank.remember(this, round);
         showQuestion();
     }
 
@@ -148,6 +157,7 @@ public class KidsQuizActivity extends Activity {
         for (KidsBank.Q q : more) {
             if (round.contains(q)) continue;
             round.add(q);
+            picked.add(-1);
             added = true;
         }
         return added;
@@ -166,12 +176,13 @@ public class KidsQuizActivity extends Activity {
         }
         KidsBank.Q q = round.get(index);
         progress.setText(getString(R.string.quiz_progress, index + 1, round.size()));
-        score.setText(getString(R.string.quiz_score, correct));
+        showScore();
         showStars();
         question.setText(q.text);
         feedback.setText(R.string.quiz_pick);
         feedback.setTextColor(0xFF9A6A28);
-        answered = false;
+        int choice = picked.get(index);
+        answered = choice >= 0;
         waitingNext = false;
 
         options.removeAllViews();
@@ -180,12 +191,20 @@ public class KidsQuizActivity extends Activity {
         for (int i = 0; i < q.options.length; i++) {
             TextView view = (TextView) inflater.inflate(R.layout.item_quiz_option, options, false);
             view.setText(optionLabel(i) + "   " + q.options[i]);
-            final int choice = i;
-            view.setOnClickListener(v -> answer(choice));
+            final int pick = i;
+            view.setOnClickListener(v -> answer(pick));
             options.addView(view);
             optionViews.add(view);
         }
-        if (!optionViews.isEmpty()) optionViews.get(0).requestFocus();
+        prevButton.setEnabled(index > 0);
+        prevButton.setAlpha(index > 0 ? 1f : 0.4f);
+        if (answered) {
+            // Stepping back: show what was picked, what was right, and let a press move on.
+            markAnswer(q, choice);
+            waitingNext = true;
+        } else if (!optionViews.isEmpty()) {
+            optionViews.get(0).requestFocus();
+        }
     }
 
     private void showStars() {
@@ -198,7 +217,8 @@ public class KidsQuizActivity extends Activity {
     }
 
     private void answer(int choice) {
-        if (answered || index >= round.size()) return;
+        if (index >= round.size() || picked.get(index) >= 0) return;
+        picked.set(index, choice);
         answered = true;
         KidsBank.Q q = round.get(index);
         boolean right = choice == q.answer;
@@ -209,9 +229,6 @@ public class KidsQuizActivity extends Activity {
             correct++;
             streak++;
             QuizSounds.playCorrect();
-            optionViews.get(choice).setBackgroundResource(R.drawable.quiz_option_right);
-            feedback.setText(R.string.quiz_right);
-            feedback.setTextColor(0xFF2E8B57);
             if (starsOn()) {
                 earned += STAR_PER_RIGHT;
                 Kids.addStars(STAR_PER_RIGHT);
@@ -221,17 +238,9 @@ public class KidsQuizActivity extends Activity {
         } else {
             streak = 0;
             QuizSounds.playWrong();
-            // The wrong pick keeps its red frame and the right one goes green; the line below spells
-            // out which option was picked, so the wrong answer stays readable after the round moves on.
-            optionViews.get(choice).setBackgroundResource(R.drawable.quiz_option_wrong);
-            if (q.answer < optionViews.size()) {
-                optionViews.get(q.answer).setBackgroundResource(R.drawable.quiz_option_right);
-            }
-            feedback.setText(getString(R.string.quiz_wrong_pick, q.options[choice], q.options[q.answer])
-                    + "\n✊ " + getString(R.string.quiz_cheer));
-            feedback.setTextColor(0xFFC0432F);
         }
-        score.setText(getString(R.string.quiz_score, correct));
+        markAnswer(q, choice);
+        showScore();
 
         long delay = plan.autoNextSeconds > 0 ? plan.autoNextSeconds * 1_000L : 0;
         if (delay > 0) {
@@ -241,6 +250,39 @@ public class KidsQuizActivity extends Activity {
             feedback.setText(getString(R.string.quiz_next));
             feedback.setTextColor(0xFF9A6A28);
         }
+    }
+
+    /** The two counters in the corner: today's right and wrong, cleared at midnight. */
+    private void showScore() {
+        score.setText(getString(R.string.quiz_score_pair, ledger.rightToday, ledger.wrongToday));
+    }
+
+    /** Paints the pick red and the right answer green, and says which was which. */
+    private void markAnswer(KidsBank.Q q, int choice) {
+        boolean right = choice == q.answer;
+        if (choice < optionViews.size() && !right) {
+            optionViews.get(choice).setBackgroundResource(R.drawable.quiz_option_wrong);
+        }
+        if (q.answer < optionViews.size()) {
+            optionViews.get(q.answer).setBackgroundResource(R.drawable.quiz_option_right);
+        }
+        if (right) {
+            feedback.setText(R.string.quiz_right);
+            feedback.setTextColor(0xFF2E8B57);
+        } else {
+            feedback.setText(getString(R.string.quiz_wrong_pick, q.options[choice], q.options[q.answer])
+                    + "\n✊ " + getString(R.string.quiz_cheer));
+            feedback.setTextColor(0xFFC0432F);
+        }
+    }
+
+    /** One question back; an answered question shows its result again instead of asking twice. */
+    private void previous() {
+        if (closing || index == 0) return;
+        handler.removeCallbacks(nextQuestion);
+        waitingNext = false;
+        index--;
+        showQuestion();
     }
 
     /** A star flies in from below, bounces, then drifts off: one per right answer. */
