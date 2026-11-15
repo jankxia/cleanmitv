@@ -15,6 +15,8 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Locale;
 
 /**
@@ -93,6 +95,7 @@ public final class QuizPack {
         if (!dir.isDirectory() && !dir.mkdirs()) throw new Exception("no pack folder");
         String folder = base.substring(0, base.lastIndexOf('/') + 1);
         int done = 0;
+        List<String> missing = new ArrayList<>();
         for (int i = 0; i < files.length(); i++) {
             JSONObject f = files.getJSONObject(i);
             String name = f.getString("name");
@@ -101,22 +104,30 @@ public final class QuizPack {
             if (!name.endsWith(".json")) continue;
             String link = f.optString("url", "");
             if (link.isEmpty()) link = folder + name;
-            byte[] body = getWithRetry(link, 180000);
-            String sha = f.optString("sha256", "").trim().toLowerCase(Locale.US);
-            // A short manifest entry (the author once wrote 16 hex digits) still pins the file:
-            // the computed digest has to start with it.
-            if (!sha.isEmpty() && !sha256(body).startsWith(sha)) {
-                throw new Exception("checksum " + name);
+            try {
+                byte[] body = getWithRetry(link, 180000);
+                String sha = f.optString("sha256", "").trim().toLowerCase(Locale.US);
+                // A short manifest entry (the author once wrote 16 hex digits) still pins the
+                // file: the computed digest has to start with it.
+                if (!sha.isEmpty() && !sha256(body).startsWith(sha)) {
+                    throw new Exception("checksum " + name);
+                }
+                String text = new String(body, StandardCharsets.UTF_8);
+                if (!KidsBank.usable(text)) throw new Exception("bad file " + name);
+                File tmp = new File(dir, name + ".tmp");
+                write(tmp, body);
+                File target = new File(dir, name);
+                if (target.exists() && !target.delete()) throw new Exception("busy " + name);
+                if (!tmp.renameTo(target)) throw new Exception("rename " + name);
+                done++;
+            } catch (Exception e) {
+                // One bad file must not sink the twelve: it is listed and retried next time.
+                missing.add(name);
             }
-            String text = new String(body, StandardCharsets.UTF_8);
-            if (!KidsBank.usable(text)) throw new Exception("bad file " + name);
-            File tmp = new File(dir, name + ".tmp");
-            write(tmp, body);
-            File target = new File(dir, name);
-            if (target.exists() && !target.delete()) throw new Exception("busy " + name);
-            if (!tmp.renameTo(target)) throw new Exception("rename " + name);
-            done++;
             if (progress != null) progress.onStep(name, done, files.length());
+        }
+        if (!missing.isEmpty()) {
+            throw new Exception("left " + missing.size() + ": " + missing);
         }
         prefs(c).edit()
                 .putString(VERSION_KEY, root.optString("version", ""))
@@ -136,11 +147,9 @@ public final class QuizPack {
      */
     public static void ensure(final Context c) {
         if (syncing) return;
-        File dir = KidsBank.packDir(c);
-        String[] names = dir.list();
-        if (names != null) {
-            for (String n : names) if (n.endsWith(".json")) return;
-        }
+        // A version is only written once every listed file went in, so it doubles as "complete".
+        // Checking for "some json on disk" instead would freeze a half finished pack in place.
+        if (!version(c).isEmpty()) return;
         syncing = true;
         final Context app = c.getApplicationContext();
         Log.i("QuizPack", "no pack on device, fetching " + url(c));
