@@ -45,6 +45,9 @@ public final class QuizPack {
     private static final String URL_KEY = "url";
     private static final String VERSION_KEY = "version";
     private static final String STAMP_KEY = "at";
+    private static final String CHECK_KEY = "checked";
+    /** A finished pack is only re-checked against the mirror this often. */
+    private static final long CHECK_GAP = 5 * 60 * 1000L;
 
     /** Where the download got to, for the row's hint. */
     public interface Progress {
@@ -173,6 +176,7 @@ public final class QuizPack {
         prefs(c).edit()
                 .putString(VERSION_KEY, root.optString("version", ""))
                 .putLong(STAMP_KEY, System.currentTimeMillis())
+                .putLong(CHECK_KEY, System.currentTimeMillis())
                 .apply();
         KidsBank.forget();
         return done;
@@ -188,11 +192,40 @@ public final class QuizPack {
      */
     public static void ensure(final Context c) {
         if (syncing) return;
+        final Context app = c.getApplicationContext();
+        final String have = version(c);
+        if (!have.isEmpty()) {
+            // The pack is complete, but the mirror may have a newer one - that is the whole point of
+            // "题库更新". Probing costs one small manifest read, so it is throttled rather than run
+            // on every open, and a probe that fails changes nothing.
+            long checked = prefs(app).getLong(CHECK_KEY, 0);
+            if (System.currentTimeMillis() - checked < CHECK_GAP) return;
+            prefs(app).edit().putLong(CHECK_KEY, System.currentTimeMillis()).apply();
+            syncing = true;
+            new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        String remote = remoteVersion(app);
+                        if (remote.isEmpty() || remote.equals(have)) {
+                            Log.i("QuizPack", "pack up to date: " + have);
+                            return;
+                        }
+                        Log.i("QuizPack", "pack out of date " + have + " -> " + remote);
+                        int done = sync(app, null);
+                        Log.i("QuizPack", "pack ready: " + done + " files, version " + version(app));
+                    } catch (Exception e) {
+                        Log.w("QuizPack", "pack check failed, keeping " + have + ": " + e);
+                    } finally {
+                        syncing = false;
+                    }
+                }
+            }, "quiz-pack").start();
+            return;
+        }
         // A version is only written once every listed file went in, so it doubles as "complete".
         // Checking for "some json on disk" instead would freeze a half finished pack in place.
-        if (!version(c).isEmpty()) return;
         syncing = true;
-        final Context app = c.getApplicationContext();
         Log.i("QuizPack", "no pack on device, fetching " + url(c));
         new Thread(new Runnable() {
             @Override
@@ -209,12 +242,27 @@ public final class QuizPack {
         }, "quiz-pack").start();
     }
 
+    /** The version a mirror is serving, "" when none of them answers. */
+    private static String remoteVersion(Context c) {
+        for (String base : candidates(c)) {
+            if (base.isEmpty()) continue;
+            try {
+                JSONObject root = new JSONObject(new String(get(base, 30000), StandardCharsets.UTF_8));
+                String v = root.optString("version", "").trim();
+                if (!v.isEmpty()) return v;
+            } catch (Exception e) {
+                Log.w("QuizPack", "version probe failed " + base + ": " + e);
+            }
+        }
+        return "";
+    }
+
     /** Throws away the downloaded pack, back to the bundled questions. */
     public static void clear(Context c) {
         File dir = KidsBank.packDir(c);
         File[] files = dir.listFiles();
         if (files != null) for (File f : files) f.delete();
-        prefs(c).edit().putString(VERSION_KEY, "").putLong(STAMP_KEY, 0).apply();
+        prefs(c).edit().putString(VERSION_KEY, "").putLong(STAMP_KEY, 0).putLong(CHECK_KEY, 0).apply();
         KidsBank.forget();
     }
 
