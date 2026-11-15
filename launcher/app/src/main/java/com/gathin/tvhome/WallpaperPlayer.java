@@ -69,7 +69,9 @@ final class WallpaperPlayer {
         interval = config.wallpaperRotationMinutes * 60_000L;
         bitmapConfig = config.wallpaperTrueColor ? Bitmap.Config.ARGB_8888 : Bitmap.Config.RGB_565;
         // The dim is painted into the picture (decode), so no full-screen shade layer is drawn on every frame.
-        dimColor = PersonalAppearance.day(context) ? 0xB8EDF3FA
+        // Day appearance paints a 10% white veil into the picture: bright enough to unify the wallpapers,
+        // thin enough that the picture itself stays visible instead of going milky.
+        dimColor = PersonalAppearance.day(context) ? 0x1AEDF3FA
                 : config.wallpaperDim > 0 ? (config.wallpaperDim * 255 / 100) << 24 : 0;
         order = config.wallpaperOrder;
         preferences = context.getSharedPreferences("wallpaper_rotation", Context.MODE_PRIVATE);

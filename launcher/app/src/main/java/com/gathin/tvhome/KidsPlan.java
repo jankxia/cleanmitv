@@ -200,6 +200,8 @@ public final class KidsPlan {
 
     /** The grade as stored, kept inside the stage it belongs to. */
     public int grade() {
+        // 0 is the whole stage, picked by the all-grades chip.
+        if (grade == 0) return 0;
         int[] all = grades(stage);
         if (grade < all[0]) grade = all[0];
         if (grade > all[all.length - 1]) grade = all[all.length - 1];

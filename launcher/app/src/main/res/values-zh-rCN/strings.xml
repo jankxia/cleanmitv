@@ -259,6 +259,7 @@
     <string name="kids_overlay_need">家长：请允许本应用「显示在其他应用的上层」，否则视频播放时锁屏盖不住。</string>
     <string name="kids_stage_later">初中、高中的题库以后再加</string>
     <string name="kids_grade">年级</string>
+    <string name="kids_grade_all">全年级</string>
     <string name="kids_grade_1">一年级</string>
     <string name="kids_grade_2">二年级</string>
     <string name="kids_grade_3">三年级</string>

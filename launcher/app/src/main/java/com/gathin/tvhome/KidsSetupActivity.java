@@ -411,7 +411,11 @@ public class KidsSetupActivity extends Activity {
         subjectChips.clear();
 
         LayoutInflater inflater = getLayoutInflater();
-        int[] grades = KidsPlan.grades(plan.stage);
+        // The whole stage first, then every one of its grades: 6 in primary, 3 in middle and high.
+        int[] stageGrades = KidsPlan.grades(plan.stage);
+        int[] grades = new int[stageGrades.length + 1];
+        grades[0] = 0;
+        System.arraycopy(stageGrades, 0, grades, 1, stageGrades.length);
         for (int i = 0; i < grades.length; i++) {
             LinearLayout row = i < 3 ? gradeRow : gradeRow2;
             TextView chip = (TextView) inflater.inflate(R.layout.kids_chip, row, false);
@@ -455,6 +459,7 @@ public class KidsSetupActivity extends Activity {
 
     private String gradeLabel(int grade) {
         switch (grade) {
+            case 0: return getString(R.string.kids_grade_all);
             case 1: return getString(R.string.kids_grade_1);
             case 2: return getString(R.string.kids_grade_2);
             case 3: return getString(R.string.kids_grade_3);
