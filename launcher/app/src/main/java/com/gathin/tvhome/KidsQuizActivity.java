@@ -446,7 +446,9 @@ public class KidsQuizActivity extends Activity {
         super.onUserLeaveHint();
         // Home is a system key no activity can take, so the round hands over to the gate at once:
         // the gate opens on the parent's PIN, and nothing behind it is reachable until it is entered.
-        if (!leavesBehindPin() || closing) return;
+        // Only a locked round has anywhere to hand over to: with time still on the clock the kids
+        // home is already where Home goes, and the gate would open on nothing.
+        if (!leavesBehindPin() || closing || Kids.lock == null) return;
         KidsWatch.quizShowing = false;
         KidsLockActivity.pinFirst = true;
         try {
