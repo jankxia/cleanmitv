@@ -218,7 +218,14 @@ public final class QuizPack {
         KidsBank.forget();
     }
 
-    /** OpenList in front of Quark drops a long read now and then; three tries ride that out. */
+    /** One read is up to 32 KB: OpenList in front of Quark tears long responses down. */
+    private static final int CHUNK = 32768;
+
+    /**
+     * A whole file: one plain read when that works, otherwise a ranged walk over the same URL.
+     * The set drops long responses with "unexpected end of stream" while short ranged reads go
+     * through, and OpenList advertises Accept-Ranges, so the fallback is cheap and verifiable.
+     */
     private static byte[] getWithRetry(String link, int readTimeout) throws Exception {
         Exception last = null;
         for (int i = 0; i < 3; i++) {
@@ -233,7 +240,72 @@ public final class QuizPack {
                 }
             }
         }
-        throw last;
+        Log.w("QuizPack", "plain read failed, going ranged: " + last);
+        return getRanged(link, readTimeout);
+    }
+
+    private static byte[] getRanged(String link, int readTimeout) throws Exception {
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        int total = -1;
+        for (int attempt = 0; attempt < 6; attempt++) {
+            int pos = out.size();
+            int end = total > 0 ? Math.min(pos + CHUNK, total) - 1 : pos + CHUNK - 1;
+            HttpURLConnection conn = (HttpURLConnection) new URL(link).openConnection();
+            conn.setConnectTimeout(15000);
+            conn.setReadTimeout(readTimeout);
+            conn.setInstanceFollowRedirects(true);
+            conn.setRequestProperty("User-Agent", "CleanMiTV/quiz");
+            conn.setRequestProperty("Connection", "close");
+            conn.setRequestProperty("Accept-Encoding", "identity");
+            conn.setRequestProperty("Range", "bytes=" + pos + "-" + end);
+            try {
+                int code = conn.getResponseCode();
+                if (code == 200) {
+                    // The mirror ignored the range: this response is the whole file.
+                    return readAll(conn);
+                }
+                if (code != 206) throw new Exception("HTTP " + code);
+                String cr = conn.getHeaderField("Content-Range");
+                if (cr != null && total < 0) {
+                    int slash = cr.lastIndexOf('/');
+                    if (slash > 0) {
+                        try {
+                            total = Integer.parseInt(cr.substring(slash + 1).trim());
+                        } catch (NumberFormatException ignored) {
+                            total = -1;
+                        }
+                    }
+                }
+                byte[] part = readAll(conn);
+                if (part.length == 0) throw new Exception("empty range at " + pos);
+                out.write(part, 0, part.length);
+                attempt = 0;
+                if (total > 0 && out.size() >= total) break;
+                if (total < 0 && part.length < CHUNK) break;
+            } catch (Exception e) {
+                if (attempt == 5) throw e;
+                try {
+                    Thread.sleep(400L * (attempt + 1));
+                } catch (InterruptedException ignored) {
+                    // next try
+                }
+            } finally {
+                conn.disconnect();
+            }
+        }
+        byte[] body = out.toByteArray();
+        if (total > 0 && body.length != total) throw new Exception("short read " + body.length + "/" + total);
+        return body;
+    }
+
+    private static byte[] readAll(HttpURLConnection conn) throws Exception {
+        try (InputStream in = conn.getInputStream();
+             ByteArrayOutputStream out = new ByteArrayOutputStream()) {
+            byte[] buf = new byte[8192];
+            int n;
+            while ((n = in.read(buf)) > 0) out.write(buf, 0, n);
+            return out.toByteArray();
+        }
     }
 
     private static byte[] get(String link, int readTimeout) throws Exception {
