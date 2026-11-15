@@ -259,7 +259,15 @@
     <string name="kids_overlay_need">家长：请允许本应用「显示在其他应用的上层」，否则视频播放时锁屏盖不住。</string>
     <string name="kids_stage_later">初中、高中的题库以后再加</string>
     <string name="kids_grade">年级</string>
-    <string name="kids_grade_all">全年级</string>
+    <string name="kids_grade_all">全选</string>
+    <string name="kids_grade_need">至少保留一个年级</string>
+    <string name="quiz_pack_row">题库更新</string>
+    <string name="quiz_pack_row_version">题库更新 · %1$s</string>
+    <string name="quiz_pack_hint">从题库地址（OpenList、夸克网盘）按年级下载，校验不过的文件不会替换内置题库。</string>
+    <string name="quiz_pack_checking">正在检查题库…</string>
+    <string name="quiz_pack_ok">题库已更新：%1$d 个年级</string>
+    <string name="quiz_pack_fail">题库更新失败：%1$s</string>
+    <string name="quiz_pack_no_url">还没有配置题库地址</string>
     <string name="kids_grade_1">一年级</string>
     <string name="kids_grade_2">二年级</string>
     <string name="kids_grade_3">三年级</string>

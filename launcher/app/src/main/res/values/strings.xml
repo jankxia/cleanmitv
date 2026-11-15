@@ -266,7 +266,15 @@
     <string name="kids_stage_note">Each stage has its own bank: pick a stage, then the grade and the subjects.</string>
     <string name="kids_stage_later">Middle and high school banks come later</string>
     <string name="kids_grade">Grade</string>
-    <string name="kids_grade_all">All grades</string>
+    <string name="kids_grade_all">All</string>
+    <string name="kids_grade_need">Keep at least one grade</string>
+    <string name="quiz_pack_row">Question pack</string>
+    <string name="quiz_pack_row_version">Question pack · %1$s</string>
+    <string name="quiz_pack_hint">Downloads the per-grade files from the pack address (OpenList / Quark). Nothing is replaced unless the download verifies.</string>
+    <string name="quiz_pack_checking">Checking the question pack…</string>
+    <string name="quiz_pack_ok">Question pack updated: %1$d grades</string>
+    <string name="quiz_pack_fail">Question pack failed: %1$s</string>
+    <string name="quiz_pack_no_url">No question pack address set</string>
     <string name="kids_grade_1">Year 1</string>
     <string name="kids_grade_2">Year 2</string>
     <string name="kids_grade_3">Year 3</string>

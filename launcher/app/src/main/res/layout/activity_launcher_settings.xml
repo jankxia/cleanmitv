@@ -262,7 +262,19 @@
                 android:layout_weight="1"
                 android:layout_marginStart="10dp"
                 android:orientation="vertical">
+                <TextView android:id="@+id/quizPackChoice" style="@style/SettingsGridCell"
+                    android:text="@string/quiz_pack_row" />
+                <TextView
+                    android:id="@+id/quizPackHint"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="7dp"
+                    android:visibility="gone"
+                    android:text="@string/quiz_pack_hint"
+                    android:textColor="#FFACB8C1"
+                    android:textSize="14sp" />
                 <TextView android:id="@+id/updateChoice" style="@style/SettingsGridCell"
+                    android:layout_marginTop="18dp"
                     android:text="@string/update_check" />
                 <TextView
                     android:id="@+id/updateHint"

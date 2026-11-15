@@ -422,7 +422,14 @@ public class KidsSetupActivity extends Activity {
             chip.setText(gradeLabel(grades[i]));
             chip.setTag(grades[i]);
             chip.setOnClickListener(v -> {
-                plan.grade = (Integer) v.getTag();
+                int grade = (Integer) v.getTag();
+                if (grade == 0) {
+                    // The first chip is the stage's whole set: on, or back to its first grade.
+                    plan.setAllGrades(!plan.allGrades());
+                } else if (!plan.toggleGrade(grade)) {
+                    Toast.makeText(this, R.string.kids_grade_need, Toast.LENGTH_SHORT).show();
+                    return;
+                }
                 Kids.savePlan();
                 KidsWatch.poke();
                 refresh();
@@ -643,9 +650,10 @@ public class KidsSetupActivity extends Activity {
         setSelected(R.id.stageMiddle, KidsPlan.STAGE_MIDDLE.equals(plan.stage));
         setSelected(R.id.stageHigh, KidsPlan.STAGE_HIGH.equals(plan.stage));
         ensureChips(plan);
-        int gradeNow = plan.grade();
+        boolean everyGrade = plan.allGrades();
         for (TextView chip : gradeChips) {
-            chip.setSelected(((Integer) chip.getTag()) == gradeNow);
+            int grade = (Integer) chip.getTag();
+            chip.setSelected(grade == 0 ? everyGrade : plan.hasGrade(grade));
         }
         for (TextView chip : subjectChips) {
             chip.setSelected(plan.subject((String) chip.getTag()));

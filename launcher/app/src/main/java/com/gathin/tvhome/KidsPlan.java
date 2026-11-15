@@ -42,8 +42,12 @@ public final class KidsPlan {
     public static final String STAGE_HIGH = "high";
     /** Which school stage the questions come from. */
     public String stage = STAGE_PRIMARY;
-    /** Which grade of that stage: 1-6 in primary, 7-9 in middle, 10-12 in high. */
-    public int grade = 1;
+    /**
+     * Which grades of that stage a round may draw from: 1-6 in primary, 7-9 in middle, 10-12 in
+     * high, any number of them. Never empty.
+     */
+    public final java.util.LinkedHashSet<Integer> gradeSet =
+            new java.util.LinkedHashSet<>(java.util.Collections.singletonList(1));
     /** The subjects offered by the stage; the ones no stage uses stay off. */
     public boolean subjectChinese = true;
     public boolean subjectMath = true;
@@ -84,7 +88,19 @@ public final class KidsPlan {
         plan.playMode = p.getString("play_mode", plan.playMode);
         plan.autoNextSeconds = p.getInt("auto_next", plan.autoNextSeconds);
         plan.stage = p.getString("stage", plan.stage);
-        plan.grade = p.getInt("grade", plan.grade);
+        plan.gradeSet.clear();
+        java.util.Set<String> stored = p.getStringSet("grades", null);
+        if (stored != null) {
+            for (String g : stored) {
+                try {
+                    plan.gradeSet.add(Integer.parseInt(g));
+                } catch (NumberFormatException ignored) {
+                }
+            }
+        }
+        // Saved before the grade row became a multi-select: keep its one grade.
+        if (plan.gradeSet.isEmpty()) plan.gradeSet.add(p.getInt("grade", 1));
+        plan.normalizeGrades();
         plan.subjectChinese = p.getBoolean("subject_chinese", plan.subjectChinese);
         plan.subjectMath = p.getBoolean("subject_math", plan.subjectMath);
         plan.subjectEnglish = p.getBoolean("subject_english", plan.subjectEnglish);
@@ -119,7 +135,8 @@ public final class KidsPlan {
                 .putString("play_mode", playMode)
                 .putInt("auto_next", autoNextSeconds)
                 .putString("stage", stage)
-                .putInt("grade", grade)
+                .putStringSet("grades", gradesPrefs())
+                .putInt("grade", grade())
                 .putBoolean("subject_chinese", subjectChinese)
                 .putBoolean("subject_math", subjectMath)
                 .putBoolean("subject_english", subjectEnglish)
@@ -198,20 +215,79 @@ public final class KidsPlan {
         return STAGE_PRIMARY;
     }
 
-    /** The grade as stored, kept inside the stage it belongs to. */
+    /** The grades a round may draw from, in order. */
+    public java.util.Set<Integer> gradesSelected() {
+        return gradeSet;
+    }
+
+    /** The lowest grade picked; the web page and older builds still speak of one grade. */
     public int grade() {
-        // 0 is the whole stage, picked by the all-grades chip.
-        if (grade == 0) return 0;
-        int[] all = grades(stage);
-        if (grade < all[0]) grade = all[0];
-        if (grade > all[all.length - 1]) grade = all[all.length - 1];
-        return grade;
+        int lowest = 0;
+        for (int g : gradeSet) if (lowest == 0 || g < lowest) lowest = g;
+        return lowest == 0 ? grades(stage)[0] : lowest;
+    }
+
+    public boolean hasGrade(int grade) {
+        return gradeSet.contains(grade);
+    }
+
+    /** Adds or removes a grade; the last one stays on, as with the subjects. False when it refused. */
+    public boolean toggleGrade(int grade) {
+        if (!gradeSet.remove(grade)) {
+            gradeSet.add(grade);
+            return true;
+        }
+        if (gradeSet.isEmpty()) {
+            gradeSet.add(grade);
+            return false;
+        }
+        return true;
+    }
+
+    /** Picks every grade of the stage, or only its first one. */
+    public void setAllGrades(boolean all) {
+        gradeSet.clear();
+        int[] offered = grades(stage);
+        if (all) {
+            for (int g : offered) gradeSet.add(g);
+        } else {
+            gradeSet.add(offered[0]);
+        }
+    }
+
+    public boolean allGrades() {
+        return gradeSet.size() == grades(stage).length;
+    }
+
+    /** One grade only, for the web page's single-grade field. */
+    public void setOnlyGrade(int grade) {
+        gradeSet.clear();
+        gradeSet.add(grade);
+    }
+
+    /** Keeps the selection inside the stage and never empty. */
+    public void normalizeGrades() {
+        int[] offered = grades(stage);
+        java.util.Iterator<Integer> it = gradeSet.iterator();
+        while (it.hasNext()) {
+            int g = it.next();
+            if (g < offered[0] || g > offered[offered.length - 1]) it.remove();
+        }
+        if (gradeSet.isEmpty()) gradeSet.add(offered[0]);
+    }
+
+    /** The set as preferences hold it. */
+    private java.util.Set<String> gradesPrefs() {
+        java.util.Set<String> out = new java.util.HashSet<>();
+        for (Integer g : gradeSet) out.add(String.valueOf(g));
+        return out;
     }
 
     /** Switches stage, taking the first grade of the new one and its subjects. */
     public void chooseStage(String next) {
         stage = next;
-        grade = grades(next)[0];
+        gradeSet.clear();
+        gradeSet.add(grades(next)[0]);
         for (String key : new String[]{"chinese", "math", "english", "history", "physics",
                 "chemistry", "biology", "geography", "politics"}) {
             setSubject(key, false);

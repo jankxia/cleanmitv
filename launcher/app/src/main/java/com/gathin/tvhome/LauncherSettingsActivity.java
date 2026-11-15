@@ -110,6 +110,8 @@ public final class LauncherSettingsActivity extends Activity {
         // Kids/Elders mode: who it is for, the apps it shows and the time limits.
         findViewById(R.id.kidsChoice).setOnClickListener(v ->
                 open(new Intent(this, KidsSetupActivity.class)));
+        // Question pack: pull the per-grade files from the author's OpenList (Quark) folder.
+        findViewById(R.id.quizPackChoice).setOnClickListener(v -> syncQuizPack());
         // One-tap update: download the configured APK and open the system installer.
         findViewById(R.id.updateChoice).setOnClickListener(v -> {
             String url = choices.getString("update_url", "");
@@ -168,9 +170,34 @@ public final class LauncherSettingsActivity extends Activity {
         bindHint(R.id.defaultHomeChoice, R.id.defaultHomeHint);
         bindHint(R.id.kidsChoice, R.id.kidsHint);
         bindHint(R.id.updateChoice, R.id.updateHint);
+        bindHint(R.id.quizPackChoice, R.id.quizPackHint);
         if (config.launcherSettingsButton) reorderChoice.requestFocus();
         else columnsChoice.requestFocus();
         setupRemote();
+    }
+
+    /** Downloads the question pack on a worker thread; the row reports how it went. */
+    private void syncQuizPack() {
+        if (QuizPack.url(this).isEmpty()) {
+            Toast.makeText(this, R.string.quiz_pack_no_url, Toast.LENGTH_LONG).show();
+            return;
+        }
+        Toast.makeText(this, R.string.quiz_pack_checking, Toast.LENGTH_SHORT).show();
+        new Thread(() -> {
+            String message;
+            try {
+                int files = QuizPack.sync(this, null);
+                message = getString(R.string.quiz_pack_ok, files);
+            } catch (Exception e) {
+                message = getString(R.string.quiz_pack_fail,
+                        e.getMessage() == null ? e.getClass().getSimpleName() : e.getMessage());
+            }
+            String result = message;
+            runOnUiThread(() -> {
+                Toast.makeText(this, result, Toast.LENGTH_LONG).show();
+                refresh();
+            });
+        }, "quiz-pack").start();
     }
 
     /** Show the row's hint only while it holds focus; hide it again when focus moves away. */
@@ -516,6 +543,13 @@ public final class LauncherSettingsActivity extends Activity {
         TextView weatherCity = findViewById(R.id.weatherCityChoice);
         if (weatherCity != null) {
             weatherCity.setText(getString(R.string.weather_city_state, Weather.city(this)));
+        }
+        TextView quizPack = findViewById(R.id.quizPackChoice);
+        if (quizPack != null) {
+            String pack = QuizPack.version(this);
+            quizPack.setText(pack.isEmpty()
+                    ? getString(R.string.quiz_pack_row)
+                    : getString(R.string.quiz_pack_row_version, pack));
         }
         followThemeChoice.setSelected(!hasOnTvChoices());
     }

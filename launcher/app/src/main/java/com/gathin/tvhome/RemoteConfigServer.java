@@ -494,7 +494,8 @@ final class RemoteConfigServer {
                 case "grade":
                     Integer grade = parseInt(value);
                     if (grade == null) throw new BadRequest("bad grade");
-                    plan.grade = grade;
+                    if (grade == 0) plan.setAllGrades(true);
+                    else plan.setOnlyGrade(grade);
                     break;
                 case "session_minutes":
                 case "questions_per_round":
@@ -531,7 +532,7 @@ final class RemoteConfigServer {
             }
         }
         // Keep the grade inside its stage and at least one subject, as the TV does.
-        plan.grade = plan.grade();
+        plan.normalizeGrades();
         if (plan.subjectCount() == 0) throw new BadRequest("keep at least one subject");
         Kids.savePlan();
         KidsWatch.poke();

@@ -6,21 +6,29 @@ import android.content.SharedPreferences;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
 import java.util.Set;
 
 /**
- * The questions, read once from assets/kids-quiz.json, plus what has been answered so far.
+ * The questions, one file per grade: assets/quiz/primary-1.json ... quiz/high-12.json, with a
+ * downloaded pack allowed to stand in for the same names (see {@link QuizPack}).
  *
  * <p>Every question is ours: written for this fork, not copied from another app. Each has a subject
  * (math / poem / common), four options, an answer index, and a level from 1 to 5 that the star
  * reward pays by.
+ *
+ * <p>A grade is read the first time it is asked for and kept, so a round only pays for the grades it
+ * may draw from instead of the whole bank.
  *
  * <p>Progress lives in its own preferences: how often each id was right or wrong, and which were
  * asked today. A round prefers questions not answered today, then ones never answered right - which
@@ -29,7 +37,8 @@ import java.util.Set;
 public final class KidsBank {
 
     static final String PREFS = "kids_bank";
-    private static final String ASSET = "kids-quiz.json";
+    /** Where the grade files live, inside the apk and inside a downloaded pack alike. */
+    private static final String DIR = "quiz";
 
     /** One question. */
     public static final class Q {
@@ -56,18 +65,93 @@ public final class KidsBank {
         }
     }
 
-    private static List<Q> cached;
+    /** Parsed files, by name; a pack download calls {@link #forget()} to drop them. */
+    private static final Map<String, List<Q>> loaded = new HashMap<>();
 
-    /** Every question, or an empty list if the asset is missing or broken. */
-    public static synchronized List<Q> all(Context context) {
+    /** The asset a stage and grade sit in, e.g. quiz/primary-1.json. */
+    static String fileFor(String stage, int grade) {
+        String prefix = KidsPlan.STAGE_MIDDLE.equals(stage) ? "middle"
+                : KidsPlan.STAGE_HIGH.equals(stage) ? "high" : "primary";
+        return DIR + "/" + prefix + "-" + grade + ".json";
+    }
+
+    /** A downloaded pack lives here; a file of the same name wins over the one in the apk. */
+    static File packDir(Context context) {
+        return new File(context.getFilesDir(), "quizpack");
+    }
+
+    /** True when at least one grade file is on the device. */
+    public static boolean available(Context context) {
+        File pack = packDir(context);
+        if (pack.isDirectory()) {
+            String[] names = pack.list();
+            if (names != null) {
+                for (String n : names) if (n.endsWith(".json")) return true;
+            }
+        }
+        try {
+            String[] names = context.getAssets().list(DIR);
+            if (names != null) {
+                for (String n : names) if (n.endsWith(".json")) return true;
+            }
+        } catch (Exception ignored) {
+        }
+        return false;
+    }
+
+    /** Drops the parsed files: a pack went in or out and the questions are no longer the same. */
+    public static synchronized void forget() {
+        loaded.clear();
+    }
+
+    /** True when the text is a grade file with at least one question the bank can use. */
+    static boolean usable(String json) {
+        List<Q> probe = new ArrayList<>();
+        parse(json, probe);
+        return !probe.isEmpty();
+    }
+
+    private static List<Q> read(Context context, String name) {
+        List<Q> cached = loaded.get(name);
         if (cached != null) return cached;
         List<Q> list = new ArrayList<>();
-        try (InputStream in = context.getAssets().open(ASSET)) {
+        String json = null;
+        File pack = new File(packDir(context), name.substring(DIR.length() + 1));
+        if (pack.isFile()) json = text(pack);
+        if (json == null) {
+            try (InputStream in = context.getAssets().open(name)) {
+                json = text(in);
+            } catch (Exception ignored) {
+            }
+        }
+        if (json != null) parse(json, list);
+        loaded.put(name, list);
+        return list;
+    }
+
+    private static String text(File file) {
+        try (InputStream in = new FileInputStream(file)) {
+            return text(in);
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    private static String text(InputStream in) {
+        try {
             byte[] buf = new byte[8192];
             StringBuilder sb = new StringBuilder();
             int n;
             while ((n = in.read(buf)) > 0) sb.append(new String(buf, 0, n, StandardCharsets.UTF_8));
-            JSONObject root = new JSONObject(sb.toString());
+            return sb.toString();
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    private static void parse(String json, List<Q> out) {
+        try {
+            JSONObject root = new JSONObject(json);
             JSONArray arr = root.getJSONArray("questions");
             for (int i = 0; i < arr.length(); i++) {
                 JSONObject o = arr.getJSONObject(i);
@@ -76,45 +160,42 @@ public final class KidsBank {
                 for (int j = 0; j < options.length; j++) options[j] = opts.getString(j);
                 int answer = o.getInt("a");
                 if (options.length < 2 || answer < 0 || answer >= options.length) continue;
-                list.add(new Q(o.getString("id"), o.optString("st", "primary"), o.optInt("g", 1),
+                out.add(new Q(o.getString("id"), o.optString("st", "primary"), o.optInt("g", 1),
                         o.optString("s", "common"), o.getString("q"), options, answer,
                         o.optInt("l", 1)));
             }
         } catch (Exception e) {
-            list.clear();
+            out.clear();
         }
-        cached = list;
-        return list;
     }
 
     /** A round of up to n questions: not asked today first, then never answered right, then the rest. */
     public static List<Q> pick(Context context, int n) {
-        return pick(context, n, null, 0, null);
+        return pick(context, n, null, null, null);
     }
 
     /** The same, only from the subjects picked; an empty set means every subject. */
     public static List<Q> pick(Context context, int n, Set<String> subjects) {
-        return pick(context, n, null, 0, subjects);
+        return pick(context, n, null, null, subjects);
     }
 
     /**
-     * The same, only from one stage and grade; an empty subject set means every subject of that
-     * grade. A grade with nothing on file falls back to the rest of its stage, then to the whole
-     * bank, so a thin year can never leave the round empty.
+     * The same, only from the grades picked in one stage; an empty grade set means every grade of
+     * that stage, and an empty subject set every subject. A grade with nothing on file falls back to
+     * the rest of its stage, then to the whole bank, so a thin year can never leave the round empty.
      */
-    public static List<Q> pick(Context context, int n, String stage, int grade, Set<String> subjects) {
-        List<Q> all = all(context);
-        List<Q> pool = within(all, stage, grade, subjects);
-        if (pool.isEmpty()) pool = within(all, stage, 0, subjects);
-        if (pool.isEmpty()) pool = within(all, null, 0, null);
+    public static List<Q> pick(Context c, int n, String stage, Set<Integer> grades, Set<String> subjects) {
+        List<Q> pool = stagePool(c, stage, grades, subjects);
+        if (pool.isEmpty()) pool = stagePool(c, stage, null, subjects);
+        if (pool.isEmpty()) pool = everyPool(c, subjects);
 
-        Set<String> seen = seenToday(context);
+        Set<String> seen = seenToday(c);
         List<Q> fresh = new ArrayList<>();
         List<Q> unseen = new ArrayList<>();
         List<Q> rest = new ArrayList<>();
         for (Q q : pool) {
             if (seen.contains(q.id)) rest.add(q);
-            else if (right(context, q.id) == 0) unseen.add(q);
+            else if (right(c, q.id) == 0) unseen.add(q);
             else fresh.add(q);
         }
         Random random = new Random(System.currentTimeMillis());
@@ -129,15 +210,27 @@ public final class KidsBank {
         return out.size() > n ? new ArrayList<>(out.subList(0, n)) : out;
     }
 
-    /** Every question in one stage (grade 0 = any grade) whose subject is on. */
-    private static List<Q> within(List<Q> all, String stage, int grade, Set<String> subjects) {
-        boolean bySubject = subjects != null && !subjects.isEmpty();
+    /** The questions of one stage from the grades picked (and the subjects on). */
+    private static List<Q> stagePool(Context c, String stage, Set<Integer> grades, Set<String> subjects) {
         List<Q> out = new ArrayList<>();
-        for (Q q : all) {
-            if (stage != null && !stage.equals(q.stage)) continue;
-            if (grade > 0 && q.grade != grade) continue;
-            if (bySubject && !subjects.contains(q.subject)) continue;
-            out.add(q);
+        if (stage == null) return out;
+        boolean anyGrade = grades == null || grades.isEmpty();
+        boolean bySubject = subjects != null && !subjects.isEmpty();
+        for (int grade : KidsPlan.grades(stage)) {
+            if (!anyGrade && !grades.contains(grade)) continue;
+            for (Q q : read(c, fileFor(stage, grade))) {
+                if (bySubject && !subjects.contains(q.subject)) continue;
+                out.add(q);
+            }
+        }
+        return out;
+    }
+
+    /** Every grade of every stage: the last fallback, only read when the picked ones came up empty. */
+    private static List<Q> everyPool(Context c, Set<String> subjects) {
+        List<Q> out = new ArrayList<>();
+        for (String stage : new String[]{KidsPlan.STAGE_PRIMARY, KidsPlan.STAGE_MIDDLE, KidsPlan.STAGE_HIGH}) {
+            out.addAll(stagePool(c, stage, null, subjects));
         }
         return out;
     }
@@ -151,10 +244,10 @@ public final class KidsBank {
 
     /** A round of the given size, the practice pool first, then the usual pick. */
     public static List<Q> pickWithPractice(Context context, int n, int practice, String stage,
-                                          int grade, Set<String> subjects) {
-        List<Q> list = new ArrayList<>(pick(context, n, stage, grade, subjects));
+                                          Set<Integer> grades, Set<String> subjects) {
+        List<Q> list = new ArrayList<>(pick(context, n, stage, grades, subjects));
         if (practice > 0) {
-            List<Q> extra = pick(context, practice, stage, grade, subjects);
+            List<Q> extra = pick(context, practice, stage, grades, subjects);
             for (Q q : extra) {
                 if (list.size() >= n + practice) break;
                 if (list.contains(q)) continue;

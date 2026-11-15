@@ -77,7 +77,7 @@ public class KidsQuizActivity extends Activity {
         freePractice = getIntent().getBooleanExtra(EXTRA_PRACTICE, false);
         practice = freePractice || KidsPlan.MODE_PRACTICE.equals(plan.playMode);
 
-        if (KidsBank.all(this).isEmpty()) {
+        if (!KidsBank.available(this)) {
             // No bank, no questions: a locked round pays out rather than leaving the TV locked forever.
             Toast.makeText(this, R.string.quiz_empty, Toast.LENGTH_LONG).show();
             if (!freePractice) Kids.grantQuizTime(plan.sessionMinutes);
@@ -130,7 +130,7 @@ public class KidsQuizActivity extends Activity {
         resultPanel.setVisibility(View.GONE);
         int n = Math.max(1, plan.questionsPerRound);
         round.addAll(KidsBank.pickWithPractice(this, n, practice ? 0 : ledger.extraPool,
-                plan.stage, plan.grade(), plan.subjects()));
+                plan.stage, plan.gradesSelected(), plan.subjects()));
         if (round.isEmpty()) {
             if (!freePractice) Kids.grantQuizTime(plan.sessionMinutes);
             close();
@@ -143,7 +143,7 @@ public class KidsQuizActivity extends Activity {
     private boolean extendRound() {
         int n = Math.max(1, plan.questionsPerRound);
         List<KidsBank.Q> more = KidsBank.pickWithPractice(this, n, ledger.extraPool,
-                plan.stage, plan.grade(), plan.subjects());
+                plan.stage, plan.gradesSelected(), plan.subjects());
         boolean added = false;
         for (KidsBank.Q q : more) {
             if (round.contains(q)) continue;
