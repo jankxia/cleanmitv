@@ -123,6 +123,37 @@ public final class QuizPack {
         return done;
     }
 
+    private static volatile boolean syncing;
+
+    /**
+     * Pulls the full pack in the background when nothing has been downloaded yet. The apk only
+     * carries a few dozen questions per grade as an offline floor, so the first time the quiz opens
+     * on a fresh install this fetches the real bank; a failed fetch just leaves the floor in place
+     * and the next open tries again.
+     */
+    public static void ensure(final Context c) {
+        if (syncing) return;
+        File dir = KidsBank.packDir(c);
+        String[] names = dir.list();
+        if (names != null) {
+            for (String n : names) if (n.endsWith(".json")) return;
+        }
+        syncing = true;
+        final Context app = c.getApplicationContext();
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    sync(app, null);
+                } catch (Exception ignored) {
+                    // offline, or the host is down: the bundled floor keeps the quiz working
+                } finally {
+                    syncing = false;
+                }
+            }
+        }, "quiz-pack").start();
+    }
+
     /** Throws away the downloaded pack, back to the bundled questions. */
     public static void clear(Context c) {
         File dir = KidsBank.packDir(c);

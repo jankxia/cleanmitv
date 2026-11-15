@@ -56,6 +56,9 @@ public class KidsLockActivity extends Activity {
         super.onCreate(state);
         Kids.init(this);
         KidsWatch.lockScreenShowing = true;
+        // The apk only bundles a handful of questions per grade; fetch the real bank while this
+        // screen is up, so the quiz that follows already has it.
+        QuizPack.ensure(this);
         setContentView(R.layout.activity_kids_lock);
         icon = findViewById(R.id.icon);
         title = findViewById(R.id.title);

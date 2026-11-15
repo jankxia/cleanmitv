@@ -78,6 +78,7 @@ public class KidsQuizActivity extends Activity {
         super.onCreate(state);
         Kids.init(this);
         KidsWatch.quizShowing = true;
+        QuizPack.ensure(this);
         plan = Kids.plan();
         ledger = Kids.ledger();
         freePractice = getIntent().getBooleanExtra(EXTRA_PRACTICE, false);
