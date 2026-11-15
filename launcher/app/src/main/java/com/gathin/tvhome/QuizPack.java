@@ -58,11 +58,26 @@ public final class QuizPack {
         return c.getSharedPreferences(PREFS, Context.MODE_PRIVATE);
     }
 
-    /** The manifest address: what the author saved, else the one compiled into config.xml. */
-    public static String url(Context c) {
+    /**
+     * Every manifest address worth trying, in order: the one saved from the settings page or the
+     * web form, then the LAN mirror, then the WAN one. The TV sits next to the OpenList box, so the
+     * LAN address wins when it is there at all.
+     */
+    public static List<String> candidates(Context c) {
+        List<String> out = new ArrayList<>();
         String saved = prefs(c).getString(URL_KEY, "").trim();
-        if (!saved.isEmpty()) return saved;
-        return c.getString(R.string.quiz_pack_url).trim();
+        if (!saved.isEmpty()) out.add(saved);
+        for (int id : new int[]{R.string.quiz_pack_url, R.string.quiz_pack_url_backup}) {
+            String u = c.getString(id).trim();
+            if (!u.isEmpty() && !out.contains(u)) out.add(u);
+        }
+        return out;
+    }
+
+    /** The manifest address in use: the saved one, else the first compiled default. */
+    public static String url(Context c) {
+        List<String> out = candidates(c);
+        return out.isEmpty() ? "" : out.get(0);
     }
 
     public static void setUrl(Context c, String url) {
@@ -86,7 +101,26 @@ public final class QuizPack {
      * @return how many files went in
      */
     public static int sync(Context c, Progress progress) throws Exception {
-        String base = url(c);
+        Exception last = null;
+        for (String base : candidates(c)) {
+            try {
+                return syncFrom(c, base, progress);
+            } catch (Exception e) {
+                // A mirror that is down must not stop the next one from answering.
+                last = e;
+                Log.w("QuizPack", "mirror failed " + base + ": " + e);
+            }
+        }
+        throw last == null ? new Exception("no pack url") : last;
+    }
+
+    /**
+     * Downloads a whole manifest from one address. Runs on a worker thread: it touches the network
+     * and the file system, and the caller shows the result.
+     *
+     * @return how many files went in
+     */
+    private static int syncFrom(Context c, String base, Progress progress) throws Exception {
         if (base.isEmpty()) throw new Exception("no pack url");
         String manifest = new String(get(base, 60000), StandardCharsets.UTF_8);
         JSONObject root = new JSONObject(manifest);

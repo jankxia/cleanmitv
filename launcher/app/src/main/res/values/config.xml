@@ -69,6 +69,10 @@
          drops long reads. Empty keeps the bundled per-grade files. -->
     <string name="quiz_pack_url" translatable="false">http://192.168.1.24:5244/p/%E5%A4%B8%E5%85%8B/CleanMiTV/quiz/index.json</string>
 
+    <!-- The same manifest through the WAN reverse proxy: used only when the LAN one cannot be
+         reached, e.g. the OpenList box is off or the TV is on another network. -->
+    <string name="quiz_pack_url_backup" translatable="false">https://list.717611.xyz/p/%E5%A4%B8%E5%85%8B/CleanMiTV/quiz/index.json</string>
+
     <!-- Tiles that open a screen of the app instead of its start screen: "package=action", sent to that package.
          A tile whose action no longer resolves opens the app normally. MagentaTV's program guide:
          com.telekom.onetv.tv.pl=com.telekom.onetv.tv.pl.action.PROGRAM_GUIDE. -->

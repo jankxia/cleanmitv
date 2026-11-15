@@ -317,6 +317,12 @@ final class RemoteConfigServer {
         update.put("state", ApkUpdater.state());
         update.put("progress", ApkUpdater.progress());
         update.put("message", ApkUpdater.message());
+        // The question pack address, and the two compiled defaults it falls back to: the form
+        // shows the LAN one as the placeholder so "leave it empty" reads as "LAN first".
+        update.put("pack", QuizPack.url(appContext));
+        update.put("pack_lan", appContext.getString(R.string.quiz_pack_url));
+        update.put("pack_wan", appContext.getString(R.string.quiz_pack_url_backup));
+        update.put("pack_version", QuizPack.version(appContext));
         return update;
     }
 
@@ -555,6 +561,11 @@ final class RemoteConfigServer {
             String url = incoming.optString("url", "").trim();
             if (url.isEmpty()) prefs.edit().remove(UPDATE_URL_KEY).apply();
             else if (url.length() <= 500) prefs.edit().putString(UPDATE_URL_KEY, url).apply();
+        }
+        if (incoming.has("pack")) {
+            // Empty means "no override": the pack goes LAN first, then WAN, as compiled in.
+            String pack = incoming.optString("pack", "").trim();
+            if (pack.length() <= 500) QuizPack.setUrl(appContext, pack);
         }
     }
 

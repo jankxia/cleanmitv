@@ -255,6 +255,16 @@
     </div>
   </details>
 
+  <details class="card">
+    <summary>题库更新 <span class="tag">局域网优先 · 外网兜底</span></summary>
+    <div class="row" style="display:block">
+      <label>题库清单地址</label>
+      <input type="text" id="pack_url" placeholder="留空 = 局域网优先，外网自动兜底" style="margin-top:8px">
+    </div>
+    <div class="note">留空时先用局域网 OpenList（<span id="pack_lan">—</span>），连不上再走外网（<span id="pack_wan">—</span>）。也可以在这里填任一台自建 OpenList / 普通 HTTP 目录的 index.json。</div>
+    <div class="note">当前生效：<span id="pack_current">—</span>　已装版本：<span id="pack_version">未下载</span></div>
+  </details>
+
   <div class="sysnote">
     <b>以下三项属于系统页面，无法在本网页替代，需在电视端操作：</b>
     <ul>
@@ -350,7 +360,23 @@ function render() {
   renderKids();
   renderPlan();
   document.getElementById("update_url").value = state.update.url || "";
+  renderPack();
   renderUpdateState();
+}
+
+// ---- question pack ----
+function renderPack() {
+  const u = state.update || {};
+  const lan = u.pack_lan || "";
+  const wan = u.pack_wan || "";
+  // The saved override is what the manifest ends up on; when none is saved the first candidate
+  // is the LAN default, which is what the box should leave empty.
+  const saved = (u.pack && u.pack !== lan) ? u.pack : "";
+  document.getElementById("pack_url").value = saved;
+  document.getElementById("pack_lan").textContent = lan || "未设置";
+  document.getElementById("pack_wan").textContent = wan || "未设置";
+  document.getElementById("pack_current").textContent = u.pack || "未设置";
+  document.getElementById("pack_version").textContent = u.pack_version || "未下载（用内置题库）";
 }
 
 function renderKids() {
@@ -585,7 +611,8 @@ function collect() {
     values: v,
     kids: kidsPayload,
     plan: {values: planValues},
-    update: {url: document.getElementById("update_url").value.trim()}
+    update: {url: document.getElementById("update_url").value.trim(),
+             pack: document.getElementById("pack_url").value.trim()}
   };
 }
 
